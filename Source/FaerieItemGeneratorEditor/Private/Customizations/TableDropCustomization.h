@@ -11,7 +11,4 @@ public:
 
 	virtual void CustomizeHeader(TSharedRef<IPropertyHandle> PropertyHandle, FDetailWidgetRow& HeaderRow, IPropertyTypeCustomizationUtils& CustomizationUtils) override;
 	virtual void CustomizeChildren(TSharedRef<IPropertyHandle> PropertyHandle, IDetailChildrenBuilder& ChildBuilder, IPropertyTypeCustomizationUtils& CustomizationUtils) override;
-
-private:
-	void OnGenerateElement(TSharedRef<IPropertyHandle, ESPMode::ThreadSafe> PropertyHandle, int32 Index, IDetailChildrenBuilder& ChildrenBuilder);
 };

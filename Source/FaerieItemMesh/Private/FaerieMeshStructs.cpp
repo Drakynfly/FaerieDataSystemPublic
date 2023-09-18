@@ -1,12 +1,18 @@
 ﻿// Copyright Guy (Drakynfly) Lundvall. All Rights Reserved.
 
 #include "FaerieMeshStructs.h"
+#include "UDynamicMesh.h"
 
-FMeshPurposeTags FMeshPurposeTags::MeshPurposeTags;
+namespace Faerie::ItemMesh::Tags
+{
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(MeshPurpose_Default, FName{TEXTVIEW("MeshPurpose.Default")}, "Only mesh, or mesh used as fallback if others fail")
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(MeshPurpose_Display, FName{TEXTVIEW("MeshPurpose.Display")}, "Mesh for visual display, e.g item pickups.")
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(MeshPurpose_Equipped, FName{TEXTVIEW("MeshPurpose.Equipped")}, "Mesh for item when used as active equipment")
+}
 
 FFaerieDynamicStaticMesh::FFaerieDynamicStaticMesh(const FFaerieStaticMeshData& EditorStaticMesh)
 {
-	if (!IsValid(EditorStaticMesh.StaticMesh))
+	if (!EditorStaticMesh.StaticMesh.IsValid())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("FInventoryDynamicStaticMesh constructed from invalid EditorStaticMesh"))
 		return;
@@ -21,7 +27,7 @@ FFaerieDynamicStaticMesh::FFaerieDynamicStaticMesh(const FFaerieStaticMeshData& 
 
 FFaerieDynamicSkeletalMesh::FFaerieDynamicSkeletalMesh(const FFaerieSkeletalMeshData& EditorStaticMesh)
 {
-	if (!IsValid(EditorStaticMesh.SkeletonAndAnimClass.Mesh))
+	if (!EditorStaticMesh.SkeletonAndAnimClass.Mesh.IsValid())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("FInventoryDynamicSkeletalMesh constructed from invalid EditorStaticMesh"))
 		return;
@@ -39,11 +45,6 @@ bool FFaerieMeshContainer::GetStaticItemMesh(const FGameplayTagContainer& Search
 {
 	for (const FFaerieStaticMeshData& Data : StaticMeshes)
 	{
-		if (!Data.StaticMesh)
-		{
-			continue;
-		}
-
 		if (Data.Purpose.HasAnyExact(SearchPurposes))
 		{
 			Static = Data;
@@ -58,12 +59,6 @@ bool FFaerieMeshContainer::GetSkeletalItemMesh(const FGameplayTagContainer& Sear
 {
 	for (const FFaerieSkeletalMeshData& Data : SkeletalMeshes)
 	{
-		if (!Data.SkeletonAndAnimClass.Mesh
-		 || !IsValid(Data.SkeletonAndAnimClass.AnimClass))
-		{
-			continue;
-		}
-
 		if (Data.Purpose.HasAnyExact(SearchPurposes))
 		{
 			Skeletal = Data;
@@ -71,4 +66,19 @@ bool FFaerieMeshContainer::GetSkeletalItemMesh(const FGameplayTagContainer& Sear
 		}
 	}
 	return false;
+}
+
+bool FFaerieItemMesh::IsStatic() const
+{
+	return IsValid(StaticMesh);
+}
+
+bool FFaerieItemMesh::IsDynamic() const
+{
+	return IsValid(DynamicStaticMesh);
+}
+
+bool FFaerieItemMesh::IsSkeletal() const
+{
+	return IsValid(SkeletonAndAnimClass.Mesh) && IsValid(SkeletonAndAnimClass.AnimClass);
 }

@@ -4,7 +4,7 @@
 
 #include "IPropertyTypeCustomization.h"
 
-class FItemsArrayCustomization final : public IPropertyTypeCustomization
+class FAERIEDATASYSTEMEDITOR_API FItemsArrayCustomization final : public IPropertyTypeCustomization
 {
 public:
 	static TSharedRef<IPropertyTypeCustomization> MakeInstance();

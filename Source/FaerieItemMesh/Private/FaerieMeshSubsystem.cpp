@@ -17,29 +17,29 @@
 #include "GeometryScript/MeshBasicEditFunctions.h"
 #include "GeometryScript/MeshMaterialFunctions.h"
 
-
-UDynamicMeshPool* UFaerieMeshSubsystem::GetMeshPool()
+void UFaerieMeshSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
-	if (!MeshPool) MeshPool = NewObject<UDynamicMeshPool>();
-	return MeshPool;
+	Super::Initialize(Collection);
+
+	FallbackPurpose = Faerie::ItemMesh::Tags::MeshPurpose_Default;
 }
 
-UDynamicMesh* UFaerieMeshSubsystem::GetDynamicStaticMeshForData(const FFaerieDynamicStaticMesh& MeshData,
-                                                                TArray<FFaerieItemMaterial>& OutMaterialSet)
+FFaerieItemMesh UFaerieMeshSubsystem::GetDynamicStaticMeshForData(const FFaerieDynamicStaticMesh& MeshData)
 {
 	if (MeshData.Fragments.IsEmpty())
 	{
-		return nullptr;
+		return FFaerieItemMesh();
 	}
 
 	// The final mesh we will return.
-	UDynamicMesh* OutMesh = GetMeshPool()->RequestMesh();
+	UDynamicMesh* OutMesh = NewObject<UDynamicMesh>();
+	TArray<FFaerieItemMaterial> Materials;
 
 	TMap<FName, UStaticMeshSocket*> Sockets;
 
 	for (const FFaerieDynamicStaticMeshFragment& Fragment : MeshData.Fragments)
 	{
-		if (!IsValid(Fragment.StaticMesh))
+		if (!Fragment.StaticMesh.IsValid())
 		{
 			UE_LOG(LogTemp, Error, TEXT("Invalid Static Mesh detected while building dynamic mesh!"))
 			continue;
@@ -47,12 +47,12 @@ UDynamicMesh* UFaerieMeshSubsystem::GetDynamicStaticMeshForData(const FFaerieDyn
 
 		// Copy mesh data
 
-		UDynamicMesh* AppendMesh = GetMeshPool()->RequestMesh();
+		UDynamicMesh* AppendMesh = NewObject<UDynamicMesh>();
 
 		const FGeometryScriptCopyMeshFromAssetOptions AssetOptions;
 		const FGeometryScriptMeshReadLOD RequestedLOD;
 		EGeometryScriptOutcomePins Outcome;
-		UGeometryScriptLibrary_StaticMeshFunctions::CopyMeshFromStaticMesh(Fragment.StaticMesh, AppendMesh, AssetOptions, RequestedLOD, Outcome);
+		UGeometryScriptLibrary_StaticMeshFunctions::CopyMeshFromStaticMesh(Fragment.StaticMesh.LoadSynchronous(), AppendMesh, AssetOptions, RequestedLOD, Outcome);
 
 		for (auto&& Socket : Fragment.StaticMesh->Sockets)
 		{
@@ -65,9 +65,8 @@ UDynamicMesh* UFaerieMeshSubsystem::GetDynamicStaticMeshForData(const FFaerieDyn
 
 		if (!Fragment.Attachment.Socket.IsNone())
 		{
-			auto&& Socket = Sockets.Find(Fragment.Attachment.Socket);
-
-			if (Socket && IsValid(*Socket))
+			if (auto&& Socket = Sockets.Find(Fragment.Attachment.Socket);
+				Socket && IsValid(*Socket))
 			{
 				AppendTransform *= FTransform((*Socket)->RelativeRotation, (*Socket)->RelativeLocation, (*Socket)->RelativeScale);
 			}
@@ -81,18 +80,18 @@ UDynamicMesh* UFaerieMeshSubsystem::GetDynamicStaticMeshForData(const FFaerieDyn
 
 		for (int32 MatOverrideIndex = 0; MatOverrideIndex < MaterialOverrideNum; ++MatOverrideIndex)
 		{
-			const int32 ExistingIndex = OutMaterialSet.IndexOfByPredicate([&](const FFaerieItemMaterial& IndexedMat)
-			{
-				return IndexedMat.Material == Fragment.StaticMesh->GetMaterial(MatOverrideIndex);
-			});
-
-			if (ExistingIndex != INDEX_NONE)
+			if (const int32 ExistingIndex = Materials.IndexOfByPredicate(
+				[&](const FFaerieItemMaterial& IndexedMat)
+				{
+					return IndexedMat.Material == Fragment.StaticMesh->GetMaterial(MatOverrideIndex);
+				});
+				ExistingIndex != INDEX_NONE)
 			{
 				UGeometryScriptLibrary_MeshMaterialFunctions::RemapMaterialIDs(AppendMesh, MatOverrideIndex, ExistingIndex);
 			}
 			else
 			{
-				const int32 NewIndex = OutMaterialSet.Add(Fragment.Materials[MatOverrideIndex]);
+				const int32 NewIndex = Materials.Add(Fragment.Materials[MatOverrideIndex]);
 				UGeometryScriptLibrary_MeshMaterialFunctions::RemapMaterialIDs(AppendMesh, MatOverrideIndex, NewIndex);
 			}
 		}
@@ -100,30 +99,29 @@ UDynamicMesh* UFaerieMeshSubsystem::GetDynamicStaticMeshForData(const FFaerieDyn
 		// Commit new mesh
 		UGeometryScriptLibrary_MeshBasicEditFunctions::AppendMesh(OutMesh, AppendMesh, AppendTransform);
 
-		// Discard temp dynamic mesh.
-		GetMeshPool()->ReturnMesh(AppendMesh);
+		// Trash temp dynamic mesh.
+		AppendMesh->MarkAsGarbage();
 	}
 
-	return OutMesh;
+	return FFaerieItemMesh::MakeDynamic(OutMesh, Materials);
 }
 
-FSkeletonAndAnimClass UFaerieMeshSubsystem::GetDynamicSkeletalMeshForData(const FFaerieDynamicSkeletalMesh& MeshData,
-                                                                   TArray<FFaerieItemMaterial>& OutMaterialSet)
+FFaerieItemMesh UFaerieMeshSubsystem::GetDynamicSkeletalMeshForData(const FFaerieDynamicSkeletalMesh& MeshData) const
 {
 	FSkeletonAndAnimClass OutSkeletonAndAnimClass;
+	TArray<FFaerieItemMaterial> Materials;
 
 	FSkeletalMeshMergeParams Params;
-
 	OutSkeletonAndAnimClass.Mesh = USkeletalMergingLibrary::MergeMeshes(Params);
 
-	return OutSkeletonAndAnimClass;
+	return FFaerieItemMesh::MakeSkeletal(OutSkeletonAndAnimClass, Materials);
 }
 
-bool UFaerieMeshSubsystem::LoadMeshFromTokenSynchronous(UFaerieMeshTokenBase* Token, const FGameplayTag Purpose,
+bool UFaerieMeshSubsystem::LoadMeshFromTokenSynchronous(const UFaerieMeshTokenBase* Token, const FGameplayTag Purpose,
 	FFaerieItemMesh& Mesh)
 {
 	// This is a stupid fix for an issue with blueprints, where impure nodes will cache their output across multiple executions.
-	// The result without this line, is that a static mesh fed into Mesh in one call will persist for successive calls.
+	// The result without this line, is that a mesh value put into Mesh in one call will persist for successive calls.
 	Mesh = FFaerieItemMesh();
 
 	if (!IsValid(Token))
@@ -134,6 +132,7 @@ bool UFaerieMeshSubsystem::LoadMeshFromTokenSynchronous(UFaerieMeshTokenBase* To
 
 	const FFaerieCachedMeshKey Key = {Token, Purpose};
 
+	// If we have already generated this mesh, just return that one.
 	if (auto&& CachedMesh = GeneratedMeshes.Find(Key))
 	{
 		Mesh = *CachedMesh;
@@ -141,15 +140,15 @@ bool UFaerieMeshSubsystem::LoadMeshFromTokenSynchronous(UFaerieMeshTokenBase* To
 	}
 
 	FGameplayTagContainer PurposeHierarchy;
-	if (Purpose != FMeshPurposeTags::Get().MP_Default)
+	if (Purpose != Faerie::ItemMesh::Tags::MeshPurpose_Default)
 	{
 		PurposeHierarchy.AddTagFast(Purpose);
 	}
-	if (FallbackPurpose.IsValid() && FallbackPurpose != FMeshPurposeTags::Get().MP_Default)
+	if (FallbackPurpose.IsValid() && FallbackPurpose != Faerie::ItemMesh::Tags::MeshPurpose_Default)
 	{
 		PurposeHierarchy.AddTagFast(FallbackPurpose);
 	}
-	PurposeHierarchy.AddTagFast(FMeshPurposeTags::Get().MP_Default);
+	PurposeHierarchy.AddTagFast(Faerie::ItemMesh::Tags::MeshPurpose_Default);
 
 	// Check for the presence of a custom dynamic mesh to build.
 
@@ -159,11 +158,11 @@ bool UFaerieMeshSubsystem::LoadMeshFromTokenSynchronous(UFaerieMeshTokenBase* To
 		{
 			if (SkeletalMesh.Purpose.HasAnyExact(PurposeHierarchy))
 			{
-				Mesh.SkeletonAndAnimClass = GetDynamicSkeletalMeshForData(SkeletalMesh, Mesh.Materials);
+				Mesh = GetDynamicSkeletalMeshForData(SkeletalMesh);
 
-				if (IsValid(Mesh.SkeletonAndAnimClass.Mesh) &&
-					IsValid(Mesh.SkeletonAndAnimClass.AnimClass))
+				if (Mesh.IsSkeletal())
 				{
+					GeneratedMeshes.Add(Key, Mesh);
 					return true;
 				}
 			}
@@ -173,10 +172,11 @@ bool UFaerieMeshSubsystem::LoadMeshFromTokenSynchronous(UFaerieMeshTokenBase* To
 		{
 			if (StaticMesh.Purpose.HasAnyExact(PurposeHierarchy))
 			{
-				Mesh.DynamicStaticMesh = GetDynamicStaticMeshForData(StaticMesh, Mesh.Materials);
+				Mesh = GetDynamicStaticMeshForData(StaticMesh);
 
-				if (IsValid(Mesh.DynamicStaticMesh))
+				if (Mesh.IsDynamic())
 				{
+					GeneratedMeshes.Add(Key, Mesh);
 					return true;
 				}
 			}
@@ -186,35 +186,34 @@ bool UFaerieMeshSubsystem::LoadMeshFromTokenSynchronous(UFaerieMeshTokenBase* To
 
 	// Otherwise, scan and load pre-defined mesh data.
 
-	FFaerieSkeletalMeshData SkelMeshData;
-	if (Token->GetSkeletalItemMesh(PurposeHierarchy, SkelMeshData))
+	if (FFaerieSkeletalMeshData SkelMeshData;
+		Token->GetSkeletalItemMesh(PurposeHierarchy, SkelMeshData))
 	{
-		Mesh.SkeletonAndAnimClass = SkelMeshData.SkeletonAndAnimClass;
-		Mesh.Materials = SkelMeshData.Materials;
+		Mesh = FFaerieItemMesh::MakeSkeletal(SkelMeshData.SkeletonAndAnimClass.LoadSynchronous(), SkelMeshData.Materials);
+		GeneratedMeshes.Add(Key, Mesh);
 		return true;
 	}
 
-	FFaerieStaticMeshData StaticMeshData;
-	if (Token->GetStaticItemMesh(PurposeHierarchy, StaticMeshData))
+	if (FFaerieStaticMeshData StaticMeshData;
+		Token->GetStaticItemMesh(PurposeHierarchy, StaticMeshData))
 	{
-		Mesh.StaticMesh = StaticMeshData.StaticMesh;
-		Mesh.Materials = StaticMeshData.Materials;
+		Mesh = FFaerieItemMesh::MakeStatic(StaticMeshData.StaticMesh.LoadSynchronous(), StaticMeshData.Materials);
+		GeneratedMeshes.Add(Key, Mesh);
 		return true;
 	}
-
-	GeneratedMeshes.Add(Key, Mesh);
 
 	UE_LOG(LogTemp, Error, __FUNCTION__ TEXT(": Asset does not contain a mesh suitable for the purpose."))
 	return false;
 }
 
-bool UFaerieMeshSubsystem::LoadMeshFromReaderSynchronous(UFaerieItemDataProxyBase* Proxy, const FGameplayTag Purpose, FFaerieItemMesh& Mesh)
+bool UFaerieMeshSubsystem::LoadMeshFromProxySynchronous(const FFaerieItemProxy Proxy, const FGameplayTag Purpose,
+														FFaerieItemMesh& Mesh)
 {
 	// This is a stupid fix for an issue with blueprints, where impure nodes will cache their output across multiple executions.
-	// The result without this line, is that a static mesh fed into Mesh in one call will persist for successive calls.
+	// The result without this line, is that a mesh value put into Mesh in one call will persist for successive calls.
 	Mesh = FFaerieItemMesh();
 
-	if (!ensure(IsValid(Proxy)))
+	if (!ensure(Proxy.IsValid()))
 	{
 		UE_LOG(LogTemp, Warning, __FUNCTION__ TEXT(": Invalid proxy!"))
 		return false;
@@ -226,7 +225,9 @@ bool UFaerieMeshSubsystem::LoadMeshFromReaderSynchronous(UFaerieItemDataProxyBas
 		return false;
 	}
 
-	auto&& MeshToken = Proxy->GetItemObject()->GetToken<UFaerieMeshTokenBase>();
-
-	return LoadMeshFromTokenSynchronous(MeshToken, Purpose, Mesh);
+	if (auto&& MeshToken = Proxy->GetItemObject()->GetToken<UFaerieMeshTokenBase>())
+	{
+		return LoadMeshFromTokenSynchronous(MeshToken, Purpose, Mesh);
+	}
+	return false;
 }

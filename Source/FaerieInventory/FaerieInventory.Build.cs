@@ -17,10 +17,11 @@ public class FaerieInventory : ModuleRules
                 "Core",
                 "CoreUObject",
                 "Engine",
-                "NetCore",
                 "GameplayTags",
-                "UMG",
-                "Slate"
+                "NetCore",
+                "StructUtils",
+                "Slate",
+                "UMG"
             });
 
         // Plugin dependencies

@@ -17,45 +17,31 @@ void UFaerieMeshTokenBase::GetMeshes(const FGameplayTagContainer& SearchPurposes
 
 #if WITH_EDITOR
 
-#define LOCTEXT_NAMESPACE "FaerieMeshTokenBaseValidation"
+#define LOCTEXT_NAMESPACE "FaerieMeshTokenValidation"
 
-EDataValidationResult UFaerieMeshToken::IsDataValid(FDataValidationContext& Context)
+EDataValidationResult UFaerieMeshToken::IsDataValid(FDataValidationContext& Context) const
 {
-	FText ErrorMessage;
-	bool HasError = false;
-
 	for (auto&& i : MeshContainer.StaticMeshes)
 	{
-		//for (auto&& Fragment : i.Fragments)
+		if (i.StaticMesh.IsNull())
 		{
-			if (!IsValid(i.StaticMesh))
-			{
-				ErrorMessage = LOCTEXT("IsDataValid_Failed_InvalidStaticMesh", "Invalid static mesh found");
-				Context.AddError(ErrorMessage);
-				HasError = true;
-			}
+			Context.AddError(LOCTEXT("IsDataValid_Failed_InvalidStaticMesh", "Invalid static mesh found"));
 		}
 	}
 
 	for (auto&& i : MeshContainer.SkeletalMeshes)
 	{
-		//for (auto&& Fragment : i.Fragments)
+		if (i.SkeletonAndAnimClass.Mesh.IsNull() ||
+			i.SkeletonAndAnimClass.AnimClass.IsNull())
 		{
-			if (!IsValid(i.SkeletonAndAnimClass.Mesh) ||
-				!IsValid(i.SkeletonAndAnimClass.AnimClass))
-			{
-				ErrorMessage = LOCTEXT("IsDataValid_Failed_InvalidSkeletalMesh", "Invalid skeletal mesh found");
-				Context.AddError(ErrorMessage);
-				HasError = true;
-			}
+			Context.AddError(LOCTEXT("IsDataValid_Failed_InvalidSkeletalMesh", "Invalid skeletal mesh found"));
 		}
 	}
 
-	if (HasError)
+	if (Context.GetNumErrors())
 	{
 		return EDataValidationResult::Invalid;
 	}
-
 	return Super::IsDataValid(Context);
 }
 
@@ -74,3 +60,43 @@ bool UFaerieMeshToken::GetSkeletalItemMesh(const FGameplayTagContainer& SearchPu
 {
 	return MeshContainer.GetSkeletalItemMesh(SearchPurposes, Skeletal);
 }
+
+#if WITH_EDITOR
+
+#define LOCTEXT_NAMESPACE "FaerieMeshToken_DynamicValidation"
+
+EDataValidationResult UFaerieMeshToken_Dynamic::IsDataValid(FDataValidationContext& Context) const
+{
+	for (auto Element : DynamicMeshContainer.StaticMeshes)
+	{
+		for (auto Fragment : Element.Fragments)
+		{
+			if (Fragment.StaticMesh.IsNull())
+			{
+				Context.AddError(LOCTEXT("IsDataValid_Failed_InvalidStaticMesh", "Invalid static mesh found"));
+			}
+		}
+	}
+
+	for (auto Element : DynamicMeshContainer.SkeletalMeshes)
+	{
+		for (auto Fragment : Element.Fragments)
+		{
+			if (Fragment.SkeletonAndAnimClass.Mesh.IsNull() ||
+				Fragment.SkeletonAndAnimClass.AnimClass.IsNull())
+			{
+				Context.AddError(LOCTEXT("IsDataValid_Failed_InvalidSkeletalMesh", "Invalid skeletal mesh found"));
+			}
+		}
+	}
+
+	if (Context.GetNumErrors())
+	{
+		return EDataValidationResult::Invalid;
+	}
+	return Super::IsDataValid(Context);
+}
+
+#undef LOCTEXT_NAMESPACE
+
+#endif

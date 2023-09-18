@@ -3,48 +3,57 @@
 #include "ItemGeneratorConfig.h"
 
 #include "ItemSourcePool.h"
+#include "Squirrel.h"
 #include "UObject/ObjectSaveContext.h"
 
 DEFINE_LOG_CATEGORY(LogItemGenConfig)
 
-UItemGenerationDriver::UItemGenerationDriver()
+UItemGenerationConfig::UItemGenerationConfig()
 {
-	Pool = CreateDefaultSubobject<UItemSourcePool>("Pool");
+	AmountResolver = TInstancedStruct<FGeneratorAmountBase>::Make<FGeneratorAmount_Fixed>();
 }
 
-void UItemGenerationDriver::PreSave(FObjectPreSaveContext SaveContext)
+void UItemGenerationConfig::PreSave(FObjectPreSaveContext SaveContext)
 {
 	Super::PreSave(SaveContext);
 
 #if WITH_EDITOR
-	if (ensure(IsValid(Pool)))
-	{
-		Pool->SortTable();
-	}
+	DropPool.SortTable();
 #endif
 }
 
-UItemSourcePool* UItemGenerationDriver::GetPool() const
+void UItemGenerationConfig::PostLoad()
 {
-	return Pool;
+	Super::PostLoad();
+#if WITH_EDITOR
+	DropPool.CalculatePercentages();
+#endif
 }
 
-FGeneratorAmountBase UItemGenerationDriver::GetAmountResolver() const
+#if WITH_EDITOR
+void UItemGenerationConfig::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+{
+	Super::PostEditChangeProperty(PropertyChangedEvent);
+	DropPool.CalculatePercentages();
+}
+
+void UItemGenerationConfig::PostEditChangeChainProperty(FPropertyChangedChainEvent& PropertyChangedEvent)
+{
+	Super::PostEditChangeChainProperty(PropertyChangedEvent);
+	DropPool.CalculatePercentages();
+}
+#endif
+
+FGeneratorAmountBase UItemGenerationConfig::GetAmountResolver() const
 {
 	return AmountResolver.Get<FGeneratorAmountBase>();
 }
 
-FPendingItemGeneration UItemGenerationDriver::Resolve() const
+FPendingItemGeneration UItemGenerationConfig::Resolve() const
 {
-	if (!ensure(IsValid(Pool)))
-	{
-		UE_LOG(LogItemGenConfig, Error, TEXT("Invalid Pool!"));
-		return FPendingItemGeneration();
-	}
-
 	FPendingItemGeneration Result;
 
-    Result.Drop = Pool->GenerateDrop(Squirrel);
+    Result.Drop = DropPool.GenerateDrop(Squirrel->NextReal());
 	Result.Count = AmountResolver.Get<FGeneratorAmountBase>().Resolve(Squirrel);
 	Result.Squirrel = Squirrel;
 

@@ -8,7 +8,8 @@ void UInventoryItemLimitExtension::InitializeExtension(const UFaerieItemContaine
 {
 	if (!ensure(IsValid(Container))) return;
 
-	Container->ForEachKey([this, Container](const FEntryKey Key)
+	Container->ForEachKey(
+		[this, Container](const FEntryKey Key)
 		{
 			UpdateCacheForEntry(Container, Key);
 		});
@@ -18,11 +19,12 @@ void UInventoryItemLimitExtension::DeinitializeExtension(const UFaerieItemContai
 {
 	if (!ensure(IsValid(Container))) return;
 
-	Container->ForEachKey([this](const FEntryKey Key)
+	Container->ForEachKey(
+		[this](const FEntryKey Key)
 		{
 			int32 Value = 0;
 			StackAmountCache.RemoveAndCopyValue(Key, Value);
-			CurrentTotalItemCount -= Value;
+			CurrentTotalItemCopies -= Value;
 		});
 }
 
@@ -31,8 +33,9 @@ EEventExtensionResponse UInventoryItemLimitExtension::AllowsAddition(const UFaer
 {
 	if (!CanContain(Stack))
 	{
-		UE_LOG(LogTemp, Warning,
-			TEXT("PreAddition: Cannot add Stack (Copies: %i)"),
+		// @todo this is a routine call, which is normal to fail. Why log failure at all?
+		UE_LOG(LogTemp, VeryVerbose,
+			TEXT("AllowsAddition: Cannot add Stack (Copies: %i)"),
 			Stack.Copies);
 
 		return EEventExtensionResponse::Disallowed;
@@ -41,12 +44,12 @@ EEventExtensionResponse UInventoryItemLimitExtension::AllowsAddition(const UFaer
 	return EEventExtensionResponse::Allowed;
 }
 
-void UInventoryItemLimitExtension::PostAddition(const UFaerieItemContainerBase* Container, const Faerie::FItemContainerEvent& Event)
+void UInventoryItemLimitExtension::PostAddition(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event)
 {
 	UpdateCacheForEntry(Container, Event.EntryTouched);
 }
 
-void UInventoryItemLimitExtension::PostRemoval(const UFaerieItemContainerBase* Container, const Faerie::FItemContainerEvent& Event)
+void UInventoryItemLimitExtension::PostRemoval(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event)
 {
 	UpdateCacheForEntry(Container, Event.EntryTouched);
 }
@@ -58,37 +61,43 @@ void UInventoryItemLimitExtension::PostEntryChanged(const UFaerieItemContainerBa
 
 int32 UInventoryItemLimitExtension::GetTotalItemCount() const
 {
-	return CurrentTotalItemCount;
+	return CurrentTotalItemCopies;
 }
 
 int32 UInventoryItemLimitExtension::GetRemainingStackCount() const
 {
-	if (MaxEntries == FInventoryStack::UnlimitedNum)
+	if (MaxEntries <= 0)
 	{
-		return MaxEntries;
+		return Faerie::ItemData::UnlimitedStack;
 	}
 	return MaxEntries - StackAmountCache.Num();
 }
 
 int32 UInventoryItemLimitExtension::GetRemainingTotalItemCount() const
 {
-	if (MaxItems == 0)
+	if (MaxTotalItemCopies <= 0)
 	{
-		return FInventoryStack::UnlimitedNum;
+		return Faerie::ItemData::UnlimitedStack;
 	}
-	return MaxItems - CurrentTotalItemCount;
+	return MaxTotalItemCopies - CurrentTotalItemCopies;
 }
 
 bool UInventoryItemLimitExtension::CanContain(const FFaerieItemStackView Stack) const
 {
-	if (StackAmountCache.Num() >= MaxEntries)
+	if (MaxEntries > 0)
 	{
-		return false;
+		if (StackAmountCache.Num() >= MaxEntries)
+		{
+			return false;
+		}
 	}
 
-	if (CurrentTotalItemCount + Stack.Copies > MaxItems)
+	if (MaxTotalItemCopies > 0)
 	{
-		return false;
+		if (CurrentTotalItemCopies + Stack.Copies > MaxTotalItemCopies)
+		{
+			return false;
+		}
 	}
 
 	return true;
@@ -98,27 +107,27 @@ void UInventoryItemLimitExtension::UpdateCacheForEntry(const UFaerieItemContaine
 {
 	if (!ensure(IsValid(Container))) return;
 
-	const int32* PrevCache = StackAmountCache.Find(Key);
+	const int32* PrevStackCache = StackAmountCache.Find(Key);
 
 	if (!Container->IsValidKey(Key))
 	{
-		if (PrevCache)
+		if (PrevStackCache)
 		{
-			CurrentTotalItemCount -= *PrevCache;
+			CurrentTotalItemCopies -= *PrevStackCache;
 			StackAmountCache.Remove(Key);
 		}
 		return;
 	}
 
-	const int32 Total = Container->GetStack(Key).GetAmount();
+	const int32 StackAtKey = Container->GetStack(Key);
 
-	int32 Diff = Total;
+	int32 Diff = StackAtKey;
 
-	if (PrevCache)
+	if (PrevStackCache)
 	{
-		Diff -= *PrevCache;
+		Diff -= *PrevStackCache;
 	}
 
-	StackAmountCache.Add(Key, Total);
-	CurrentTotalItemCount += Diff;
+	StackAmountCache.Add(Key, StackAtKey);
+	CurrentTotalItemCopies += Diff;
 }

@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "UObject/NameTypes.h"
 #include "ItemSlotHandle.generated.h"
 
 USTRUCT(BlueprintType, meta=(DisableSplitPin))
@@ -12,9 +13,7 @@ struct FAERIEITEMGENERATOR_API FFaerieItemSlotHandle
 	FFaerieItemSlotHandle() {}
 
 	FFaerieItemSlotHandle(const FName& Name)
-		: InternalHandle(Name)
-	{
-	}
+	  : InternalHandle(Name) {}
 
 private:
 	UPROPERTY(EditAnywhere)
@@ -41,7 +40,7 @@ public:
 		return !(Lhs == Rhs);
 	}
 
-	FORCEINLINE friend uint32 GetTypeHash(const FFaerieItemSlotHandle& Key)
+	friend uint32 GetTypeHash(const FFaerieItemSlotHandle& Key)
 	{
 		return GetTypeHash(Key.InternalHandle);
 	}

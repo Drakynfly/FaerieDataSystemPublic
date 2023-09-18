@@ -13,24 +13,24 @@ void UFaerieCapacityToken::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>&
 	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, Capacity, Params);
 }
 
-int32 UFaerieCapacityToken::GetWeightOfStack(const FInventoryStack Stack) const
+int32 UFaerieCapacityToken::GetWeightOfStack(const int32 Stack) const
 {
-	return Capacity.Weight * Stack.GetAmount();
+	return Capacity.Weight * Stack;
 }
 
-int32 UFaerieCapacityToken::GetVolumeOfStack(const FInventoryStack Stack) const
+int32 UFaerieCapacityToken::GetVolumeOfStack(const int32 Stack) const
 {
 	const int32 Volume = Capacity.GetVolume();
-	return Volume + (Volume * (Stack.GetAmount() - 1) * Capacity.Efficiency);
+	return Volume + (Volume * (Stack - 1) * Capacity.Efficiency);
 }
 
-FWeightAndVolume UFaerieCapacityToken::GetWeightAndVolumeOfStack(const FInventoryStack Stack) const
+FWeightAndVolume UFaerieCapacityToken::GetWeightAndVolumeOfStack(const int32 Stack) const
 {
 	return FWeightAndVolume(GetWeightOfStack(Stack), GetVolumeOfStack(Stack));
 }
 
-FWeightAndVolume UFaerieCapacityToken::GetWeightAndVolumeOfStackForRemoval(const FInventoryStack Current,
-																		   const FInventoryStack Removal) const
+FWeightAndVolume UFaerieCapacityToken::GetWeightAndVolumeOfStackForRemoval(const int32 Current,
+																		   const int32 Removal) const
 {
 	if (Removal <= 0) return FWeightAndVolume();
 
@@ -43,8 +43,8 @@ FWeightAndVolume UFaerieCapacityToken::GetWeightAndVolumeOfStackForRemoval(const
 	}
 	else
 	{
-		Out.GramWeight = Capacity.Weight * Removal.GetAmount();
-		Out.Volume = Capacity.GetVolume() * Removal.GetAmount() * Capacity.Efficiency;
+		Out.GramWeight = Capacity.Weight * Removal;
+		Out.Volume = Capacity.GetVolume() * Removal * Capacity.Efficiency;
 	}
 
 	return Out;

@@ -2,11 +2,12 @@
 
 #pragma once
 
+#include "FaerieItemSource.h"
 #include "ItemSlotHandle.h"
+#include "FaerieItemProxy.h"
 #include "ItemInstancingContext_Crafting.generated.h"
 
 class USquirrel;
-class UFaerieItemDataProxyBase;
 
 UCLASS()
 class FAERIEITEMGENERATOR_API UItemInstancingContext_Crafting : public UItemInstancingContext
@@ -16,7 +17,7 @@ class FAERIEITEMGENERATOR_API UItemInstancingContext_Crafting : public UItemInst
 public:
 	// Used to fill Required & Optional Slots
 	UPROPERTY()
-	TMap<FFaerieItemSlotHandle, TObjectPtr<UFaerieItemDataProxyBase>> InputEntryData;
+	TMap<FFaerieItemSlotHandle, FFaerieItemProxy> InputEntryData;
 
 	// When valid, this context can generate seeded output, otherwise implementations may choose to either fail or
 	// resolve to non-seeded output.

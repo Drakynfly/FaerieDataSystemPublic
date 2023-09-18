@@ -11,7 +11,7 @@
 /**
  * Responsible for displaying a single inventory entry in an entry list widget.
  */
-UCLASS()
+UCLASS(Abstract)
 class FAERIEINVENTORYCONTENT_API UEntryDisplayBase : public UUserWidget, public IUserObjectListEntry
 {
 	GENERATED_BODY()
@@ -25,5 +25,5 @@ protected:
 	TObjectPtr<UInventoryContentsBase> InventoryWidget;
 
 	UPROPERTY(BlueprintReadWrite, Category = "Entry Display")
-	TObjectPtr<UInventoryEntryProxy> LocalCache;
+	TObjectPtr<UInventoryStackProxy> LocalCache;
 };

@@ -3,10 +3,10 @@
 #include "Extensions/InventoryEjectionHandlerExtension.h"
 
 #include "FaerieItemDataProxy.h"
+#include "ItemContainerEvent.h"
 #include "Tokens/FaerieVisualActorClassToken.h"
-#include "ActorClasses/ItemRepresentationActor.h"
-
-#include "GameFramework/GameStateBase.h"
+#include "Actors/ItemRepresentationActor.h"
+#include "Engine/AssetManager.h"
 
 FFaerieEjectionEvent FFaerieEjectionEvent::FaerieEjectionEvent;
 
@@ -21,7 +21,7 @@ EEventExtensionResponse UInventoryEjectionHandlerExtension::AllowsRemoval(const 
 	return EEventExtensionResponse::NoExplicitResponse;
 }
 
-void UInventoryEjectionHandlerExtension::PostRemoval(const UFaerieItemContainerBase* Container, const Faerie::FItemContainerEvent& Event)
+void UInventoryEjectionHandlerExtension::PostRemoval(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event)
 {
 	// This extension only listens to Ejection removals
 	if (Event.Type != FFaerieEjectionEvent::Get().Removal_Ejection) return;
@@ -34,6 +34,7 @@ void UInventoryEjectionHandlerExtension::PostRemoval(const UFaerieItemContainerB
 
 	if (Event.Item->IsDataMutable())
 	{
+		// @todo figure out handling ejection of stacks
 		check(Stack.Copies == 1);
 	}
 
@@ -51,11 +52,9 @@ void UInventoryEjectionHandlerExtension::HandleNextInQueue()
 {
 	if (PendingEjectionQueue.IsEmpty()) return;
 
-	auto&& Stack = PendingEjectionQueue[0];
-
 	TSoftClassPtr<AItemRepresentationActor> ClassToSpawn;
 
-	if (auto&& ClassToken = Stack.Item->GetToken<UFaerieVisualActorClassToken>())
+	if (auto&& ClassToken = PendingEjectionQueue[0].Item->GetToken<UFaerieVisualActorClassToken>())
 	{
 		ClassToSpawn = ClassToken->GetActorClass();
 	}
@@ -70,7 +69,7 @@ void UInventoryEjectionHandlerExtension::HandleNextInQueue()
 	}
 	else
 	{
-		StreamableManager.RequestAsyncLoad(ClassToSpawn.ToSoftObjectPath(),
+		UAssetManager::GetStreamableManager().RequestAsyncLoad(ClassToSpawn.ToSoftObjectPath(),
 			FStreamableDelegate::CreateUObject(this, &ThisClass::PostLoadClassToSpawn, ClassToSpawn));
 	}
 }
@@ -91,21 +90,28 @@ void UInventoryEjectionHandlerExtension::PostLoadClassToSpawn(const TSoftClassPt
 		return;
 	}
 
-	auto&& PendingStack = PendingEjectionQueue[0];
-	PendingEjectionQueue.RemoveAt(0);
+	const AActor* OwningActor = GetTypedOuter<AActor>();
 
-	FTransform SpawnTransform = IsValid(RelativeSpawningComponent) ? RelativeSpawningComponent->GetComponentTransform() : GetOwner()->GetTransform();
+	if (!IsValid(OwningActor))
+	{
+		UE_LOG(LogTemp, Error, TEXT("InventoryEjectionHandlerExtension cannot find outer AActor. Ejection cancelled!"))
+		return;
+	}
+
+	FTransform SpawnTransform = IsValid(RelativeSpawningComponent) ? RelativeSpawningComponent->GetComponentTransform() : OwningActor->GetTransform();
 	SpawnTransform = SpawnTransform.GetRelativeTransform(RelativeSpawningTransform);
 	FActorSpawnParameters Args;
 	Args.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-	AItemRepresentationActor* NewPickup = GetOwner()->GetWorld()->SpawnActor<AItemRepresentationActor>(ActorClass, SpawnTransform, Args);
+	AItemRepresentationActor* NewPickup = OwningActor->GetWorld()->SpawnActor<AItemRepresentationActor>(ActorClass, SpawnTransform, Args);
 
 	if (IsValid(NewPickup))
 	{
 		UFaerieItemDataStackLiteral* FaerieItemStack = NewObject<UFaerieItemDataStackLiteral>(NewPickup);
-		FaerieItemStack->SetValue(PendingStack);
+		FaerieItemStack->SetValue(PendingEjectionQueue[0]);
 		NewPickup->SetSourceProxy(FaerieItemStack);
 	}
+
+	PendingEjectionQueue.RemoveAt(0);
 
 	HandleNextInQueue();
 }

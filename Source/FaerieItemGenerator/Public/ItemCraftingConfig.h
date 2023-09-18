@@ -3,7 +3,7 @@
 #pragma once
 
 #include "FaerieItemSlotUtils.h"
-#include "GenerationActionConfig.h"
+#include "CraftingActionConfig.h"
 #include "ItemCraftingConfig.generated.h"
 
 class UFaerieItemRecipe;
@@ -14,14 +14,14 @@ DECLARE_LOG_CATEGORY_EXTERN(LogItemCraftingConfig, Log, All);
  *
  */
 UCLASS()
-class FAERIEITEMGENERATOR_API UItemCraftingConfig : public UGenerationActionConfig, public IFaerieItemSlotInterface
+class FAERIEITEMGENERATOR_API UItemCraftingConfig : public UCraftingActionConfig, public IFaerieItemSlotInterface
 {
 	GENERATED_BODY()
 
 	UItemCraftingConfig() {}
 
 #if WITH_EDITOR
-	virtual EDataValidationResult IsDataValid(TArray<FText>& ValidationErrors) override;
+	virtual EDataValidationResult IsDataValid(FDataValidationContext& Context) const override;
 #endif
 
 public:

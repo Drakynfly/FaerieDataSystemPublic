@@ -16,7 +16,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FBenchInteractionEvent);
  * Primary uses are for chests, any other container, crafting/upgrading benches (origin of the name).
  */
 UCLASS(Abstract, Blueprintable, EditInlineNew, CollapseCategories)
-class FAERIEINVENTORYCONTENT_API UBenchBehaviorBase : public UNetSupportedObject
+class FAERIEINVENTORYCONTENT_API UBenchBehaviorBase : public UActorSubobjectBase
 {
 	GENERATED_BODY()
 
@@ -38,9 +38,6 @@ protected:
 	bool DefaultInteractionTest() const;
 
 public:
-	UFUNCTION(BlueprintCallable, Category = "Bench")
-	ABenchVisualBase* GetBenchVisualActor() const;
-
 	UFUNCTION(BlueprintCallable, Category = "Bench|Player Interaction")
 	TSubclassOf<UBenchInteractionWidgetBase> GetInteractionWidget() const { return InteractionWidget; }
 

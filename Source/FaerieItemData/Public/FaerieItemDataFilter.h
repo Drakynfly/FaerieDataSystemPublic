@@ -3,11 +3,20 @@
 #pragma once
 
 #include "UObject/Object.h"
+#include "FaerieItemDataProxy.h"
 #include "FaerieItemDataTypes.h"
 #include "FaerieItemDataFilter.generated.h"
 
-class UFaerieItemDataProxyBase;
+namespace Faerie::ItemData
+{
+	class FFilterLogger
+	{
+	public:
+		TArray<FText> Errors;
+	};
+}
 
+// @todo convert these to an struct, and implement with TInstancedStruct
 /**
  *
  */
@@ -24,8 +33,13 @@ public:
 	virtual EItemDataMutabilityStatus GetMutabilityStatus() const { return EItemDataMutabilityStatus::Unknown; }
 #endif
 
+	virtual bool ExecWithLog(const FFaerieItemStackView View, Faerie::ItemData::FFilterLogger* Logger) const
+	{
+		return Exec(View);
+	}
+
 	UFUNCTION(BlueprintCallable, Category = "Faerie|ItemDataFilter")
-	virtual bool Exec(const UFaerieItemDataProxyBase* Proxy) const PURE_VIRTUAL(UFaerieItemDataFilter::Exec, return false; )
+	virtual bool Exec(FFaerieItemStackView View) const PURE_VIRTUAL(UFaerieItemDataFilter::Exec, return false; )
 };
 
 USTRUCT(BlueprintType)

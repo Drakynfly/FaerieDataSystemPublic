@@ -20,17 +20,19 @@ class FAERIEITEMDATA_API UFaerieItemTemplate : public UObject
 
 public:
 #if WITH_EDITOR
-	virtual EDataValidationResult IsDataValid(FDataValidationContext& Context) override;
+	virtual EDataValidationResult IsDataValid(FDataValidationContext& Context) const override;
 #endif
 
+	bool TryMatchWithDescriptions(FFaerieItemStackView View, TArray<FText>& Errors) const;
+
 	UFUNCTION(BlueprintCallable, Category = "Faerie|ItemTemplate")
-	bool TryMatch(const UFaerieItemDataProxyBase* Proxy) const;
+	bool TryMatch(FFaerieItemStackView View) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Faerie|ItemTemplate")
 	const FFaerieAssetInfo& GetDescription() const { return Info; }
 
 	UFUNCTION(BlueprintCallable, Category = "Faerie|ItemTemplate")
-	UFaerieItemDataFilter* GetPattern() const { return Pattern; }
+	const UFaerieItemDataFilter* GetPattern() const { return Pattern; }
 
 protected:
 	UPROPERTY(EditInstanceOnly, Category = "Template")

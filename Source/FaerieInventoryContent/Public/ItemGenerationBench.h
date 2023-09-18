@@ -5,7 +5,7 @@
 #include "BenchBehaviorBase.h"
 #include "ItemGenerationBench.generated.h"
 
-class UItemGenerationDriver;
+class UItemGenerationConfig;
 
 /**
  *
@@ -15,11 +15,12 @@ class FAERIEINVENTORYCONTENT_API UItemGenerationBench : public UBenchBehaviorBas
 {
 	GENERATED_BODY()
 
+public:
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif
 
 protected:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, NoClear, Category = "ItemGeneration", meta = (NoResetToDefault))
-	TArray<TObjectPtr<UItemGenerationDriver>> Drivers;
+	TArray<TObjectPtr<UItemGenerationConfig>> Drivers;
 };

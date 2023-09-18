@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "InventoryExtensionBase.h"
+#include "ItemContainerExtensionBase.h"
 #include "CapacityStructs.h"
 #include "InventoryCapacityExtension.generated.h"
 
@@ -73,15 +73,13 @@ struct FCapacityExtensionState
     bool OverMaxVolume = false;
 };
 
-class UFaerieItemDataProxyBase;
-
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FInventoryCapacityEvent);
 
 /**
  * This class is the parser for extracting a Capacity out from Item Data.
  */
 UCLASS()
-class FAERIEINVENTORYCONTENT_API UInventoryCapacityExtension : public UInventoryExtensionBase
+class FAERIEINVENTORYCONTENT_API UInventoryCapacityExtension : public UItemContainerExtensionBase
 {
     GENERATED_BODY()
 
@@ -94,14 +92,14 @@ public:
 #endif
 
 protected:
-    //~ UInventoryExtensionBase
+    //~ UItemContainerExtensionBase
     virtual void InitializeExtension(const UFaerieItemContainerBase* Container) override;
     virtual void DeinitializeExtension(const UFaerieItemContainerBase* Container) override;
     virtual EEventExtensionResponse AllowsAddition(const UFaerieItemContainerBase* Container, FFaerieItemStackView Stack) override;
-    virtual void PostAddition(const UFaerieItemContainerBase* Container, const Faerie::FItemContainerEvent& Event) override;
-    virtual void PostRemoval(const UFaerieItemContainerBase* Container, const Faerie::FItemContainerEvent& Event) override;
+    virtual void PostAddition(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) override;
+    virtual void PostRemoval(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) override;
     virtual void PostEntryChanged(const UFaerieItemContainerBase* Container, const FEntryKey Key) override;
-    //~ UInventoryExtensionBase
+    //~ UItemContainerExtensionBase
 
 private:
     static FWeightAndVolume GetEntryWeightAndVolume(const UFaerieItemContainerBase* Container, const FEntryKey Key);
@@ -110,57 +108,57 @@ private:
 
     void CheckCapacityLimit();
 
-    bool CanContainToken(const class UFaerieCapacityToken* Token, const FInventoryStack Stack) const;
+    bool CanContainToken(const class UFaerieCapacityToken* Token, const int32 Stack) const;
 
     void AddWeightAndVolume(FWeightAndVolume Value);
 
-    void OnStateChanged();
-public:
+    void HandleStateChanged();
 
+public:
     // Tests if the capacity of an entry can fit in this container.
-    UFUNCTION(BlueprintPure, Category = "Inventory|Capacity")
+    UFUNCTION(BlueprintPure, Category = "Faerie|InventoryCapacity")
     bool CanContain(FFaerieItemStackView Stack) const;
 
     // Tests if the capacity of an item can fit in this container.
-    UFUNCTION(BlueprintPure, Category = "Inventory|Capacity")
-    bool CanContainProxy(const UFaerieItemDataProxyBase* Proxy) const;
+    UFUNCTION(BlueprintPure, Category = "Faerie|InventoryCapacity")
+    bool CanContainProxy(FFaerieItemProxy Proxy) const;
 
     // Get the configuration struct.
-    UFUNCTION(BlueprintPure, Category = "Inventory|Capacity")
+    UFUNCTION(BlueprintPure, Category = "Faerie|InventoryCapacity")
     const FCapacityExtensionConfig& GetCapacityConfig() const { return Config; }
 
     // Get the current state struct.
-    UFUNCTION(BlueprintPure, Category = "Inventory|Capacity")
+    UFUNCTION(BlueprintPure, Category = "Faerie|InventoryCapacity")
     FCapacityExtensionState GetCurrentState() const { return State; }
 
     // Get the current amount filled.
-    UFUNCTION(BlueprintPure, Category = "Inventory|Capacity")
+    UFUNCTION(BlueprintPure, Category = "Faerie|InventoryCapacity")
     FWeightAndVolume GetCurrentCapacity() const;
 
     // Get the maximum amount that this manager can hold.
-    UFUNCTION(BlueprintPure, Category = "Inventory|Capacity")
+    UFUNCTION(BlueprintPure, Category = "Faerie|InventoryCapacity")
     FWeightAndVolume GetMaxCapacity() const;
 
-    UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Inventory|Capacity")
+    UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Faerie|InventoryCapacity")
     void SetConfiguration(const FCapacityExtensionConfig& NewConfig);
 
-    UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Inventory|Capacity")
+    UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Faerie|InventoryCapacity")
     void SetMaxCapacity(const FWeightAndVolume NewMax);
 
-    UFUNCTION(BlueprintPure, Category = "Inventory|Capacity")
+    UFUNCTION(BlueprintPure, Category = "Faerie|InventoryCapacity")
     float GetPercentageFullForWeightAndVolume(const FWeightAndVolume& WeightAndVolume) const;
 
     // Get our current percentage "fullness"
-    UFUNCTION(BlueprintPure, Category = "Inventory|Capacity")
+    UFUNCTION(BlueprintPure, Category = "Faerie|InventoryCapacity")
     float GetPercentageFull() const;
 
-    // Broadcast whenever the current capacity changes.
-    UPROPERTY(BlueprintCallable, BlueprintAssignable, Category = "Inventory|Capacity|Events")
-    FInventoryCapacityEvent OnCapacityChanged;
+    // Broadcast whenever the state changes.
+    UPROPERTY(BlueprintCallable, BlueprintAssignable, Category = "Events")
+    FInventoryCapacityEvent OnStateChanged;
 
-    // Broadcast whenever the max capacity changes.
-    UPROPERTY(BlueprintCallable, BlueprintAssignable, Category = "Inventory|Capacity|Events")
-    FInventoryCapacityEvent OnMaxCapacityChanged;
+    // Broadcast whenever the config changes.
+    UPROPERTY(BlueprintCallable, BlueprintAssignable, Category = "Events")
+    FInventoryCapacityEvent OnConfigurationChanged;
 
 protected:
     UFUNCTION()
@@ -178,5 +176,5 @@ protected:
 
     // Cache of all entries to maintain serverside integrity.
     // @todo actually use this to validate State
-    TMap<TPair<TWeakObjectPtr<const UFaerieItemContainerBase>, FEntryKey>, FWeightAndVolume> ServerCapacityCache;
+    TMap<TWeakObjectPtr<const UFaerieItemContainerBase>, TMap<FEntryKey, FWeightAndVolume>> ServerCapacityCache;
 };

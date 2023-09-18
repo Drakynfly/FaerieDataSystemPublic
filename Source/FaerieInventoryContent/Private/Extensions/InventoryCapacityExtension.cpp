@@ -2,9 +2,7 @@
 
 #include "Extensions/InventoryCapacityExtension.h"
 
-#include "FaerieEquipmentSlot.h"
 #include "FaerieItem.h"
-#include "FaerieItemDataProxy.h"
 #include "FaerieItemStorage.h"
 #include "Net/UnrealNetwork.h"
 #include "Tokens/FaerieCapacityToken.h"
@@ -50,29 +48,31 @@ void UInventoryCapacityExtension::InitializeExtension(const UFaerieItemContainer
 {
 	if (!ensure(IsValid(Container))) return;
 
-	Container->ForEachKey([this, Container](const FEntryKey Key)
+	Container->ForEachKey(
+		[this, Container](const FEntryKey Key)
 		{
 			UpdateCacheForEntry(Container, Key);
 		});
 
-	OnStateChanged();
+	HandleStateChanged();
 }
 
 void UInventoryCapacityExtension::DeinitializeExtension(const UFaerieItemContainerBase* Container)
 {
 	if (!ensure(IsValid(Container))) return;
 
-	Container->ForEachKey([this, Container](const FEntryKey Key)
-		{
-			const TPair<TWeakObjectPtr<const UFaerieItemContainerBase>, FEntryKey> CacheKey = {Container, Key};
-			FWeightAndVolume Cache;
-			ServerCapacityCache.RemoveAndCopyValue(CacheKey, Cache);
+	if (!ServerCapacityCache.Contains(Container)) return;
 
-			// Remove the existing cache by adding its inverse
-			AddWeightAndVolume(-Cache);
-		});
+	for (auto&& Cache = ServerCapacityCache[Container];
+		auto&& Element : Cache)
+	{
+		// Remove the existing cache by adding its inverse
+		AddWeightAndVolume(-Element.Value);
+	}
 
-	OnStateChanged();
+	ServerCapacityCache.Remove(Container);
+
+	HandleStateChanged();
 }
 
 EEventExtensionResponse UInventoryCapacityExtension::AllowsAddition(const UFaerieItemContainerBase* Container, const FFaerieItemStackView Stack)
@@ -86,53 +86,62 @@ EEventExtensionResponse UInventoryCapacityExtension::AllowsAddition(const UFaeri
 	return EEventExtensionResponse::Allowed;
 }
 
-void UInventoryCapacityExtension::PostAddition(const UFaerieItemContainerBase* Container, const Faerie::FItemContainerEvent& Event)
+void UInventoryCapacityExtension::PostAddition(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event)
 {
 	UpdateCacheForEntry(Container, Event.EntryTouched);
-	OnStateChanged();
+	HandleStateChanged();
 }
 
-void UInventoryCapacityExtension::PostRemoval(const UFaerieItemContainerBase* Container, const Faerie::FItemContainerEvent& Event)
+void UInventoryCapacityExtension::PostRemoval(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event)
 {
 	UpdateCacheForEntry(Container, Event.EntryTouched);
-	OnStateChanged();
+	HandleStateChanged();
 }
 
 void UInventoryCapacityExtension::PostEntryChanged(const UFaerieItemContainerBase* Container, const FEntryKey Key)
 {
 	UpdateCacheForEntry(Container, Key);
-	OnStateChanged();
+	HandleStateChanged();
 }
 
 FWeightAndVolume UInventoryCapacityExtension::GetEntryWeightAndVolume(const UFaerieItemContainerBase* Container, const FEntryKey Key)
 {
 	FWeightAndVolume Out;
 
+	const FFaerieItemStackView View = Container->View(Key);
+	if (!IsValid(View.Item))
+	{
+		return Out;
+	}
+
+	auto&& Token = View.Item->GetToken<UFaerieCapacityToken>();
+	if (!IsValid(Token))
+	{
+		return Out;
+	}
+
+	Out.GramWeight = Token->GetWeightOfStack(View.Copies);
+
 	if (auto&& AsStorage = Cast<UFaerieItemStorage>(Container))
 	{
-		FInventoryEntry Entry;
-		AsStorage->GetEntry(Key, Entry);
-
-		if (auto&& Token = Entry.ItemObject->GetToken<UFaerieCapacityToken>())
+		// @todo a nicer way to do this would be ideal. but since UFaerieItemStorage has custom stacking logic, we
+		// have to sum it seperately to handle efficiency per stack correctly
+		const FConstStructView EntryView = AsStorage->GetEntryView(Key);
+		if (!ensure(EntryView.IsValid()))
 		{
-			Out.GramWeight = Token->GetWeightOfStack(Entry.StackSum());
+			return Out;
+		}
 
-			for (auto&& KeyedStack : Entry.Stacks)
-			{
-				Out.Volume += Token->GetVolumeOfStack(KeyedStack.Stack);
-			}
+		for (const FInventoryEntry& Entry = EntryView.Get<const FInventoryEntry>();
+			auto&& KeyedStack : Entry.Stacks)
+		{
+			Out.Volume += Token->GetVolumeOfStack(KeyedStack.Stack);
 		}
 	}
-	else if (auto&& AsEquipment = Cast<UFaerieEquipmentSlot>(Container))
+	else
 	{
-		if (auto&& Item = AsEquipment->GetItem())
-		{
-			if (auto&& Token = Item->GetToken<UFaerieCapacityToken>())
-			{
-				Out.GramWeight = Token->GetWeightOfStack(1);
-				Out.Volume += Token->GetVolumeOfStack(1);
-			}
-		}
+		// Other container types (like EquipmentSlot) fallback to the default logic
+		Out.Volume += Token->GetVolumeOfStack(View.Copies);
 	}
 
 	return Out;
@@ -142,9 +151,8 @@ void UInventoryCapacityExtension::UpdateCacheForEntry(const UFaerieItemContainer
 {
 	if (!ensure(IsValid(Container))) return;
 
-	const TPair<TWeakObjectPtr<const UFaerieItemContainerBase>, FEntryKey> CacheKey = {Container, Key};
-
-	auto&& PrevCache = ServerCapacityCache.Find(CacheKey);
+	auto&& ContainerCache = ServerCapacityCache.FindOrAdd(Container);
+	auto&& PrevCache = ContainerCache.Find(Key);
 
 	if (!Container->IsValidKey(Key))
 	{
@@ -152,7 +160,7 @@ void UInventoryCapacityExtension::UpdateCacheForEntry(const UFaerieItemContainer
 		{
 			// Remove the existing cache by adding its inverse
 			AddWeightAndVolume(-*PrevCache);
-			ServerCapacityCache.Remove(CacheKey);
+			ContainerCache.Remove(Key);
 		}
 		return;
 	}
@@ -166,7 +174,7 @@ void UInventoryCapacityExtension::UpdateCacheForEntry(const UFaerieItemContainer
 		Diff -= *PrevCache;
 	}
 
-	ServerCapacityCache.Add(CacheKey, Total);
+	ContainerCache.Add(Key, Total);
 	AddWeightAndVolume(Diff);
 }
 
@@ -187,7 +195,7 @@ void UInventoryCapacityExtension::CheckCapacityLimit()
 	}
 }
 
-bool UInventoryCapacityExtension::CanContainToken(const UFaerieCapacityToken* Token, const FInventoryStack Stack) const
+bool UInventoryCapacityExtension::CanContainToken(const UFaerieCapacityToken* Token, const int32 Stack) const
 {
 	// We can always contain items with no capacity requirement.
 	if (!IsValid(Token))
@@ -244,11 +252,11 @@ void UInventoryCapacityExtension::AddWeightAndVolume(const FWeightAndVolume Valu
 	State.CurrentVolume += Value.Volume;
 }
 
-void UInventoryCapacityExtension::OnStateChanged()
+void UInventoryCapacityExtension::HandleStateChanged()
 {
 	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, State, this);
 	CheckCapacityLimit();
-	OnCapacityChanged.Broadcast();
+	OnStateChanged.Broadcast();
 }
 
 bool UInventoryCapacityExtension::CanContain(const FFaerieItemStackView Stack) const
@@ -263,9 +271,9 @@ bool UInventoryCapacityExtension::CanContain(const FFaerieItemStackView Stack) c
 	return CanContainToken(CapacityToken, Stack.Copies);
 }
 
-bool UInventoryCapacityExtension::CanContainProxy(const UFaerieItemDataProxyBase* Proxy) const
+bool UInventoryCapacityExtension::CanContainProxy(const FFaerieItemProxy Proxy) const
 {
-	if (!ensure(IsValid(Proxy)))
+	if (!ensure(Proxy.IsValid()))
 	{
 		return false;
 	}
@@ -284,9 +292,9 @@ bool UInventoryCapacityExtension::CanContainProxy(const UFaerieItemDataProxyBase
 		return Config.AllowEntriesWithNoCapacityToken;
 	}
 
-	const FInventoryStack Stack =  Proxy->GetCopies();
+	const int32 Stack = Proxy->GetCopies();
 
-	if (!Stack.IsValid())
+	if (!Faerie::ItemData::IsValidStack(Stack))
 	{
 		return false;
 	}
@@ -317,7 +325,7 @@ void UInventoryCapacityExtension::SetConfiguration(const FCapacityExtensionConfi
 
 	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, Config, this);
 	CheckCapacityLimit();
-	OnMaxCapacityChanged.Broadcast();
+	OnConfigurationChanged.Broadcast();
 }
 
 void UInventoryCapacityExtension::SetMaxCapacity(const FWeightAndVolume NewMax)
@@ -326,7 +334,7 @@ void UInventoryCapacityExtension::SetMaxCapacity(const FWeightAndVolume NewMax)
 	Config.MaxVolume = NewMax.Volume;
 	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, Config, this);
 	CheckCapacityLimit();
-	OnMaxCapacityChanged.Broadcast();
+	OnConfigurationChanged.Broadcast();
 }
 
 float UInventoryCapacityExtension::GetPercentageFullForWeightAndVolume(const FWeightAndVolume& WeightAndVolume) const
@@ -358,10 +366,10 @@ float UInventoryCapacityExtension::GetPercentageFull() const
 
 void UInventoryCapacityExtension::OnRep_Config()
 {
-	OnMaxCapacityChanged.Broadcast();
+	OnConfigurationChanged.Broadcast();
 }
 
 void UInventoryCapacityExtension::OnRep_State()
 {
-	OnCapacityChanged.Broadcast();
+	OnStateChanged.Broadcast();
 }

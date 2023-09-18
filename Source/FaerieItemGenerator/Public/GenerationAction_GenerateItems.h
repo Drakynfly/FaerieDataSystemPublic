@@ -3,23 +3,24 @@
 #pragma once
 
 #include "GenerationAction.h"
-#include "ItemGeneratorConfig.h"
 #include "GenerationAction_GenerateItems.generated.h"
 
-class UItemGenerationDriver;
+struct FPendingItemGeneration;
+class UItemGenerationConfig;
 
 /**
  * Contains the asynchronous generation logic for inventory entries.
+ * // @todo should be renamed to UCraftingAction_Generate
  */
 UCLASS()
-class UGenerationAction_GenerateItems : public UGenerationActionBase
+class UGenerationAction_GenerateItems : public UCraftingActionBase
 {
 	GENERATED_BODY()
 
 public:
 	struct FActionArgs : Super::FActionArgs
 	{
-		TArray<TObjectPtr<UItemGenerationDriver>> Drivers;
+		TArray<TObjectPtr<UItemGenerationConfig>> Drivers;
 	};
 
 	void Configure(FActionArgs& Args);

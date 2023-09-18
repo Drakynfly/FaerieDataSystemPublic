@@ -11,7 +11,7 @@ class UFaerieItemToken;
 class UFaerieItemTemplate;
 
 /**
- * A basic item definition. Can be used to generate generic items with no procedural data.
+ * A basic item definition. Used to generate generic items with no procedural data.
  */
 UCLASS(Const)
 class FAERIEITEMDATA_API UFaerieItemAsset : public UObject, public IFaerieItemSource
@@ -22,7 +22,7 @@ public:
 	virtual void PreSave(FObjectPreSaveContext SaveContext) override;
 
 #if WITH_EDITOR
-	virtual EDataValidationResult IsDataValid(FDataValidationContext& Context) override;
+	virtual EDataValidationResult IsDataValid(FDataValidationContext& Context) const override;
 #endif
 
 	//~ IFaerieItemSource
@@ -31,15 +31,16 @@ public:
 	//~ IFaerieItemSource
 
 protected:
-	UPROPERTY(VisibleAnywhere, DuplicateTransient)
+	UPROPERTY(VisibleAnywhere, DuplicateTransient, Category = "ItemAsset")
 	TObjectPtr<UFaerieItem> Item;
 
 #if WITH_EDITORONLY_DATA
 	// Tokens used to build the Item. Only exist in the editor, as the item is compiled by PreSave.
-	UPROPERTY(EditInstanceOnly, Instanced)
+	UPROPERTY(EditInstanceOnly, Instanced, Category = "ItemAsset")
 	TArray<TObjectPtr<UFaerieItemToken>> Tokens;
 
-	UPROPERTY(EditInstanceOnly)
+	// Item template, used to verify that the generated item follows an expected pattern.
+	UPROPERTY(EditInstanceOnly, Category = "ItemAsset")
 	TObjectPtr<UFaerieItemTemplate> Template;
 #endif
 };

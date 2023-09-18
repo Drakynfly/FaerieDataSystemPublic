@@ -15,47 +15,25 @@ LLM_DEFINE_TAG(ItemStorage, NAME_None, NAME_None, GET_STATFNAME(STAT_StorageLLM)
 
 FEntryKey FEntryKey::InvalidKey;
 
-int32 FInventoryStack::EmptyStackNum = 0;
-int32 FInventoryStack::UnlimitedNum = -1;
-FInventoryStack FInventoryStack::EmptyStack(0);
-FInventoryStack FInventoryStack::UnlimitedStack = MakeUnlimitedStack();
-
-bool FInventoryStack::IsValid() const
-{
-	return Amount > 0 || Amount == UnlimitedNum;
-}
-
-FInventoryStack FInventoryStack::MakeUnlimitedStack()
-{
-	FInventoryStack Stack;
-	Stack.Amount = -1;
-	return Stack;
-}
-
-FInventoryStack FInventoryEntry::GetStack(const FStackKey& Key) const
+int32 FInventoryEntry::GetStack(const FStackKey& Key) const
 {
 	if (auto&& KeyedStack = Stacks.FindByKey(Key))
 	{
 		return KeyedStack->Stack;
 	}
-	return FInventoryStack::EmptyStack;
+	return 0;
 }
 
-TArray<FStackKey> FInventoryEntry::GetKeys() const
+TArray<FStackKey> FInventoryEntry::CopyKeys() const
 {
 	TArray<FStackKey> Out;
-
-	for (auto&& KeyedStack : Stacks)
-	{
-		Out.Add(KeyedStack.Key);
-	}
-
+	Algo::Transform(Stacks, Out, &FKeyedStack::Key);
 	return Out;
 }
 
-FInventoryStack FInventoryEntry::StackSum() const
+int32 FInventoryEntry::StackSum() const
 {
-	FInventoryStack Out = 0;
+	int32 Out = 0;
 
 	for (auto&& KeyedStack : Stacks)
 	{
@@ -65,13 +43,12 @@ FInventoryStack FInventoryEntry::StackSum() const
 	return Out;
 }
 
-void FInventoryEntry::Set(const FStackKey& Key, const FInventoryStack Stack)
+void FInventoryEntry::SetStack(const FStackKey& Key, const int32 Stack)
 {
-	if (Stack == FInventoryStack::EmptyStack)
+	if (Stack <= 0)
 	{
-		const int32 StackIndex = Algo::BinarySearchBy(Stacks, Key, &FKeyedStack::Key, FStackKey::FCompare());
-
-		if (Stacks.IsValidIndex(StackIndex))
+		if (const int32 StackIndex = Algo::BinarySearchBy(Stacks, Key, &FKeyedStack::Key);
+			Stacks.IsValidIndex(StackIndex))
 		{
 			Stacks.RemoveAt(StackIndex);
 		}
@@ -88,15 +65,15 @@ void FInventoryEntry::Set(const FStackKey& Key, const FInventoryStack Stack)
 	}
 }
 
-FInventoryStack FInventoryEntry::AddToAnyStack(FInventoryStack Stack, TArray<FStackKey>* OutAddedKeys)
+int32 FInventoryEntry::AddToAnyStack(int32 Stack, TArray<FStackKey>* OutAddedKeys)
 {
 	// Fill existing stacks first
 	for (auto& KeyedStack : Stacks)
 	{
-		if (Limit == FInventoryStack::UnlimitedStack)
+		if (Limit == Faerie::ItemData::UnlimitedStack)
 		{
 			KeyedStack.Stack += Stack;
-			Stack -= Stack;
+			Stack = 0;
 			break;
 		}
 
@@ -109,14 +86,14 @@ FInventoryStack FInventoryEntry::AddToAnyStack(FInventoryStack Stack, TArray<FSt
 	}
 
 	// We have dispersed the incoming stack among existing ones.
-	if (Stack == FInventoryStack::EmptyStack)
+	if (Stack == 0)
 	{
 		return Stack;
 	}
 
 	TArray<FStackKey> AddedStacks;
 
-	if (Limit == FInventoryStack::UnlimitedStack)
+	if (Limit == Faerie::ItemData::UnlimitedStack)
 	{
 		const FStackKey NewKey = AddedStacks.Add_GetRef(StackCount++);
 		Stacks.Add({NewKey, Stack});
@@ -127,7 +104,7 @@ FInventoryStack FInventoryEntry::AddToAnyStack(FInventoryStack Stack, TArray<FSt
 		while (Stack > 0)
 		{
 			const FStackKey NewKey = AddedStacks.Add_GetRef(StackCount++);
-			const FInventoryStack NewStack = FMath::Min(Stack, Limit);
+			const int32 NewStack = FMath::Min(Stack, Limit);
 			Stack -= NewStack;
 			Stacks.Add({NewKey, NewStack});
 		}
@@ -141,16 +118,15 @@ FInventoryStack FInventoryEntry::AddToAnyStack(FInventoryStack Stack, TArray<FSt
 	return Stack;
 }
 
-FInventoryStack FInventoryEntry::RemoveFromAnyStack(FInventoryStack Amount, TArray<FStackKey>* OutAllModifiedKeys, TArray<FStackKey>* OutRemovedKeys)
+int32 FInventoryEntry::RemoveFromAnyStack(int32 Amount, TArray<FStackKey>* OutAllModifiedKeys, TArray<FStackKey>* OutRemovedKeys)
 {
 	TArray<FStackKey> RemovedStacks;
 
 	// Remove from tail stack first
 	for (int32 i = Stacks.Num() - 1; i >= 0; --i)
 	{
-		FKeyedStack& KeyedStack = Stacks[i];
-
-		if (Amount >= KeyedStack.Stack)
+		if (FKeyedStack& KeyedStack = Stacks[i];
+			Amount >= KeyedStack.Stack)
 		{
 			RemovedStacks.Add(KeyedStack.Key);
 			Amount -= KeyedStack.Stack;
@@ -183,35 +159,40 @@ FInventoryStack FInventoryEntry::RemoveFromAnyStack(FInventoryStack Amount, TArr
 
 bool FInventoryEntry::IsValid() const
 {
+	// No item, obviously invalid
 	if (!ItemObject) return false;
 
+	// No stacks, invalid
 	if (Stacks.IsEmpty()) return false;
 
-	if (!Limit.IsValid()) return false;
+	// Invalid limit
+	if (!Faerie::ItemData::IsValidStack(Limit)) return false;
 
-	for (auto&& Stack : Stacks)
+	// Check that each stack is valid
+	for (auto&& Element : Stacks)
 	{
-		if (!Stack.Key.IsValid() || !Stack.Stack.IsValid())
+		if (!Element.Key.IsValid() || !Faerie::ItemData::IsValidStack(Element.Stack))
 		{
 			return false;
 		}
 	}
 
+	// Everything is good
 	return true;
 }
 
-FFaerieItemStack FInventoryEntry::ToItemStack() const
+FFaerieItemStackView FInventoryEntry::ToItemStackView() const
 {
-	FFaerieItemStack Stack;
+	FFaerieItemStackView Stack;
 	Stack.Item = ItemObject;
-	Stack.Copies = StackSum().GetAmount();
+	Stack.Copies = StackSum();
 	return Stack;
 }
 
 bool FInventoryEntry::IsEqualTo(const FInventoryEntry& A, const FInventoryEntry& B, const EEntryEquivelancyFlags CheckFlags)
 {
 #define TEST_FLAG(Flag, Test)\
-	if (EnumHasAnyFlags(CheckFlags, EEntryEquivelancyFlags::##Flag)) if (!(Test)) return false;
+	if (EnumHasAnyFlags(CheckFlags, EEntryEquivelancyFlags::Test_##Flag)) if (!(Test)) return false;
 
 	TEST_FLAG(ItemData, UFaerieItemDataLibrary::Equal_ItemData(A.ItemObject, B.ItemObject));
 	TEST_FLAG(StackSum, A.StackSum() == B.StackSum());
@@ -237,44 +218,6 @@ void FKeyedInventoryEntry::PostReplicatedChange(const FInventoryContent& InArray
 	InArraySerializer.PostEntryReplicatedChange(*this);
 }
 
-int32 FInventoryContent::IndexOf(const FEntryKey Key) const
-{
-	// Search for Key in the Items. Since those do not share Type, a projection is provided, in the form of the address
-	// of the appropriate member to compare against. Finally the custom Predicate is provided.
-	return Algo::BinarySearchBy(Items, Key, &FKeyedInventoryEntry::Key, FEntryKey::FCompare());
-}
-
-bool FInventoryContent::Contains(const FEntryKey Key) const
-{
-	return IndexOf(Key) != INDEX_NONE;
-}
-
-const FInventoryEntry* FInventoryContent::Find(const FEntryKey Key) const
-{
-	const int32 Index = IndexOf(Key);
-
-	if (Index != INDEX_NONE)
-	{
-		return &Items[Index].Entry;
-	}
-	return nullptr;
-}
-
-const FInventoryEntry& FInventoryContent::operator[](const FEntryKey Key) const
-{
-	return Items[IndexOf(Key)].Entry;
-}
-
-FEntryKey FInventoryContent::GetKeyAt(const int32 Index) const
-{
-	if (!Items.IsValidIndex(Index))
-	{
-		return FEntryKey();
-	}
-
-	return Items[Index].Key;
-}
-
 FKeyedInventoryEntry& FInventoryContent::Append(const FEntryKey Key, const FInventoryEntry& Entry)
 {
 	check(Key.IsValid());
@@ -282,13 +225,25 @@ FKeyedInventoryEntry& FInventoryContent::Append(const FEntryKey Key, const FInve
 	LLM_SCOPE_BYTAG(ItemStorage);
 
 	// Quick validation that Key *should* be stuck at the end of the array.
-	if (!Items.IsEmpty())
+	if (!Entries.IsEmpty())
 	{
-		checkf(FEntryKey::FCompare()(Items.Last().Key, Key),
+		checkf(Entries.Last().Key < Key,
 			TEXT("If this is hit, then Key is not sequential and Append was not safe to use. Either use a validated Key, or use FInventoryContent::Insert"));
 	}
 
-	FKeyedInventoryEntry& NewItemRef = Items.Add_GetRef({Key, Entry});
+	FKeyedInventoryEntry& NewItemRef = Entries.Add_GetRef({Key, Entry});
+	MarkItemDirty(NewItemRef);
+	ChangeListener->PostContentAdded(NewItemRef);
+	return NewItemRef;
+}
+
+FKeyedInventoryEntry& FInventoryContent::AppendUnsafe(FEntryKey Key, const FInventoryEntry& Entry)
+{
+	check(Key.IsValid());
+
+	LLM_SCOPE_BYTAG(ItemStorage);
+
+	FKeyedInventoryEntry& NewItemRef = Entries.Add_GetRef({Key, Entry});
 	MarkItemDirty(NewItemRef);
 	ChangeListener->PostContentAdded(NewItemRef);
 	return NewItemRef;
@@ -300,54 +255,21 @@ void FInventoryContent::Insert(const FEntryKey Key, const FInventoryEntry& Entry
 
 	LLM_SCOPE_BYTAG(ItemStorage);
 
-	// Find the index of either ahead of where Key currently is, or where it should be inserted if it isn't present.
-	const int32 NextIndex = Algo::UpperBoundBy(Items, Key, &FKeyedInventoryEntry::Key, FEntryKey::FCompare());
+	FKeyedInventoryEntry& NewEntry = BSOA::Insert({Key, Entry});
 
-	if (NextIndex < Items.Num())
-	{
-		// Check if the index-1 is our key, and overwrite the data there if so.
-		FKeyedInventoryEntry& CurrentEntry = Items[NextIndex-1];
-
-		if (CurrentEntry.Key == Key)
-		{
-			CurrentEntry.Entry = Entry;
-			ChangeListener->PostContentChanged(CurrentEntry);
-			MarkItemDirty(CurrentEntry);
-		}
-	}
-	// Otherwise, we were given a key not present and we should insert the Entry at the Index.
-	else
-	{
-		FKeyedInventoryEntry& NewItemRef = Items.Insert_GetRef({Key, Entry}, NextIndex);
-		MarkItemDirty(NewItemRef);
-		ChangeListener->PostContentAdded(NewItemRef);
-	}
-}
-
-void FInventoryContent::Sort()
-{
-	struct FCompare
-	{
-		bool operator()(const FKeyedInventoryEntry& A, const FKeyedInventoryEntry& B) const
-		{
-			return A.Key.Value() < B.Key.Value();
-		}
-	};
-
-	Algo::Sort(Items, FCompare());
-	// We don't bother to mark anything dirty right now. If clients become out-of-order, they can call this themselves.
-	// If this causes problems, oops.
+	ChangeListener->PostContentAdded(NewEntry);
+	MarkItemDirty(NewEntry);
 }
 
 void FInventoryContent::Remove(const FEntryKey Key)
 {
-	const int32 Index = IndexOf(Key);
-	if (Index != INDEX_NONE)
+	if (BSOA::Remove(Key,
+		[this](const FKeyedInventoryEntry& Entry)
+		{
+			// Notify owning server of this removal.
+			ChangeListener->PreContentRemoved(Entry);
+		}))
 	{
-		// Notify owning server of this removal.
-		ChangeListener->PreContentRemoved(Items[Index]);
-		Items.RemoveAt(Index);
-
 		// Notify clients of this removal.
 		MarkArrayDirty();
 	}
@@ -388,13 +310,13 @@ void FInventoryContent::PostEntryReplicatedChange(const FKeyedInventoryEntry& En
 
 namespace Faerie::Inventory
 {
-	void Utils::BreakKeyedEntriesIntoInventoryKeys(const TArray<FKeyedInventoryEntry>& Entries,
-		TArray<FInventoryKey>& OutKeys)
+	void BreakKeyedEntriesIntoInventoryKeys(const TArray<FKeyedInventoryEntry>& Entries, TArray<FInventoryKey>& OutKeys)
 	{
 		OutKeys.Empty(Entries.Num());
+
 		for (auto&& Entry : Entries)
 		{
-			for (auto&& Stack : Entry.Entry.Stacks)
+			for (auto&& Stack : Entry.Value.Stacks)
 			{
 				OutKeys.Add({Entry.Key, Stack.Key});
 			}

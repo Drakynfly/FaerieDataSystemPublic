@@ -29,12 +29,14 @@ public class FaerieInventoryContent : ModuleRules
                 "FaerieEquipment",
                 "FaerieInventory",
                 "FaerieItemGenerator",
-                "FaerieItemData"
+                "FaerieItemData",
+                "FaerieItemMesh"
             });
 
         PrivateDependencyModuleNames.AddRange(
             new[]
             {
+                "FaerieDataUtils",
                 "GeometryScriptingCore",
                 "GeometryFramework"
             });

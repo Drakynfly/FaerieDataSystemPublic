@@ -2,8 +2,11 @@
 
 #pragma once
 
-#include "UObject/Object.h"
+#include "Internationalization/Text.h"
+
 #include "FaerieInfoObject.generated.h"
+
+class UTexture2D;
 
 /**
  * A common set of properties for displaying information about an item/asset/thing to the player.
@@ -15,7 +18,7 @@ struct FFaerieAssetInfo
 
 	// A name or very short description of the object.
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "FaerieInfoObject")
-	FText ObjectName = NSLOCTEXT("FaerieAssetInfo", "ObjectNameUnknown", "{UNKNOWN_NAME}");
+	FText ObjectName;
 
 	// A single line description, such as a "blurb", or subtitle.
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "FaerieInfoObject")

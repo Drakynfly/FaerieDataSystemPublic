@@ -5,9 +5,9 @@
 #include "Blueprint/UserWidget.h"
 #include "ActorClasses/FaerieInventoryClient.h"
 #include "FaerieItemStorage.h"
-#include "InventorySortRule.h"
 #include "InventoryContentsBase.generated.h"
 
+class UFaerieItemDataComparator;
 class UFaerieItemDataFilter;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogInventoryContents, Log, All)
@@ -15,29 +15,28 @@ DECLARE_LOG_CATEGORY_EXTERN(LogInventoryContents, Log, All)
 /**
  *
  */
-UCLASS()
+UCLASS(Abstract)
 class FAERIEINVENTORYCONTENT_API UInventoryContentsBase : public UUserWidget
 {
 	GENERATED_BODY()
 
 	friend class UInventoryUIAction;
 
-private:
+public:
 	virtual bool Initialize() override;
-
 	virtual void NativeConstruct() override;
-
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
+private:
 	void Reset();
 
 	void CreateActions();
 
 	UFUNCTION()
-	bool DefaultFilter(const FInventoryEntry& Entry);
+	bool ExecFilter(const FFaerieItemProxy& Entry);
 
 	UFUNCTION()
-	bool DefaultSort(const FInventoryEntry& A, const FInventoryEntry& B);
+	bool ExecSort(const FFaerieItemProxy& A, const FFaerieItemProxy& B);
 
 protected:
 	virtual void NativeEntryAdded(UFaerieItemStorage* Storage, FEntryKey Key);
@@ -72,7 +71,7 @@ public:
 	void ResetFilter(bool bResort = true);
 
 	UFUNCTION(BlueprintCallable, Category = "Inventory Contents|Display")
-	void SetSortRule(UInventorySortRule* Rule, bool bResort = true);
+	void SetSortRule(UFaerieItemDataComparator* Rule, bool bResort = true);
 
 	UFUNCTION(BlueprintCallable, Category = "Inventory Contents|Display")
 	void SetSortReverse(bool Reverse, bool bResort = true);
@@ -100,11 +99,13 @@ protected:
 	void OnKeyRemoved(FInventoryKey Key);
 
 
-protected:
 	/// ***		SETUP		*** ///
-
+protected:
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Instanced, Category = "Display", NoClear)
 	TObjectPtr<UFaerieItemDataFilter> DefaultFilterRule;
+
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Instanced, Category = "Display", NoClear)
+	TObjectPtr<UFaerieItemDataComparator> DefaultSortRule;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Config")
 	TArray<TSubclassOf<UInventoryUIAction>> ActionClasses;
@@ -119,6 +120,9 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, Category = "Runtime")
 	TArray<FInventoryKey> SortedAndFilteredKeys;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Runtime")
+	TObjectPtr<UFaerieItemDataFilter> ActiveFilterRule;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Runtime")
 	TObjectPtr<UFaerieItemDataComparator> ActiveSortRule;
@@ -139,13 +143,4 @@ private:
 
 	bool NeedsResort = false;
 	bool NeedsReconstructEntries = false;
-
-	UPROPERTY()
-	TObjectPtr<UInventoryEntryLiteral> DefaultFilterProxyObject;
-
-	UPROPERTY()
-	TObjectPtr<UInventoryEntryLiteral> DefaultSortProxyAObject;
-
-	UPROPERTY()
-	TObjectPtr<UInventoryEntryLiteral> DefaultSortProxyBObject;
 };

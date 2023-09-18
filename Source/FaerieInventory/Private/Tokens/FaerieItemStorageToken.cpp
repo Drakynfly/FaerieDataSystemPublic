@@ -2,23 +2,47 @@
 
 #include "Tokens/FaerieItemStorageToken.h"
 #include "FaerieItemStorage.h"
+#include "ItemContainerExtensionBase.h"
 #include "Net/UnrealNetwork.h"
 
-UFaerieItemStorageToken::UFaerieItemStorageToken()
-{
-	ItemStorage = CreateDefaultSubobject<UFaerieItemStorage>("ItemStorage");
-}
-
-void UFaerieItemStorageToken::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+void UFaerieItemContainerToken::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME_CONDITION(ThisClass, ItemStorage, COND_InitialOnly);
+	DOREPLIFETIME_CONDITION(ThisClass, ItemContainer, COND_InitialOnly);
 }
 
-bool UFaerieItemStorageToken::IsMutable() const
+bool UFaerieItemContainerToken::IsMutable() const
 {
-	// Storage tokens always make their owner mutable, as should be obvious. If an item can container arbitrary content
+	// Container tokens always make their owner mutable, as should be obvious. If an item can contain arbitrary content
 	// then we have no way to determine its mutability state.
 	return true;
+}
+
+TSet<UFaerieItemContainerBase*> UFaerieItemContainerToken::GetAllContainersInItem(const UFaerieItem* Item)
+{
+	if (!ensure(IsValid(Item))) return {};
+
+	TSet<UFaerieItemContainerBase*> Containers;
+
+	Item->ForEachToken<UFaerieItemContainerToken>(
+		[&Containers](const UFaerieItemContainerToken* Token)
+		{
+			Containers.Add(Token->ItemContainer);
+			return true;
+		});
+
+	return Containers;
+}
+
+UFaerieItemStorageToken::UFaerieItemStorageToken()
+{
+	ItemContainer = CreateDefaultSubobject<UFaerieItemStorage>(FName{TEXTVIEW("ItemContainer")});
+	Extensions = CreateDefaultSubobject<UItemContainerExtensionGroup>(FName{TEXTVIEW("Extensions")});
+	ItemContainer->AddExtension(Extensions);
+}
+
+UFaerieItemStorage* UFaerieItemStorageToken::GetItemStorage() const
+{
+	return Cast<UFaerieItemStorage>(ItemContainer);
 }

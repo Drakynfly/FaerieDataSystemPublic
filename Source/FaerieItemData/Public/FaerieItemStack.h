@@ -2,13 +2,25 @@
 
 #pragma once
 
+#include "FaerieItemProxy.h"
+
 #include "FaerieItemStack.generated.h"
 
 class UFaerieItem;
 class IFaerieItemOwnerInterface;
 
+namespace Faerie::ItemData
+{
+	static int32 UnlimitedStack = -1;
+
+	static bool IsValidStack(const int32 Value)
+	{
+		return Value > 0 || Value == UnlimitedStack;
+	}
+}
+
 /**
- * A simple stack of items.
+ * A simple stack of items. The Item pointer is non-const and assumed to not be owned by anyone.
  */
 USTRUCT(BlueprintType)
 struct FAERIEITEMDATA_API FFaerieItemStack
@@ -42,7 +54,7 @@ struct FAERIEITEMDATA_API FFaerieItemStack
 };
 
 /**
- * A simple stack of items. Item reference is const
+ * A simple stack of items. Item pointer is const, and assumed to be owned elsewhere.
  */
 USTRUCT(BlueprintType)
 struct FAERIEITEMDATA_API FFaerieItemStackView
@@ -54,6 +66,10 @@ struct FAERIEITEMDATA_API FFaerieItemStackView
 	FFaerieItemStackView(const UFaerieItem* ItemData, const int32 Copies)
 	  : Item(ItemData),
 		Copies(Copies) {}
+
+	FFaerieItemStackView(const FFaerieItemProxy Proxy)
+	  : Item(Proxy.GetItemObject()),
+		Copies(Proxy.GetCopies()) {}
 
 	FFaerieItemStackView(const FFaerieItemStack Stack)
 	  : Item(Stack.Item),

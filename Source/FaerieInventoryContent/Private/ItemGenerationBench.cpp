@@ -1,7 +1,6 @@
 ﻿// Copyright Guy (Drakynfly) Lundvall. All Rights Reserved.
 
 #include "ItemGenerationBench.h"
-
 #include "ItemGeneratorConfig.h"
 
 #if WITH_EDITOR
@@ -11,11 +10,11 @@ void UItemGenerationBench::PostEditChangeProperty(FPropertyChangedEvent& Propert
 
 	if (PropertyChangedEvent.GetPropertyName() == GET_MEMBER_NAME_CHECKED(UItemGenerationBench, Drivers))
 	{
-		for (TObjectPtr<UItemGenerationDriver>& Driver : Drivers)
+		for (TObjectPtr<UItemGenerationConfig>& Driver : Drivers)
 		{
-			if (!Driver)
+			if (!IsValid(Driver))
 			{
-				Driver = NewObject<UItemGenerationDriver>(this);
+				Driver = NewObject<UItemGenerationConfig>(this);
 			}
 		}
 	}

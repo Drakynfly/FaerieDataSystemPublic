@@ -2,34 +2,27 @@
 
 #pragma once
 
-#include "InventoryExtensionBase.h"
+#include "ItemContainerExtensionBase.h"
 
 #include "InventoryContentFilterExtension.generated.h"
 
-class UFaerieItemDataStackViewLiteral;
 class UFaerieItemDataFilter;
 
 /**
  * An extension that only allows items matching a filter to be contained.
  */
 UCLASS()
-class FAERIEINVENTORYCONTENT_API UInventoryContentFilterExtension : public UInventoryExtensionBase
+class FAERIEINVENTORYCONTENT_API UInventoryContentFilterExtension : public UItemContainerExtensionBase
 {
 	GENERATED_BODY()
 
 public:
-	UInventoryContentFilterExtension();
-
-	//~ UInventoryExtensionBase
+	//~ UItemContainerExtensionBase
 	virtual EEventExtensionResponse AllowsAddition(const UFaerieItemContainerBase* Container, FFaerieItemStackView Stack) override;
-	//~ UInventoryExtensionBase
+	//~ UItemContainerExtensionBase
 
 protected:
 	// Filter used to determine if an item can be contained in the inventory
 	UPROPERTY(EditAnywhere, Category = "Config", meta = (DisplayThumbnail = false))
 	TObjectPtr<UFaerieItemDataFilter> Filter;
-
-private:
-	UPROPERTY()
-	TObjectPtr<UFaerieItemDataStackViewLiteral> ExecutionContainer;
 };

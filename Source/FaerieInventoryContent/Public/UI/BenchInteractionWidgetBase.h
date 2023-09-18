@@ -16,8 +16,5 @@ class FAERIEINVENTORYCONTENT_API UBenchInteractionWidgetBase : public UUserWidge
 protected:
 	// The behavior object of the bench.
 	UPROPERTY(BlueprintReadOnly, meta = (ExposeOnSpawn), Category = "Bench Interaction Widget")
-	TObjectPtr<class UBenchBehaviorBase> Behavior;
-
-	UPROPERTY(BlueprintReadWrite, meta = (ExposeOnSpawn), Category = "Bench Interaction Widget")
-	TWeakObjectPtr<class UFaerieItemStorage> ContextItemStorage;
+	TWeakObjectPtr<class UBenchBehaviorBase> Behavior;
 };

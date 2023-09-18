@@ -79,10 +79,10 @@ void FKeyedInventoryEntryCustomization::CustomizeChildren(const TSharedRef<IProp
 														   IDetailChildrenBuilder& StructBuilder,
 														   IPropertyTypeCustomizationUtils& StructCustomizationUtils)
 {
-	auto&& EntryHandle = StructPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FKeyedInventoryEntry, Entry));
-	auto&& ItemDataHandle = EntryHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FInventoryEntry, ItemObject));
-	auto&& StacksHandle = EntryHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FInventoryEntry, Stacks));
-	auto&& LimitHandle = EntryHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FInventoryEntry, Limit));
+	auto&& ValueHandle = StructPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FKeyedInventoryEntry, Value));
+	auto&& ItemDataHandle = ValueHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FInventoryEntry, ItemObject));
+	auto&& StacksHandle = ValueHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FInventoryEntry, Stacks));
+	auto&& LimitHandle = ValueHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FInventoryEntry, Limit));
 
 	StructBuilder.AddProperty(ItemDataHandle.ToSharedRef());
 	StructBuilder.AddProperty(StacksHandle.ToSharedRef());

@@ -3,43 +3,17 @@
 #pragma once
 
 #include "AnimUtilityStructs.h"
-#include "GameplayTagsManager.h"
+#include "NativeGameplayTags.h"
 #include "FaerieMeshStructs.generated.h"
 
-struct FAERIEITEMMESH_API FMeshPurposeTags : public FGameplayTagNativeAdder
+class UDynamicMesh;
+
+namespace Faerie::ItemMesh::Tags
 {
-	FORCEINLINE static const FMeshPurposeTags& Get() { return MeshPurposeTags; }
-
-	FGameplayTag MeshPurposeBase;
-	FGameplayTag MP_Default;
-	FGameplayTag MP_Display;
-	FGameplayTag MP_Equipped;
-	FGameplayTag MP_CustomBounds;
-
-protected:
-	virtual void AddTags() override
-	{
-		UGameplayTagsManager& Manager = UGameplayTagsManager::Get();
-
-		MeshPurposeBase = Manager.AddNativeGameplayTag(TEXT("MeshPurpose"), "");
-
-		MP_Default = Manager.AddNativeGameplayTag(TEXT("MeshPurpose.Default"),
-												  "");
-
-		MP_Display = Manager.AddNativeGameplayTag(TEXT("MeshPurpose.Display"),
-												  "");
-
-		MP_Equipped = Manager.AddNativeGameplayTag(TEXT("MeshPurpose.Equipped"),
-												   "Mesh for item when used as active equipment");
-
-		MP_CustomBounds = Manager.AddNativeGameplayTag(TEXT("MeshPurpose.CustomBounds"),
-													   "");
-	}
-
-private:
-	// Private static object for the global tags. Use the Get() function to access externally.
-	static FMeshPurposeTags MeshPurposeTags;
-};
+	FAERIEITEMMESH_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(MeshPurpose_Default)
+	FAERIEITEMMESH_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(MeshPurpose_Display)
+	FAERIEITEMMESH_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(MeshPurpose_Equipped)
+}
 
 /**
  * Material reference for a faerie item
@@ -50,7 +24,7 @@ struct FAERIEITEMMESH_API FFaerieItemMaterial
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	TObjectPtr<UMaterialInterface> Material = nullptr;
+	TSoftObjectPtr<UMaterialInterface> Material = nullptr;
 
 	friend bool operator==(const FFaerieItemMaterial& Lhs, const FFaerieItemMaterial& Rhs)
 	{
@@ -76,6 +50,9 @@ USTRUCT(BlueprintType)
 struct FAERIEITEMMESH_API FFaerieMeshBaseStruct_NonDynamic : public FFaerieMeshBaseStruct
 {
 	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TArray<FFaerieItemMaterial> Materials;
 };
 
 /**
@@ -87,10 +64,7 @@ struct FAERIEITEMMESH_API FFaerieStaticMeshData : public FFaerieMeshBaseStruct_N
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	TObjectPtr<UStaticMesh> StaticMesh = nullptr;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	TArray<FFaerieItemMaterial> Materials;
+	TSoftObjectPtr<UStaticMesh> StaticMesh = nullptr;
 };
 
 /**
@@ -102,10 +76,7 @@ struct FAERIEITEMMESH_API FFaerieSkeletalMeshData : public FFaerieMeshBaseStruct
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	FSkeletonAndAnimClass SkeletonAndAnimClass;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	TArray<FFaerieItemMaterial> Materials;
+	FSoftSkeletonAndAnimClass SkeletonAndAnimClass;
 };
 
 
@@ -222,8 +193,84 @@ struct FAERIEITEMMESH_API FFaerieDynamicMeshContainer
 
 	UPROPERTY(BlueprintReadOnly, Category = "Meshes", meta = (Categories = "MeshPurpose"))
 	TArray<FFaerieDynamicSkeletalMesh> SkeletalMeshes;
+};
 
-	FString ToString() const;
+/**
+ * An item mesh container. Carries either a static, skeletal, or dynamic mesh, and any materials for them.
+ * Usually only one of the three mesh options will be valid.
+ */
+USTRUCT(BlueprintType)
+struct FAERIEITEMMESH_API FFaerieItemMesh
+{
+	GENERATED_BODY()
 
-	static FFaerieDynamicMeshContainer FromString(const FString& String);
+	static FFaerieItemMesh MakeStatic(UStaticMesh* Mesh, const TArray<FFaerieItemMaterial>& Materials)
+	{
+		FFaerieItemMesh ItemMesh;
+		ItemMesh.StaticMesh = Mesh;
+		ItemMesh.Materials = Materials;
+		return ItemMesh;
+	}
+
+	static FFaerieItemMesh MakeDynamic(UDynamicMesh* Mesh, const TArray<FFaerieItemMaterial>& Materials)
+	{
+		FFaerieItemMesh ItemMesh;
+		ItemMesh.DynamicStaticMesh = Mesh;
+		ItemMesh.Materials = Materials;
+		return ItemMesh;
+	}
+
+	static FFaerieItemMesh MakeSkeletal(const FSkeletonAndAnimClass Mesh, const TArray<FFaerieItemMaterial>& Materials)
+	{
+		FFaerieItemMesh ItemMesh;
+		ItemMesh.SkeletonAndAnimClass = Mesh;
+		ItemMesh.Materials = Materials;
+		return ItemMesh;
+	}
+
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TObjectPtr<UStaticMesh> StaticMesh = nullptr;
+
+	UPROPERTY(BlueprintReadOnly)
+	TObjectPtr<UDynamicMesh> DynamicStaticMesh = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FSkeletonAndAnimClass SkeletonAndAnimClass;
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TArray<FFaerieItemMaterial> Materials;
+
+	bool IsStatic() const;
+	bool IsDynamic() const;
+	bool IsSkeletal() const;
+
+	UStaticMesh* GetStatic() const
+	{
+		return StaticMesh;
+	}
+
+	UDynamicMesh* GetDynamic() const
+	{
+		return DynamicStaticMesh;
+	}
+
+	FSkeletonAndAnimClass GetSkeletal() const
+	{
+		return SkeletonAndAnimClass;
+	}
+
+	friend bool operator==(const FFaerieItemMesh& Lhs, const FFaerieItemMesh& Rhs)
+	{
+		return Lhs.StaticMesh == Rhs.StaticMesh
+			&& Lhs.DynamicStaticMesh == Rhs.DynamicStaticMesh
+			&& Lhs.SkeletonAndAnimClass == Rhs.SkeletonAndAnimClass
+			&& Lhs.Materials == Rhs.Materials;
+	}
+
+	friend bool operator!=(const FFaerieItemMesh& Lhs, const FFaerieItemMesh& Rhs)
+	{
+		return !(Lhs == Rhs);
+	}
 };

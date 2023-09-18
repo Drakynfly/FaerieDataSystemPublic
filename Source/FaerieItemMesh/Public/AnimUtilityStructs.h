@@ -57,3 +57,44 @@ FORCEINLINE uint32 GetTypeHash(const FSkeletonAndAnimClass& Thing)
 {
 	return FCrc::MemCrc32(&Thing, sizeof(FSkeletonAndAnimClass));
 }
+
+USTRUCT(BlueprintType)
+struct FAERIEITEMMESH_API FSoftSkeletonAndAnimClass
+{
+	GENERATED_BODY()
+
+	// Empty constructor
+	FSoftSkeletonAndAnimClass() {}
+
+	// Full constructor
+	FSoftSkeletonAndAnimClass(const TSoftObjectPtr<USkeletalMesh>& Mesh, const TSoftClassPtr<UAnimInstance>& AnimClass)
+		: Mesh(Mesh),
+		AnimClass(AnimClass) {}
+
+	UPROPERTY(NoClear, BlueprintReadWrite, EditAnywhere, Category = "Skeletal Mesh and Anim Class")
+	TSoftObjectPtr<USkeletalMesh> Mesh = nullptr;
+
+	UPROPERTY(NoClear, BlueprintReadWrite, EditAnywhere, Category = "Skeletal Mesh and Anim Class")
+	TSoftClassPtr<UAnimInstance> AnimClass = nullptr;
+
+	friend bool operator==(const FSoftSkeletonAndAnimClass& Lhs, const FSoftSkeletonAndAnimClass& Rhs)
+	{
+		return Lhs.Mesh == Rhs.Mesh
+			&& Lhs.AnimClass == Rhs.AnimClass;
+	}
+
+	friend bool operator!=(const FSoftSkeletonAndAnimClass& Lhs, const FSoftSkeletonAndAnimClass& Rhs)
+	{
+		return !(Lhs == Rhs);
+	}
+
+	FSkeletonAndAnimClass LoadSynchronous() const
+	{
+		return FSkeletonAndAnimClass(Mesh.LoadSynchronous(), AnimClass.LoadSynchronous());
+	}
+};
+
+FORCEINLINE uint32 GetTypeHash(const FSoftSkeletonAndAnimClass& Thing)
+{
+	return FCrc::MemCrc32(&Thing, sizeof(FSoftSkeletonAndAnimClass));
+}

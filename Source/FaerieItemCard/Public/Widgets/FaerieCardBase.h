@@ -2,12 +2,11 @@
 
 #pragma once
 
+#include "FaerieItemDataProxy.h"
 #include "Blueprint/UserWidget.h"
 #include "FaerieCardBase.generated.h"
 
-class UFaerieItemDataProxyBase;
-
-DECLARE_MULTICAST_DELEGATE(FOnCardRefreshed)
+using FOnCardRefreshed = TMulticastDelegate<void()>;
 
 /**
  *
@@ -20,9 +19,9 @@ class FAERIEITEMCARD_API UFaerieCardBase : public UUserWidget
 public:
 	virtual void NativeConstruct() override;
 
-	void SetItemData(const UFaerieItemDataProxyBase* InItemData, bool bRefresh);
+	void SetItemData(FFaerieItemProxy InItemProxy, bool bRefresh);
 
-	TObjectPtr<const UFaerieItemDataProxyBase> GetItemData() const { return ItemData; }
+	FFaerieItemProxy GetItemData() const { return ItemProxy; }
 
 	FOnCardRefreshed& GetOnCardRefreshed() { return OnCardRefreshed; }
 
@@ -34,10 +33,10 @@ protected:
 	void BP_Refresh();
 
 protected:
-	UPROPERTY(BlueprintReadOnly)
-	TObjectPtr<const UFaerieItemDataProxyBase> ItemData;
+	UPROPERTY(BlueprintReadOnly, Category = "Faerie|CardWidget")
+	FFaerieItemProxy ItemProxy;
 
-	UPROPERTY(BlueprintReadOnly, EditAnywhere)
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Faerie|CardWidget")
 	bool RefreshOnConstruct = true;
 
 	FOnCardRefreshed OnCardRefreshed;

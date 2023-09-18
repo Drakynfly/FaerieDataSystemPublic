@@ -5,25 +5,49 @@
 #include "FaerieItemToken.h"
 #include "FaerieItemStorageToken.generated.h"
 
+class UFaerieItemContainerBase;
 class UFaerieItemStorage;
 
 /**
- *
+ * Base class for tokens that add child item containers to items
  */
-UCLASS()
-class FAERIEINVENTORY_API UFaerieItemStorageToken : public UFaerieItemToken
+UCLASS(Abstract)
+class FAERIEINVENTORY_API UFaerieItemContainerToken : public UFaerieItemToken
+{
+	GENERATED_BODY()
+
+public:
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	virtual bool IsMutable() const override;
+
+	// Get all container objects from ContainerTokens.
+	UFUNCTION(BlueprintCallable, Category = "Faerie|ItemContainerToken")
+	static TSet<UFaerieItemContainerBase*> GetAllContainersInItem(const UFaerieItem* Item);
+
+	UFaerieItemContainerBase* GetItemContainer() { return ItemContainer; }
+	const UFaerieItemContainerBase* GetItemContainer() const { return ItemContainer; }
+
+	UPROPERTY(Replicated)
+	TObjectPtr<UFaerieItemContainerBase> ItemContainer;
+};
+
+class UItemContainerExtensionGroup;
+
+/**
+ * This token adds an Item Storage object used to store items nested in another.
+ */
+UCLASS(DisplayName = "Token - Item Storage")
+class FAERIEINVENTORY_API UFaerieItemStorageToken : public UFaerieItemContainerToken
 {
 	GENERATED_BODY()
 
 public:
 	UFaerieItemStorageToken();
 
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-	virtual bool IsMutable() const override;
-
-	UFaerieItemStorage* GetItemStorage() const { return ItemStorage; }
+	UFUNCTION(BlueprintCallable, Category = "Faerie|ItemStorage")
+	UFaerieItemStorage* GetItemStorage() const;
 
 protected:
-	UPROPERTY(BlueprintReadOnly, Replicated, Category = "ItemStorageToken")
-	TObjectPtr<UFaerieItemStorage> ItemStorage;
+	UPROPERTY(EditInstanceOnly, Instanced, NoClear, Category = "ItemStorage")
+	TObjectPtr<UItemContainerExtensionGroup> Extensions;
 };

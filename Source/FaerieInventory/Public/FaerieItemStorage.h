@@ -6,6 +6,7 @@
 #include "ItemContainerEvent.h"
 #include "FaerieItemStack.h"
 #include "InventoryDataStructs.h"
+#include "StructView.h"
 
 #include "FaerieItemStorage.generated.h"
 
@@ -14,18 +15,18 @@ DECLARE_LOG_CATEGORY_EXTERN(LogFaerieItemStorage, Log, All);
 using FEntryKeyEventNative = TMulticastDelegate<void(UFaerieItemStorage*, FEntryKey)>;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FEntryKeyEvent, UFaerieItemStorage*, Storage, FEntryKey, Key);
 
-using FNativeStorageFilter = TDelegate<bool(const FInventoryEntry&)>;
-DECLARE_DYNAMIC_DELEGATE_RetVal_OneParam(bool, FBlueprintStorageFilter, const FInventoryEntry&, Entry);
+using FNativeStorageFilter = TDelegate<bool(const FFaerieItemProxy&)>;
+DECLARE_DYNAMIC_DELEGATE_RetVal_OneParam(bool, FBlueprintStorageFilter, const FFaerieItemProxy&, Proxy);
 
-using FNativeStorageComparator = TDelegate<bool(const FInventoryEntry&, const FInventoryEntry&)>;
-DECLARE_DYNAMIC_DELEGATE_RetVal_TwoParams(bool, FBlueprintStorageComparator, const FInventoryEntry&, A, const FInventoryEntry&, B);
+using FNativeStorageComparator = TDelegate<bool(const FFaerieItemProxy&, const FFaerieItemProxy&)>;
+DECLARE_DYNAMIC_DELEGATE_RetVal_TwoParams(bool, FBlueprintStorageComparator, const FFaerieItemProxy&, A, const FFaerieItemProxy&, B);
 
 struct FFaerieItemStorageNativeQuery
 {
 	FNativeStorageFilter Filter;
-	bool InvertFilter;
+	bool InvertFilter = false;
 	FNativeStorageComparator Sort;
-	bool InvertSort;
+	bool InvertSort = false;
 };
 
 USTRUCT(BlueprintType)
@@ -33,21 +34,21 @@ struct FFaerieItemStorageBlueprintQuery
 {
 	GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadWrite, Category = "Faerie|StorageQuery")
+	UPROPERTY(BlueprintReadWrite, Category = "Faerie|ItemStorageQuery")
 	FBlueprintStorageFilter Filter;
 
-	UPROPERTY(BlueprintReadWrite, Category = "Faerie|StorageQuery")
+	UPROPERTY(BlueprintReadWrite, Category = "Faerie|ItemStorageQuery")
 	bool InvertFilter = false;
 
-	UPROPERTY(BlueprintReadWrite, Category = "Faerie|StorageQuery")
+	UPROPERTY(BlueprintReadWrite, Category = "Faerie|ItemStorageQuery")
 	FBlueprintStorageComparator Sort;
 
-	UPROPERTY(BlueprintReadWrite, Category = "Faerie|StorageQuery")
+	UPROPERTY(BlueprintReadWrite, Category = "Faerie|ItemStorageQuery")
 	bool Reverse = false;
 };
 
-class UFaerieItemDataProxyBase;
 class UInventoryEntryProxy;
+class UInventoryStackProxy;
 
 /**
  *
@@ -69,8 +70,12 @@ public:
 
 	//~ UFaerieItemContainerBase
 	virtual bool IsValidKey(FEntryKey Key) const override;
+	virtual FFaerieItemStackView View(FEntryKey Key) const override;
+	virtual FFaerieItemProxy Proxy(FEntryKey Key) const override;
 	virtual void ForEachKey(const TFunctionRef<void(FEntryKey)>& Func) const override;
-	virtual FInventoryStack GetStack(FEntryKey Key) const override;
+	virtual int32 GetStack(FEntryKey Key) const override;
+
+	virtual void OnItemMutated(const UFaerieItem* Item, const UFaerieItemToken* Token) override;
 	//~ UFaerieItemContainerBase
 
 	//~ IFaerieItemOwnerInterface
@@ -83,22 +88,22 @@ public:
 	/*	  INTERNAL IMPLEMENTATIONS	 */
 	/**------------------------------*/
 private:
-	const FInventoryEntry& GetEntryImpl(FEntryKey Key) const;
+	FConstStructView GetEntryViewImpl(FEntryKey Key) const;
 
-	/**
-	* @return Whether or not an entry was found.
-	*/
-    bool GetEntryImpl(FEntryKey Key, FInventoryEntry& Entry) const;
+	UInventoryEntryProxy* GetEntryProxyImpl(FEntryKey Key) const;
 
-	// Adds an entry with optional flags for initial state.
-	Faerie::FItemContainerEvent AddEntryImpl(const FInventoryEntry& InEntry);
-	Faerie::FItemContainerEvent AddEntryFromStackImpl(FFaerieItemStack InStack);
-	Faerie::FItemContainerEvent AddEntryFromProxyImpl(UFaerieItemDataProxyBase* InProxy);
+	// @todo this copies the entry. Kinda wonky, should be used minimally, if at all.
+    void GetEntryImpl(FEntryKey Key, FInventoryEntry& Entry) const;
+
+	// Internal implementations for adding items, in various forms.
+	Faerie::Inventory::FEventLog AddEntryImpl(const FInventoryEntry& InEntry);
+	Faerie::Inventory::FEventLog AddEntryFromStackImpl(FFaerieItemStack InStack);
 
 	// Internal implementations for removing items, specifying an amount.
-	Faerie::FItemContainerEvent RemoveFromEntryImpl(FEntryKey Key, FInventoryStack Amount, FFaerieInventoryTag Reason);
-	Faerie::FItemContainerEvent RemoveFromStackImpl(FInventoryKey Key, FInventoryStack Amount, FFaerieInventoryTag Reason);
+	Faerie::Inventory::FEventLog RemoveFromEntryImpl(FEntryKey Key, int32 Amount, FFaerieInventoryTag Reason);
+	Faerie::Inventory::FEventLog RemoveFromStackImpl(FInventoryKey Key, int32 Amount, FFaerieInventoryTag Reason);
 
+	// FastArray API; used to replicate array changes to client
 	void PostContentAdded(const FKeyedInventoryEntry& Entry);
 	void PostContentChanged(const FKeyedInventoryEntry& Entry);
 	void PreContentRemoved(const FKeyedInventoryEntry& Entry);
@@ -112,11 +117,13 @@ public:
 	FEntryKeyEventNative& GetOnKeyUpdated() { return OnKeyUpdatedCallback; }
 	FEntryKeyEventNative& GetOnKeyRemoved() { return OnKeyRemovedCallback; }
 
+	FConstStructView GetEntryView(FEntryKey Key) const;
+
 	// Convert a entry key into an array of Inventory Keys.
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Storage|Key")
 	TArray<FInventoryKey> GetInvKeysForEntry(FEntryKey Key) const;
 
-	// Retrieves all top level and hidden keys. Defaults to skipping over locked keys.
+	// Gets all entry keys contained in this storage.
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Storage|Key")
 	void GetAllKeys(TArray<FEntryKey>& Keys) const;
 
@@ -152,7 +159,14 @@ public:
 	 * The proxy will be cached for quick repeat access.
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Storage|Cache", meta = (ExpandBoolAsExecs = "ReturnValue"))
-	bool GetProxyForEntry(FInventoryKey Key, UInventoryEntryProxy*& Entry);
+	bool GetProxyForEntry(FInventoryKey Key, UInventoryStackProxy*& Entry);
+
+	/**
+	 * Get the UInventoryEntryProxy representing an entry of this storage.
+	 * The proxy will be cached for quick repeat access.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Storage|Cache", meta = (ExpandBoolAsExecs = "ReturnValue"))
+	bool GetStackProxy(FInventoryKey Key, FFaerieItemProxy& Proxy);
 
 	/** Get entries en masse */
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Storage|Entry")
@@ -176,7 +190,7 @@ public:
 	bool CanAddStack(FFaerieItemStackView Stack) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Storage")
-	bool CanAddProxy(UFaerieItemDataProxyBase* Proxy) const;
+	bool CanEditEntry(FEntryKey EntryKey);
 
 	UFUNCTION(BlueprintCallable, Category = "Storage")
 	bool CanRemoveEntry(FEntryKey Key, FFaerieInventoryTag Reason) const;
@@ -185,9 +199,9 @@ public:
 	bool CanRemoveStack(FInventoryKey Key, FFaerieInventoryTag Reason) const;
 
 
-	/**------------------------------*/
-	/*	 STORAGE API - SERVER ONLY   */
-	/**------------------------------*/
+	/**---------------------------------*/
+	/*	 STORAGE API - AUTHORITY ONLY   */
+	/**---------------------------------*/
 
 	// Add a single raw item.
 	UFUNCTION(BlueprintCallable, Category = "Storage", BlueprintAuthorityOnly)
@@ -197,21 +211,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Storage", BlueprintAuthorityOnly)
 	bool AddItemStack(FFaerieItemStack ItemStack);
 
-	// Add data from a proxy object.
-	UFUNCTION(BlueprintCallable, Category = "Storage", BlueprintAuthorityOnly)
-	bool AddEntryFromProxy(UFaerieItemDataProxyBase* Proxy);
-
-	// Add an array of items from proxy objects.
-	UFUNCTION(BlueprintCallable, Category = "Storage", BlueprintAuthorityOnly)
-	void AddEntriesFromProxy(const TArray<UFaerieItemDataProxyBase*>& Entries);
-
 	/**
 	 * Removes the entry with this key, if it exists.
 	 * An amount of -1 will remove the entire stack.
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Storage", BlueprintAuthorityOnly)
 	bool RemoveEntry(FEntryKey Key,
-		UPARAM(meta = (Categories = "Fae.Inventory.Removal")) FFaerieInventoryTag RemovalTag, const int32 Amount = -1);
+		UPARAM(meta = (Categories = "Fae.Inventory.Removal")) FGameplayTag RemovalTag, const int32 Amount = -1);
 
 	/**
 	 * Removes the entry with this key, if it exists.
@@ -219,7 +225,7 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Storage", BlueprintAuthorityOnly)
 	bool RemoveStack(FInventoryKey Key,
-		UPARAM(meta = (Categories = "Fae.Inventory.Removal")) FFaerieInventoryTag RemovalTag, const int32 Amount = -1);
+		UPARAM(meta = (Categories = "Fae.Inventory.Removal")) FGameplayTag RemovalTag, const int32 Amount = -1);
 
 	/**
 	 * Removes and returns the entry with this key, if it exists.
@@ -227,7 +233,7 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Storage", BlueprintAuthorityOnly)
 	bool TakeEntry(FEntryKey Key, FFaerieItemStack& OutStack,
-		UPARAM(meta = (Categories = "Fae.Inventory.Removal")) FFaerieInventoryTag RemovalTag, const int32 Amount = -1);
+		UPARAM(meta = (Categories = "Fae.Inventory.Removal")) FGameplayTag RemovalTag, const int32 Amount = -1);
 
 	/**
 	 * Removes and returns the entry with this key, if it exists.
@@ -235,13 +241,13 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Storage", BlueprintAuthorityOnly)
 	bool TakeStack(FInventoryKey Key, FFaerieItemStack& OutStack,
-		UPARAM(meta = (Categories = "Fae.Inventory.Removal")) FFaerieInventoryTag RemovalTag, const int32 Amount = -1);
+		UPARAM(meta = (Categories = "Fae.Inventory.Removal")) FGameplayTag RemovalTag, const int32 Amount = -1);
 
 	/**
 	 * Clear out the entire contents of the storage.
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Storage", BlueprintAuthorityOnly)
-    void Clear();
+    void Clear(UPARAM(meta = (Categories = "Fae.Inventory.Removal")) FGameplayTag RemovalTag);
 
 	/**
 	 * Add an entry from this storage to another, then remove it from this one, optionally move only part of a stack.
@@ -287,9 +293,16 @@ private:
 	UPROPERTY(Replicated, SaveGame)
 	FInventoryContent EntryMap;
 
-	// Locally stored Entry Cache objects.
-	// This property is transient, mainly so that editor code that calls GetProxyForEntry doesn't need to worry about Caches
-	// being left around.
+	// These properties are transient, mainly so that editor code that calls accesses them don't need to worry about Caches
+	// being left around. Using weak pointers here is intentional. We don't want this storage to keep these alive. They
+	// should be stored in a strong pointer by whatever requested them, and once nothing needs the proxies, they will die.
+	// #todo how will these maps get cleaned up, to they don't acrue hundred of stale ptrs?
+
+	// Locally stored proxies per individual stack.
 	UPROPERTY(Transient)
-	TMap<FInventoryKey, TWeakObjectPtr<UInventoryEntryProxy>> LocalCachedEntries;
+	TMap<FInventoryKey, TWeakObjectPtr<UInventoryStackProxy>> LocalCachedEntries;
+
+	// Locally stored proxies per entry.
+	UPROPERTY(Transient)
+	TMap<FEntryKey, TWeakObjectPtr<UInventoryEntryProxy>> EntryProxies;
 };

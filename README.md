@@ -6,7 +6,7 @@ FaerieDataSystem (or FDS), is a core plugin developed for Project Faerie, my (Dr
 Primarily because I am tired of trying to describe to people how to create inventory systems, and since this plugin is fairly applicable to many genres of games, I figured I'd make it public since I don't really care about keeping the workings of my game secret.
 
 FDS is primarily designed for:
-- Singleplayer, local-multiplayer, or limited online multiplayer (2-8 players). This is not a database-friendly inventory for MMOs. (though it could probably made to be with some modification that I don't care to make myself)
+- Single-player, local-multiplayer, or limited online multiplayer (2-8 players). This is not a database-friendly inventory for MMOs. (though it could probably made to be with some modification that I don't care to make myself)
 - Complex, mutable, or highly specific item logic. This is kinda overkill if all your items consist of is 3-4 floats, and a mesh :)
 - The currently implemented equipment system is designed for (A/J)RPG, Survival, or other Action-Adventure genres.
   - For other genres, more customization beyond what I provide will be necessary the further you stray from the norm, although I'd like to believe that FDS is flexible enough for most purposes.
@@ -40,10 +40,10 @@ FDS is primarily designed for:
   - (I am likely going to split this module up later, its kinda a grab bag of extra stuff I make)
 
 ### FaerieItemMesh
-- A subsystem for created dynamic meshes `FFaerieItemMesh` that represent an item visually in the world.
+- A subsystem for creating dynamic meshes, `FFaerieItemMesh`, which represent an item visually in the world.
 
 ### FaerieItemCard
-- A subsystem for creating UMG widget's for items in a somewhat modular way.
+- A subsystem for creating UMG widgets for items in a somewhat modular way.
 
 ### FaerieEquipment (+ Editor)
 - Simple slot-based equipment manager. In an early stage of development, but a solid, simple prototype.
@@ -66,17 +66,23 @@ FDS is primarily designed for:
 
 - This plugin depends on another free plugin I've made, Squirrel, which can be found here:
   - https://github.com/Drakynfly/SquirrelUE
-  - This dependency is annoying, because I prefer to keep my plugins seperated, but I don't want to include Squirrel as part of FDS itself, because its extremely off-topic. This plugin provides the "determinism" that I mention above. As some point I'd like to remove this by changing the internals of FDS to use a generic RNG-provider hook, so that people can use whatever generator they like. *Another thing on the long long list.*
+  - This dependency is annoying, because I prefer to keep my plugins separated, but I don't want to include Squirrel as part of FDS itself, because its extremely off-topic. This plugin provides the "determinism" that I mention above. As some point I'd like to remove this by changing the internals of FDS to use a generic RNG-provider hook, so that people can use whatever generator they like. *Another thing on the long long list.*
 
 ## Engine Plugin Dependencies
+These default plugins are forcibly enabled by FDS:
+
 ### StructUtils
   - Immensely useful utility plugin. There is no reason people should be mad for me requiring this.
+
+### GameplayTagsEditor
+  - Prerequisite for making children of FGameplayTag.
 
 ### GeometryScripting `&&` SkeletalMerging
   - Required for implementing FaerieItemMesh. If, for some reason, you take issue with this requirement, reimplement `UFaerieMeshSubsystem` however you want to.
 
 ## Links
 Discord:      [![Discord](https://img.shields.io/discord/996247217314738286.svg?label=&logo=discord&logoColor=ffffff&color=7389D8&labelColor=6A7EC2)](https://discord.gg/AAk9yNwKk8) (Drakynfly's Plugins)
+Demo:         https://github.com/Drakynfly/FaerieDataSystemDemo
 
 
 Aaaaand, that's it folks!

@@ -3,27 +3,28 @@
 #include "ItemCraftingConfig.h"
 #include "FaerieItemRecipe.h"
 
+#if WITH_EDITOR
+#include "Misc/DataValidation.h"
+#endif
+
 DEFINE_LOG_CATEGORY(LogItemCraftingConfig)
 
 #if WITH_EDITOR
 
 #define LOCTEXT_NAMESPACE "ItemCraftingConfig_IsDataValid"
 
-EDataValidationResult UItemCraftingConfig::IsDataValid(TArray<FText>& ValidationErrors)
+EDataValidationResult UItemCraftingConfig::IsDataValid(FDataValidationContext& Context) const
 {
-	bool HasFoundError = false;
-
 	if (!Recipe)
 	{
-		ValidationErrors.Add(LOCTEXT("InvalidSourceAsset", "Source Asset is invalid!"));
-		HasFoundError = true;
+		Context.AddError(LOCTEXT("InvalidSourceAsset", "Source Asset is invalid!"));
 	}
 
-	if (HasFoundError)
+	if (Context.GetNumErrors())
 	{
 		return EDataValidationResult::Invalid;
 	}
-	return Super::IsDataValid(ValidationErrors);
+	return Super::IsDataValid(Context);
 }
 
 #undef LOCTEXT_NAMESPACE

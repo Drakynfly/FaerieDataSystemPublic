@@ -6,6 +6,8 @@
 
 #include "FaerieMeshStructsLibrary.generated.h"
 
+struct FFaerieItemMaterial;
+
 /**
  *
  */
@@ -15,6 +17,9 @@ class FAERIEITEMMESH_API UFaerieMeshStructsLibrary : public UBlueprintFunctionLi
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(BlueprintPure, Category = "Inventory|Utils")
+	UFUNCTION(BlueprintPure, Category = "Faerie|Inventory|Utils")
 	static TArray<UMaterialInterface*> FaerieItemMaterialsToObjectArray(const TArray<FFaerieItemMaterial>& Materials);
+
+	UFUNCTION(BlueprintPure, Category = "Faerie|Inventory|Utils")
+	static TArray<TSoftObjectPtr<UMaterialInterface>> FaerieItemMaterialsToSoftObjectArray(const TArray<FFaerieItemMaterial>& Materials);
 };

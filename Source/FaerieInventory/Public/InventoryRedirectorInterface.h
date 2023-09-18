@@ -25,6 +25,6 @@ class FAERIEINVENTORY_API IInventoryRedirectorInterface
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Inventory|Redirector")
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Faerie|InventoryRedirector")
 	UFaerieInventoryComponent* Resolve() const;
 };

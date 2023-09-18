@@ -7,8 +7,8 @@
 
 #include "CraftingRequests.generated.h"
 
-class UFaerieItemDataProxyBase;
-class UItemGenerationDriver;
+class IFaerieItemDataProxy;
+class UItemGenerationConfig;
 class UItemUpgradeConfig;
 class UItemCraftingConfig;
 
@@ -25,7 +25,7 @@ struct FAERIEITEMGENERATOR_API FGenerationRequest
 	// The client must fill this with drivers that can have network ID mapping. This is automatic for serialized objects.
 	// Runtime generated drivers must be created server-side and replicated for this to work.
 	UPROPERTY(BlueprintReadWrite, Category = "Generation Request")
-	TArray<TObjectPtr<UItemGenerationDriver>> Drivers;
+	TArray<TObjectPtr<UItemGenerationConfig>> Drivers;
 
 	UPROPERTY(BlueprintReadWrite, Category = "Generation Request")
 	FGenerationActionOnCompleteBinding OnComplete;
@@ -43,7 +43,7 @@ struct FAERIEITEMGENERATOR_API FRequestSlot
 
 	// The item that is being used to fill the slot.
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Request Slot")
-	TObjectPtr<UFaerieItemDataProxyBase> ItemProxy;
+	FFaerieItemProxy ItemProxy;
 };
 
 // The client assembles these via UI and submits them to the server for validation when requesting an item craft.
@@ -56,7 +56,7 @@ struct FAERIEITEMGENERATOR_API FCraftingRequest
 	UPROPERTY(BlueprintReadWrite, Category = "Crafting Request")
 	TObjectPtr<UObject> Executor;
 
-	// These (should) be sourced from cooked assets, or spawned by the server, if needed at runtime.
+	// These should be sourced from cooked assets, or spawned by the server, if needed at runtime. Clients cannot create them.
 	UPROPERTY(BlueprintReadWrite, Category = "Crafting Request")
 	TObjectPtr<UItemCraftingConfig> Config = nullptr;
 
@@ -81,7 +81,7 @@ struct FAERIEITEMGENERATOR_API FUpgradeRequest
 	TObjectPtr<UObject> Executor;
 
 	UPROPERTY(BlueprintReadWrite, Category = "Upgrade Request")
-	TObjectPtr<UFaerieItemDataProxyBase> ItemProxy;
+	TScriptInterface<IFaerieItemDataProxy> ItemProxy;
 
 	// These should be safe to replicate, since they are (always?) sourced from cooked assets.
 	UPROPERTY(BlueprintReadWrite, Category = "Upgrade Request")

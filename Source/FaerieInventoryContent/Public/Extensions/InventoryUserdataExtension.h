@@ -3,7 +3,8 @@
 #pragma once
 
 #include "GameplayTagContainer.h"
-#include "InventoryExtensionBase.h"
+#include "ItemContainerExtensionBase.h"
+#include "InventoryReplicatedDataExtensionBase.h"
 #include "InventoryUserdataExtension.generated.h"
 
 /**
@@ -13,33 +14,7 @@ USTRUCT(BlueprintType, meta = (Categories = "Fae.Inventory.Public"))
 struct FAERIEINVENTORYCONTENT_API FFaerieInventoryUserTag : public FFaerieInventoryTag
 {
 	GENERATED_BODY()
-
-	FFaerieInventoryUserTag() {}
-	static FFaerieInventoryUserTag GetRootTag() { return TTypedTagStaticImpl2<FFaerieInventoryUserTag>::StaticImpl.RootTag; }
-	static FFaerieInventoryUserTag TryConvert(const FGameplayTag FromTag) { return TTypedTagStaticImpl2<FFaerieInventoryUserTag>::TryConvert(FromTag, false); }
-	static FFaerieInventoryUserTag ConvertChecked(const FGameplayTag FromTag) { return TTypedTagStaticImpl2<FFaerieInventoryUserTag>::TryConvert(FromTag, true); }
-	static FFaerieInventoryUserTag AddNativeTag(const FString& TagBody, const FString& DevComment) { return TTypedTagStaticImpl2<FFaerieInventoryUserTag>::AddNativeTag(TagBody, DevComment); }
-	bool ExportTextItem(FString& ValueStr, const FFaerieInventoryUserTag& DefaultValue, UObject* Parent, const int32 PortFlags, UObject* ExportRootScope) const
-	{
-		return TTypedTagStaticImpl2<FFaerieInventoryUserTag>::ExportTextItem(*this, ValueStr, PortFlags);
-	}
-
-protected:
-	FFaerieInventoryUserTag(const FGameplayTag& Tag) { TagName = Tag.GetTagName(); }
-	static const TCHAR* GetRootTagStr() { return TEXT("Fae.Inventory.Public"); }
-	friend class TTypedTagStaticImpl2<FFaerieInventoryUserTag>;
-};
-
-template<> struct TNameOf<FFaerieInventoryUserTag> { FORCEINLINE static TCHAR const* GetName() { return TEXT("FFaerieInventoryUserTag"); } };
-
-template<>
-struct TStructOpsTypeTraits<FFaerieInventoryUserTag> : public TStructOpsTypeTraitsBase2<FFaerieInventoryUserTag>
-{
-	enum
-	{
-		WithExportTextItem = true,
-		WithImportTextItem = true
-	};
+	END_TAG_DECL2(FFaerieInventoryUserTag, TEXT("Fae.Inventory.Public"))
 };
 
 struct FAERIEINVENTORYCONTENT_API FFaerieInventoryUserTags : public FGameplayTagNativeAdder
@@ -65,16 +40,17 @@ struct FInventoryEntryUserdata
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, Category = "InventoryEntryUserdata")
-	FEntryKey Key;
+	FInventoryEntryUserdata() {}
+
+	FInventoryEntryUserdata(const FGameplayTagContainer& Tags)
+	  : Tags(Tags) {}
 
 	UPROPERTY(EditAnywhere, Category = "InventoryEntryUserdata", meta = (Categories = "Fae.Inventory.Public"))
 	FGameplayTagContainer Tags;
 
 	friend bool operator==(const FInventoryEntryUserdata& Lhs, const FInventoryEntryUserdata& Rhs)
 	{
-		return Lhs.Key == Rhs.Key
-			   && Lhs.Tags == Rhs.Tags;
+		return Lhs.Tags == Rhs.Tags;
 	}
 
 	friend bool operator!=(const FInventoryEntryUserdata& Lhs, const FInventoryEntryUserdata& Rhs)
@@ -83,40 +59,18 @@ struct FInventoryEntryUserdata
 	}
 };
 
-USTRUCT()
-struct FStorageUserdata
-{
-	GENERATED_BODY()
-
-	UPROPERTY()
-	TObjectPtr<UFaerieItemContainerBase> Container;
-
-	UPROPERTY()
-	TArray<FInventoryEntryUserdata> Userdata;
-};
-
 /*
- * An extension added to player inventories that stored addition userdata about items, such as favorites.
+ * An extension added to player inventories that stores additional userdata about items, such as favorites.
  */
 UCLASS()
-class FAERIEINVENTORYCONTENT_API UInventoryUserdataExtension : public UInventoryExtensionBase
+class FAERIEINVENTORYCONTENT_API UInventoryUserdataExtension : public UInventoryReplicatedDataExtensionBase
 {
 	GENERATED_BODY()
 
-public:
-	UInventoryUserdataExtension();
-
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-
 protected:
-	//~ UInventoryExtensionBase
-	virtual void DeinitializeExtension(const UFaerieItemContainerBase* Container) override;
-	virtual void PreRemoval(const UFaerieItemContainerBase* Container, const FEntryKey Key, const int32 Removal) override;
-	//~ UInventoryExtensionBase
-
-private:
-		  FStorageUserdata* FindUserdataForContainer(const UFaerieItemContainerBase* Container);
-	const FStorageUserdata* FindUserdataForContainer(const UFaerieItemContainerBase* Container) const;
+	//~ UInventoryReplicatedDataExtensionBase
+	virtual UScriptStruct* GetDataScriptStruct() const override;
+	//~ UInventoryReplicatedDataExtensionBase
 
 public:
 	UFUNCTION(BlueprintCallable, Category = "Faerie|UserdataExtension")
@@ -128,8 +82,4 @@ public:
 	bool MarkStackWithTag(UFaerieItemContainerBase* Container, FEntryKey Key, FFaerieInventoryUserTag Tag);
 
 	bool ClearTagFromStack(UFaerieItemContainerBase* Container, FEntryKey Key, FFaerieInventoryUserTag Tag);
-
-private:
-	UPROPERTY(Replicated, SaveGame)
-	TArray<FStorageUserdata> PerStorageUserdata;
 };

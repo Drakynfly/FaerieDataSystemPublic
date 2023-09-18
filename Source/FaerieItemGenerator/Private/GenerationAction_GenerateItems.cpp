@@ -16,8 +16,8 @@ void UGenerationAction_GenerateItems::Configure(FActionArgs& Args)
 	{
 		if (!IsValid(Driver)) continue;
 
-		FPendingItemGeneration PendingEntry = Driver->Resolve();
-		if (PendingEntry.IsValid())
+		if (FPendingItemGeneration PendingEntry = Driver->Resolve();
+			PendingEntry.IsValid())
 		{
 			PendingGenerations.Add(PendingEntry);
 		}
@@ -73,15 +73,12 @@ void UGenerationAction_GenerateItems::Run()
 
 				if (IsValid(NewStack.Item))
 				{
-					UFaerieItemDataStackLiteral* NewLiteral = NewObject<UFaerieItemDataStackLiteral>();
-					NewLiteral->SetValue(NewStack);
-					OutProxies.Add(NewLiteral);
+					ProcessStacks.Add(NewStack);
 				}
 				else
 				{
 					UE_LOG(LogGenerationAction, Error, TEXT("FTableDrop::Resolve returned a bad instance! Crafting likely failed"))
 				}
-
 			}
 		}
 		// Generate a single entry stack when immutable, as there is no change of uniqueness.
@@ -93,16 +90,14 @@ void UGenerationAction_GenerateItems::Run()
 
 			if (IsValid(NewStack.Item))
 			{
-				UFaerieItemDataStackLiteral* NewLiteral = NewObject<UFaerieItemDataStackLiteral>();
-				NewLiteral->SetValue(NewStack);
-				OutProxies.Add(NewLiteral);
+				ProcessStacks.Add(NewStack);
 			}
 		}
 	}
 
-	if (!OutProxies.IsEmpty())
+	if (!ProcessStacks.IsEmpty())
 	{
-		UE_LOG(LogItemGenConfig, Log, TEXT("--- Generation success. Created '%i' stack(s)."), OutProxies.Num());
+		UE_LOG(LogItemGenConfig, Log, TEXT("--- Generation success. Created '%i' stack(s)."), ProcessStacks.Num());
 		Complete();
 	}
 	else

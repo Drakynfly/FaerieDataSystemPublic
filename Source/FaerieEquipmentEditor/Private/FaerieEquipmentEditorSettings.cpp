@@ -1,6 +1,6 @@
 // Copyright Guy (Drakynfly) Lundvall. All Rights Reserved.
 
-#include "..\Public\FaerieEquipmentEditorSettings.h"
+#include "FaerieEquipmentEditorSettings.h"
 #include "DurabilityGradeAsset.h"
 
 FName UFaerieEquipmentEditorSettings::GetCategoryName() const

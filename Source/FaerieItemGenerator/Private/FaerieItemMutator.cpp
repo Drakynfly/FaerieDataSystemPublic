@@ -4,19 +4,22 @@
 #include "FaerieItemDataFilter.h"
 #include "FaerieItemTemplate.h"
 
-bool UFaerieItemMutator::CanApply(const UFaerieItemDataProxyBase* Container) const
+bool UFaerieItemMutator::CanApply(const FFaerieItemProxy Proxy) const
 {
-	if (!IsValid(ApplicationFilter) || IsValid(ApplicationFilter->GetPattern())) return false;
-	return ApplicationFilter->GetPattern()->Exec(Container);
+	return Proxy->CanMutate() &&
+		IsValid(ApplicationFilter) &&
+		ApplicationFilter->TryMatch(Proxy);
 }
 
-bool UFaerieItemMutator::TryApply(UFaerieItemDataProxyBase* Entry)
+bool UFaerieItemMutator::TryApply(const FFaerieItemStack Stack)
 {
-	if (CanApply(Entry))
+	if (IsValid(ApplicationFilter) &&
+		!ApplicationFilter->TryMatch(Stack))
 	{
-		return Apply(Entry);
+		return false;
 	}
-	return false;
+
+	return Apply(Stack);
 }
 
 void UFaerieItemMutator::GetRequiredAssets_Implementation(TArray<TSoftObjectPtr<UObject>>& RequiredAssets) const {}

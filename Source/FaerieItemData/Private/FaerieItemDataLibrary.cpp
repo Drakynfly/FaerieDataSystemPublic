@@ -19,8 +19,8 @@ bool UFaerieItemDataLibrary::Equal_ItemData(const UFaerieItem* A, const UFaerieI
 	}
 
 	// Resort to comparing tokens . . .
-	const TArray<TObjectPtr<UFaerieItemToken>> TokensA = A->GetTokens();
-	const TArray<TObjectPtr<UFaerieItemToken>> TokensB = B->GetTokens();
+	const TConstArrayView<TObjectPtr<UFaerieItemToken>> TokensA = A->GetTokens();
+	const TConstArrayView<TObjectPtr<UFaerieItemToken>> TokensB = B->GetTokens();
 
 	// This already indicates they are not equal.
 	if (TokensA.Num() != TokensB.Num())

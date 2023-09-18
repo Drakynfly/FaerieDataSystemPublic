@@ -23,7 +23,15 @@ public class FaerieEquipment : ModuleRules
 			new []
 			{
 				"FaerieItemData",
+				"FaerieItemMesh",
 				"FaerieInventory"
+			});
+
+		PrivateDependencyModuleNames.AddRange(
+			new []
+			{
+				"FaerieDataUtils",
+				"Squirrel"
 			});
 	}
 }

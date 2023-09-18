@@ -7,7 +7,6 @@
 #include "GenerationStructsLibrary.h"
 #include "IDetailChildrenBuilder.h"
 #include "IPropertyUtilities.h"
-#include "PropertyCustomizationHelpers.h"
 #include "PropertyHandle.h"
 #include "Algo/ForEach.h"
 
@@ -59,8 +58,8 @@ void FTableDropCustomization::CustomizeChildren(TSharedRef<IPropertyHandle> Prop
     	}
     }
 
-	void* SlotsAddress;
-	SlotsHandle->GetValueData(SlotsAddress);
+	TMap<FFaerieItemSlotHandle, TInstancedStruct<FTableDrop>>* SlotsAddress;
+	SlotsHandle->GetValueData(reinterpret_cast<void*&>(SlotsAddress));
 
 	if (!IsValid(ObjectValue))
 	{
@@ -77,42 +76,27 @@ void FTableDropCustomization::CustomizeChildren(TSharedRef<IPropertyHandle> Prop
     if (ObjectValue->Implements<UFaerieItemSlotInterface>())
     {
     	const FConstStructView SlotsView = UFaerieItemSlotLibrary::GetCraftingSlotsFromObject(ObjectValue);
-    	const FFaerieItemCraftingSlots* SlotsPtr = SlotsView.GetPtr<FFaerieItemCraftingSlots>();
+    	const FFaerieItemCraftingSlots& SlotsPtr = SlotsView.Get<const FFaerieItemCraftingSlots>();
 
-    	if (SlotsPtr->RequiredSlots.IsEmpty() &&
-    		SlotsPtr->OptionalSlots.IsEmpty())
+    	if (SlotsPtr.RequiredSlots.IsEmpty() &&
+    		SlotsPtr.OptionalSlots.IsEmpty())
     	{
     		return;
     	}
 
     	ShowSlotsProperty = true;
 
-    	auto&& SlotsPropertyPtr = static_cast<TArray<FTableDropResourceSlot>*>(SlotsAddress);
-    	FScriptArrayHelper ArrayHelper(CastField<FArrayProperty>(SlotsHandle->GetProperty()), SlotsAddress);
+    	FScriptMapHelper MapHelper(CastField<FMapProperty>(SlotsHandle->GetProperty()), SlotsAddress);
 
     	// Prefill the map with the slots from the asset:
     	auto SlotIter = [&](const TPair<FFaerieItemSlotHandle, TObjectPtr<UFaerieItemTemplate>>& Slot)
     		{
-    			if (FFaerieItemSlotHandle ID = Slot.Key;
-					!SlotsPropertyPtr->ContainsByPredicate([ID](const FTableDropResourceSlot& Test)
-					{
-						return Test.SlotID == ID;
-					}))
-    			{
-    				// Insert blank values for slots that don't exist
-    				const int32 Index = ArrayHelper.AddValue();
-    				if (Index != INDEX_NONE)
-    				{
-    					FTableDropResourceSlot* NewValue = SlotsHandle->GetProperty()
-							->ContainerPtrToValuePtr<FTableDropResourceSlot>(SlotsAddress, Index);
-    					NewValue->SlotID = ID;
-    					NewValue->Drop = FInstancedStruct::Make<FTableDrop>();
-    				}
-    			}
+    			MapHelper.FindOrAdd(&Slot.Key);
+    			MapHelper.Rehash();
     		};
 
-    	Algo::ForEach(SlotsPtr->RequiredSlots, SlotIter);
-    	Algo::ForEach(SlotsPtr->OptionalSlots, SlotIter);
+    	Algo::ForEach(SlotsPtr.RequiredSlots, SlotIter);
+    	Algo::ForEach(SlotsPtr.OptionalSlots, SlotIter);
     }
 	else // Not a crafting asset
 	{
@@ -128,38 +112,6 @@ void FTableDropCustomization::CustomizeChildren(TSharedRef<IPropertyHandle> Prop
 
 	if (ShowSlotsProperty)
 	{
-		const TSharedRef<FDetailArrayBuilder> ArrayBuilder = MakeShareable(
-			new FDetailArrayBuilder(SlotsHandle.ToSharedRef(), true, true, true));
-
-		ArrayBuilder->OnGenerateArrayElementWidget(
-			FOnGenerateArrayElementWidget::CreateSP(this, &FTableDropCustomization::OnGenerateElement));
-
-		ChildBuilder.AddCustomBuilder(ArrayBuilder);
-
-		//ChildBuilder.AddProperty(SlotsProp.ToSharedRef());
+		ChildBuilder.AddProperty(SlotsHandle.ToSharedRef());
 	}
-}
-
-void FTableDropCustomization::OnGenerateElement(TSharedRef<IPropertyHandle, ESPMode::ThreadSafe> PropertyHandle, int32 Index,
-	IDetailChildrenBuilder& ChildrenBuilder)
-{
-	void* DataAddress;
-	PropertyHandle->GetValueData(DataAddress);
-	auto&& ResourceSlotPtr = static_cast<FTableDropResourceSlot*>(DataAddress);
-
-	auto&& Prop = PropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FTableDropResourceSlot, Drop));
-
-	ChildrenBuilder.AddCustomRow(FText())
-		.NameContent()
-		[
-			SNew(STextBlock)
-				.Text(FText::FromString(ResourceSlotPtr->SlotID.ToString()))
-		]
-		.ValueContent()
-		[
-			Prop->CreatePropertyValueWidget()
-		];
-
-	// @todo temp
-	ChildrenBuilder.AddProperty(Prop.ToSharedRef());
 }

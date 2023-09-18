@@ -2,35 +2,76 @@
 
 #include "FaerieItemTemplate.h"
 #include "FaerieItemDataFilter.h"
+#include "FaerieItemDataProxy.h"
+
+#define LOCTEXT_NAMESPACE "FaerieItemTemplate"
+
+#if WITH_EDITOR
 #include "Misc/DataValidation.h"
+#endif
 
 #if WITH_EDITOR
 
-EDataValidationResult UFaerieItemTemplate::IsDataValid(FDataValidationContext& Context)
+EDataValidationResult UFaerieItemTemplate::IsDataValid(FDataValidationContext& Context) const
 {
-	bool HasError = false;
-
-	if (!Pattern)
+	if (!IsValid(Pattern))
 	{
 		Context.AddError(NSLOCTEXT("ValidateFaerieItemTemplate", "InvalidPatternError", "Template Pattern is invalid!"));
-		HasError = true;
 	}
 
-	if (HasError)
+	if (Context.GetNumErrors())
 	{
 		return EDataValidationResult::Invalid;
 	}
 
 	return Super::IsDataValid(Context);
 }
+
 #endif
 
-bool UFaerieItemTemplate::TryMatch(const UFaerieItemDataProxyBase* Proxy) const
+bool UFaerieItemTemplate::TryMatchWithDescriptions(const FFaerieItemStackView View, TArray<FText>& Errors) const
 {
-	if (ensure(Pattern))
+	if (!ensure(IsValid(Pattern)))
 	{
-		return Pattern->Exec(Proxy);
+		static const FTextFormat GenericErrorFormat = LOCTEXT("ExecWithErrors_InvalidPattern", "'{this}' contains Invalid Pattern!'");
+
+		FFormatNamedArguments Args;
+		Args.Add("this", FText::FromString(GetName()));
+
+		Errors.Add(FText::Format(GenericErrorFormat, Args));
+		return false;
 	}
 
+	if (Faerie::ItemData::FFilterLogger Logger;
+		!Pattern->ExecWithLog(View, &Logger))
+	{
+		if (Logger.Errors.IsEmpty())
+		{
+			static const FTextFormat GenericErrorFormat = LOCTEXT("ExecWithErrors_GenericErrorFmt", "'{this}' failed with unspecified reason!'");
+
+			FFormatNamedArguments Args;
+			Args.Add("this", FText::FromString(GetName()));
+
+			Errors.Add(FText::Format(GenericErrorFormat, Args));
+		}
+		else
+		{
+			Errors = Logger.Errors;
+		}
+
+		return false;
+	}
+
+	return true;
+}
+
+bool UFaerieItemTemplate::TryMatch(const FFaerieItemStackView View) const
+{
+	if (ensure(IsValid(Pattern)))
+	{
+		return Pattern->Exec(View);
+	}
 	return false;
 }
+
+#undef LOCTEXT_NAMESPACE

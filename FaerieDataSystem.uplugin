@@ -1,7 +1,7 @@
 {
 	"FileVersion": 3,
-	"Version": 2,
-	"VersionName": "2.0",
+	"Version": 3,
+	"VersionName": "0.2",
 	"FriendlyName": "Faerie Data System",
 	"Description": "Data asset and inventory system",
 	"Category": "Domain.Data",
@@ -79,6 +79,11 @@
 			"Name": "FaerieInventoryEditor",
 			"Type": "Editor",
 			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "FaerieDataUtils",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
 		}
 	],
 	"Plugins": [
@@ -87,11 +92,19 @@
 			"Enabled": true
 		},
 		{
+			"Name": "GameplayTagsEditor",
+			"Enabled": true
+		},
+		{
 			"Name": "GeometryScripting",
 			"Enabled": true
 		},
 		{
 			"Name": "SkeletalMerging",
+			"Enabled": true
+		},
+		{
+			"Name": "Squirrel",
 			"Enabled": true
 		}
 	]

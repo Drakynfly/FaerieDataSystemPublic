@@ -13,13 +13,6 @@ void UFaerieInfoToken::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME_CONDITION(ThisClass, Info, COND_InitialOnly);
 }
 
-bool UFaerieInfoToken::IsMutable() const
-{
-	// Info tokens are inherantly immutable, and they must be since they are used to identify items.
-	// This doesn't mean that an item *cannot* be renamed, just that if it is, it's considered a seperate item.
-	return false;
-}
-
 bool UFaerieInfoToken::CompareWithImpl(const UFaerieItemToken* FaerieItemToken) const
 {
 	if (auto&& Other = Cast<UFaerieInfoToken>(FaerieItemToken))

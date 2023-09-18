@@ -5,107 +5,106 @@
 
 #include "FaerieItemDataProxy.h"
 #include "FaerieItem.h"
+#include "FaerieItemCardModule.h"
+#include "Engine/AssetManager.h"
 
-// @todo temp
-#include "FaerieCardSubsystem.h"
-
-
-void UFaerieCardGenerator::Generate(const UFaerieItemDataProxyBase* ItemData, const EFaerieCardGeneratorType Type,
-                                    const FFaerieCardGenerationResultDynamic& Callback)
+TSoftClassPtr<UFaerieCardBase> UFaerieCardGenerator::GetCardClassFromProxy(const FFaerieItemProxy Proxy, const TSubclassOf<UCustomCardClass> Type) const
 {
-	FFaerieCardGenerationResult NativeCallback;
-
-	if (Callback.IsBound())
-	{
-		NativeCallback.BindWeakLambda(Callback.GetUObject(), [Callback](const bool Success, UFaerieCardBase* Widget)
-		{
-			Callback.Execute(Success, Widget);
-		});
-	}
-
-	Generate(ItemData, Type, NativeCallback);
-}
-
-void UFaerieCardGenerator::Generate(const UFaerieItemDataProxyBase* ItemData, const EFaerieCardGeneratorType Type, const FFaerieCardGenerationResult& Callback)
-{
-	if (!IsValid(ItemData))
-	{
-		Callback.Execute(false, nullptr);
-		return;
-	}
-
-	auto&& Item = ItemData->GetItemObject();
+	auto&& Item = Proxy.GetInterface()->GetItemObject();
 
 	if (!IsValid(Item))
 	{
-		Callback.Execute(false, nullptr);
-		return;
+		UE_LOG(LogFaerieItemCard, Warning, TEXT("Unable to determine card class: Invalid Item!"))
+
+		return nullptr;
 	}
 
-	const UCustomCardClass* CardClassProvider = nullptr;
-
-	switch (Type)
+	if (auto&& CardClassProvider = Cast<UCustomCardClass>(Item->GetToken(Type)))
 	{
-	case EFaerieCardGeneratorType::Palette:
-		CardClassProvider = Item->GetToken<UCustomPaletteCard>();
-		break;
-	case EFaerieCardGeneratorType::Info:
-		CardClassProvider = Item->GetToken<UCustomInfoCard>();
-		break;
-	default: ;
-	}
-
-	TSoftClassPtr<UFaerieCardBase> CardClass;
-
-	if (CardClassProvider)
-	{
-		CardClass = CardClassProvider->GetCardClass();
-	}
-	else
-	{
-		switch (Type)
+		if (auto&& Class = CardClassProvider->GetCardClass();
+			Class.IsValid())
 		{
-		case EFaerieCardGeneratorType::Palette:
-			CardClass = DefaultPaletteClass;
-			break;
-		case EFaerieCardGeneratorType::Info:
-			CardClass = DefaultInfoClass;
-			break;
-		default: ;
+			return Class;
 		}
+
+		UE_LOG(LogFaerieItemCard, Warning, TEXT("CustomCard token contained invalid class (%s). Reverting to default!"), *Type->GetName())
+	}
+	if (auto&& Class = DefaultClasses.Find(Type))
+	{
+		return *Class;
 	}
 
-	if (!CardClass.IsNull())
-	{
-		StreamableManager.RequestAsyncLoad(CardClass.ToSoftObjectPath(),
-			FStreamableDelegate::CreateUObject(this, &ThisClass::OnCardClassLoaded, CardClass, ItemData, Callback));
-	}
-	else
-	{
-		Callback.Execute(false, nullptr);
-	}
+	UE_LOG(LogFaerieItemCard, Warning, TEXT("Unable to determine card class: No default for '%s'!"), *Type->GetName())
+
+	return nullptr;
 }
 
-void UFaerieCardGenerator::OnCardClassLoaded(const TSoftClassPtr<UFaerieCardBase> Class, const UFaerieItemDataProxyBase* ItemData, FFaerieCardGenerationResult Callback)
+UFaerieCardBase* UFaerieCardGenerator::Generate(const Faerie::Card::FSyncGeneration& Params)
 {
-	const TSubclassOf<UFaerieCardBase> LoadedClass = Class.Get();
-
-	if (IsValid(LoadedClass))
+	if (!Params.Proxy.IsValid() ||
+		!IsValid(Params.Player) ||
+		IsValid(Params.CardType))
 	{
-		auto&& CardSS = GetTypedOuter<UFaerieCardSubsystem>();
-		auto&& Player = CardSS->GetLocalPlayer<ULocalPlayer>()->PlayerController;
+		UE_LOG(LogFaerieItemCard, Warning, TEXT("Invalid Params for generation!"))
+		return nullptr;
+	}
 
-		UFaerieCardBase* CardWidget = CreateWidget<UFaerieCardBase>(Player, LoadedClass);
+	if (const TSoftClassPtr<UFaerieCardBase> CardClass = GetCardClassFromProxy(Params.Proxy, Params.CardType);
+		IsValid(CardClass.LoadSynchronous()))
+	{
+		UFaerieCardBase* CardWidget = CreateWidget<UFaerieCardBase>(Params.Player, CardClass.Get());
 
 		if (IsValid(CardWidget))
 		{
-			CardWidget->SetItemData(ItemData, false);
+			CardWidget->SetItemData(Params.Proxy, false);
 		}
 
-		Callback.ExecuteIfBound(IsValid(CardWidget), CardWidget);
+		return CardWidget;
+	}
+	return nullptr;
+}
+
+void UFaerieCardGenerator::GenerateAsync(const Faerie::Card::FAsyncGeneration& Params)
+{
+	if (!Params.Proxy.IsValid() ||
+		!IsValid(Params.Player) ||
+		!IsValid(Params.CardType))
+	{
+		UE_LOG(LogFaerieItemCard, Warning, TEXT("Invalid Params for generation!"))
+		Params.Callback.ExecuteIfBound(false, nullptr);
+		return;
+	}
+
+	if (const TSoftClassPtr<UFaerieCardBase> CardClass = GetCardClassFromProxy(Params.Proxy, Params.CardType);
+		!CardClass.IsNull())
+	{
+		UAssetManager::GetStreamableManager().RequestAsyncLoad(CardClass.ToSoftObjectPath(),
+			FStreamableDelegate::CreateUObject(this, &ThisClass::OnCardClassLoaded, FAsyncCallback{Params.Player, Params.Proxy, CardClass, Params.Callback}));
 	}
 	else
 	{
-		Callback.ExecuteIfBound(false, nullptr);
+		Params.Callback.ExecuteIfBound(false, nullptr);
+	}
+}
+
+void UFaerieCardGenerator::OnCardClassLoaded(FAsyncCallback Params)
+{
+	if (const TSubclassOf<UFaerieCardBase> LoadedClass = Params.CardClass.Get();
+		IsValid(LoadedClass) && IsValid(Params.Player))
+	{
+		UFaerieCardBase* CardWidget = CreateWidget<UFaerieCardBase>(Params.Player, LoadedClass);
+
+		if (IsValid(CardWidget))
+		{
+			CardWidget->SetItemData(Params.Proxy, false);
+		}
+
+		Params.Callback.ExecuteIfBound(IsValid(CardWidget), CardWidget);
+	}
+	else
+	{
+		UE_LOG(LogFaerieItemCard, Warning, TEXT("Generation failed: Async load failed!"))
+
+		Params.Callback.ExecuteIfBound(false, nullptr);
 	}
 }

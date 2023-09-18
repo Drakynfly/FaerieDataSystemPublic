@@ -18,15 +18,17 @@ class FAERIEITEMMESH_API UFaerieMeshTokenBase : public UFaerieItemToken
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Inventory Asset|Item Info")
-	virtual bool GetStaticItemMesh(const FGameplayTagContainer& SearchPurposes, FFaerieStaticMeshData& Static) const { return false; }
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Inventory Asset|Item Info", meta = (AutoCreateRefTerm = "SearchPurposes"))
+	virtual bool GetStaticItemMesh(UPARAM(meta = (Categories = "MeshPurpose")) const FGameplayTagContainer& SearchPurposes,
+		FFaerieStaticMeshData& Static) const { return false; }
 
-	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Inventory Asset|Item Info")
-	virtual bool GetSkeletalItemMesh(const FGameplayTagContainer& SearchPurposes, FFaerieSkeletalMeshData& Skeletal) const { return false; }
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Inventory Asset|Item Info", meta = (AutoCreateRefTerm = "SearchPurposes"))
+	virtual bool GetSkeletalItemMesh(UPARAM(meta = (Categories = "MeshPurpose")) const FGameplayTagContainer& SearchPurposes,
+		FFaerieSkeletalMeshData& Skeletal) const { return false; }
 
-	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Inventory Asset|Item Info")
-	void GetMeshes(const FGameplayTagContainer& SearchPurposes, bool& FoundStatic, FFaerieStaticMeshData& Static,
-				   bool& FoundSkeletal, FFaerieSkeletalMeshData& Skeletal) const;
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Inventory Asset|Item Info", meta = (AutoCreateRefTerm = "SearchPurposes"))
+	void GetMeshes(UPARAM(meta = (Categories = "MeshPurpose")) const FGameplayTagContainer& SearchPurposes, bool& FoundStatic,
+		FFaerieStaticMeshData& Static, bool& FoundSkeletal, FFaerieSkeletalMeshData& Skeletal) const;
 };
 
 
@@ -42,7 +44,7 @@ class FAERIEITEMMESH_API UFaerieMeshToken : public UFaerieMeshTokenBase
 
 public:
 #if WITH_EDITOR
-	virtual EDataValidationResult IsDataValid(FDataValidationContext& Context) override;
+	virtual EDataValidationResult IsDataValid(FDataValidationContext& Context) const override;
 #endif
 
 	virtual bool GetStaticItemMesh(const FGameplayTagContainer& SearchPurposes, FFaerieStaticMeshData& Static) const override;
@@ -60,6 +62,10 @@ class UFaerieMeshToken_Dynamic : public UFaerieMeshTokenBase
 	GENERATED_BODY()
 
 public:
+#if WITH_EDITOR
+	virtual EDataValidationResult IsDataValid(FDataValidationContext& Context) const override;
+#endif
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MeshToken")
 	FFaerieDynamicMeshContainer DynamicMeshContainer;
 };

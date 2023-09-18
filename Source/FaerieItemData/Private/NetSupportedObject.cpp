@@ -1,21 +1,10 @@
 ﻿// Copyright Guy (Drakynfly) Lundvall. All Rights Reserved.
 
-
 #include "NetSupportedObject.h"
-
-UWorld* UNetSupportedObject::GetWorld() const
-{
-	if (const AActor* Owner = GetOwner())
-	{
-		return Owner->GetWorld();
-	}
-
-	return nullptr;
-}
 
 bool UNetSupportedObject::IsSupportedForNetworking() const
 {
-	return IsValid(GetOwner());
+	return true;
 }
 
 void UNetSupportedObject::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -29,20 +18,46 @@ void UNetSupportedObject::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 	}
 }
 
-int32 UNetSupportedObject::GetFunctionCallspace(UFunction* Function, FFrame* Stack)
+UWorld* UActorSubobjectBase::GetWorld() const
+{
+	if (const AActor* Owner = GetOwner())
+	{
+		return Owner->GetWorld();
+	}
+
+	return nullptr;
+}
+
+bool UActorSubobjectBase::IsSupportedForNetworking() const
+{
+	return IsValid(GetOwner());
+}
+
+void UActorSubobjectBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	// Add any Blueprint properties
+	if (const UBlueprintGeneratedClass* BPClass = Cast<UBlueprintGeneratedClass>(GetClass()))
+	{
+		BPClass->GetLifetimeBlueprintReplicationList(OutLifetimeProps);
+	}
+}
+
+int32 UActorSubobjectBase::GetFunctionCallspace(UFunction* Function, FFrame* Stack)
 {
 	check(GetOuter() != nullptr);
 	return GetOuter()->GetFunctionCallspace(Function, Stack);
 }
 
-bool UNetSupportedObject::CallRemoteFunction(UFunction* Function, void* Parms, FOutParmRec* OutParms, FFrame* Stack)
+bool UActorSubobjectBase::CallRemoteFunction(UFunction* Function, void* Parms, FOutParmRec* OutParms, FFrame* Stack)
 {
 	check(!HasAnyFlags(RF_ClassDefaultObject));
 
 	// Call "Remote" (aka, RPC) functions through the actors NetDriver
 
-	AActor* Owner = GetOwner();
-	if (IsValid(Owner))
+	if (AActor* Owner = GetOwner();
+		IsValid(Owner))
 	{
 		if (UNetDriver* NetDriver = Owner->GetNetDriver())
 		{
@@ -54,13 +69,23 @@ bool UNetSupportedObject::CallRemoteFunction(UFunction* Function, void* Parms, F
 	return false;
 }
 
-AActor* UNetSupportedObject::GetOwner() const
+void UActorSubobjectBase::PostInitProperties()
 {
-	AActor* Owner = GetTypedOuter<AActor>();
-	return Owner;
+	Super::PostInitProperties();
+
+	if (!IsTemplate())
+	{
+		// Objects of this class should always be outer'ed to an Actor.
+		check(GetOwner());
+	}
 }
 
-AActor* UNetSupportedObject::GetOwnerChecked() const
+AActor* UActorSubobjectBase::GetOwner() const
+{
+	return GetTypedOuter<AActor>();
+}
+
+AActor* UActorSubobjectBase::GetOwnerChecked() const
 {
 	AActor* Owner = GetOwner();
 	check(Owner);

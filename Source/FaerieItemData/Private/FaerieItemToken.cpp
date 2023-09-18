@@ -30,6 +30,17 @@ bool UFaerieItemToken::IsOuterItemMutable() const
 	return IsValid(OuterItem) ? OuterItem->IsDataMutable() : false;
 }
 
+void UFaerieItemToken::NotifyOuterOfChange()
+{
+	auto&& Item = GetOuterItem();
+	if (!Item)
+	{
+		return;
+	}
+
+	Item->OnTokenEdited(this);
+}
+
 UFaerieItem* UFaerieItemToken::GetOuterItem() const
 {
 	return GetTypedOuter<UFaerieItem>();
@@ -51,13 +62,7 @@ void UFaerieItemToken::EditToken(const TFunction<bool(UFaerieItemToken*)>& EditF
 {
 	if (EditFunc(this))
 	{
-		auto&& Item = GetOuterItem();
-		if (!Item)
-		{
-			return;
-		}
-
-		Item->OnTokenEdited(this);
+		NotifyOuterOfChange();
 	}
 }
 
@@ -73,7 +78,9 @@ void UFaerieItemToken::BP_EditToken(const FBlueprintTokenEdit& Edit)
 		return;
 	}
 
-	EditToken([Edit](UFaerieItemToken* Token){
-		return Edit.Execute(Token);
-	});
+	EditToken(
+		[Edit](UFaerieItemToken* Token)
+		{
+			return Edit.Execute(Token);
+		});
 }

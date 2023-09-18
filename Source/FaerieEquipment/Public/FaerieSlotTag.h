@@ -12,33 +12,7 @@ USTRUCT(BlueprintType, meta = (Categories = "Fae.Slot"))
 struct FFaerieSlotTag : public FGameplayTag
 {
 	GENERATED_BODY()
-
-	FFaerieSlotTag() {}
-	static FFaerieSlotTag GetRootTag() { return TTypedTagStaticImpl2<FFaerieSlotTag>::StaticImpl.RootTag; }
-	static FFaerieSlotTag TryConvert(const FGameplayTag FromTag) { return TTypedTagStaticImpl2<FFaerieSlotTag>::TryConvert(FromTag, false); }
-	static FFaerieSlotTag ConvertChecked(const FGameplayTag FromTag) { return TTypedTagStaticImpl2<FFaerieSlotTag>::TryConvert(FromTag, true); }
-	static FFaerieSlotTag AddNativeTag(const FString& TagBody, const FString& DevComment) { return TTypedTagStaticImpl2<FFaerieSlotTag>::AddNativeTag(TagBody, DevComment); }
-	bool ExportTextItem(FString& ValueStr, const FFaerieSlotTag& DefaultValue, UObject* Parent, const int32 PortFlags, UObject* ExportRootScope) const
-	{
-		return TTypedTagStaticImpl2<FFaerieSlotTag>::ExportTextItem(*this, ValueStr, PortFlags);
-	}
-
-protected:
-	FFaerieSlotTag(const FGameplayTag& Tag) { TagName = Tag.GetTagName(); }
-	static const TCHAR* GetRootTagStr() { return TEXT("Fae.Slot"); }
-	friend class TTypedTagStaticImpl2<FFaerieSlotTag>;
-};
-
-template<> struct TNameOf<FFaerieSlotTag> { FORCEINLINE static TCHAR const* GetName() { return TEXT("FFaerieSlotTag"); } };
-
-template<>
-struct TStructOpsTypeTraits<FFaerieSlotTag> : public TStructOpsTypeTraitsBase2<FFaerieSlotTag>
-{
-	enum
-	{
-		WithExportTextItem = true,
-		WithImportTextItem = true
-	};
+	END_TAG_DECL2(FFaerieSlotTag, TEXT("Fae.Slot"))
 };
 
 struct FAERIEEQUIPMENT_API FFaerieSlotTags : public FGameplayTagNativeAdder
@@ -62,4 +36,20 @@ protected:
 private:
 	// Private static object for the global tags. Use the Get() function to access externally.
 	static FFaerieSlotTags FaerieSlotTags;
+};
+
+
+UCLASS()
+class UFaerieSlotTagLibrary : public UBlueprintFunctionLibrary
+{
+	GENERATED_BODY()
+
+public:
+	/** Returns true if the values are equal (A == B) */
+	UFUNCTION(BlueprintPure, Category = "GameplayTags", meta = (DisplayName = "Equal (FaerieSlotTag)", CompactNodeTitle = "==", BlueprintThreadSafe))
+	static bool EqualEqual_FaerieSlotTag(const FFaerieSlotTag A, const FFaerieSlotTag B) { return A == B; }
+
+	/** Returns true if the values are not equal (A != B) */
+	UFUNCTION(BlueprintPure, Category = "GameplayTags", meta = (DisplayName = "Not Equal (FaerieSlotTag)", CompactNodeTitle = "!=", BlueprintThreadSafe))
+	static bool NotEqual_FaerieSlotTag(const FFaerieSlotTag A, const FFaerieSlotTag B)  { return A != B; }
 };

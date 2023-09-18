@@ -21,6 +21,8 @@ bool UFaerieItemUsesToken::HasUses(const int32 TestUses) const
 
 void UFaerieItemUsesToken::AddUses(const int32 Amount, const bool ClampRemainingToMax)
 {
+	if (Amount <= 0) return;
+
 	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, UsesRemaining, this);
 	if (ClampRemainingToMax)
 	{
@@ -30,14 +32,19 @@ void UFaerieItemUsesToken::AddUses(const int32 Amount, const bool ClampRemaining
 	{
 		UsesRemaining += Amount;
 	}
+
+	NotifyOuterOfChange();
 }
 
 bool UFaerieItemUsesToken::RemoveUses(const int32 Amount)
 {
+	if (Amount <= 0) return false;
+
 	if (HasUses(Amount))
 	{
 		MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, UsesRemaining, this);
 		UsesRemaining = FMath::Max(UsesRemaining - Amount, 0);
+		NotifyOuterOfChange();
 		return true;
 	}
 	return false;
@@ -45,12 +52,23 @@ bool UFaerieItemUsesToken::RemoveUses(const int32 Amount)
 
 void UFaerieItemUsesToken::ResetUses()
 {
+	if (UsesRemaining == MaxUses)
+	{
+		return;
+	}
+
 	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, UsesRemaining, this);
 	UsesRemaining = MaxUses;
+	NotifyOuterOfChange();
 }
 
 void UFaerieItemUsesToken::SetMaxUses(const int32 NewMax, const bool ClampRemainingToMax)
 {
+	if (NewMax == MaxUses)
+	{
+		return;
+	}
+
 	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, MaxUses, this);
 	MaxUses = NewMax;
 	if (ClampRemainingToMax)
@@ -58,4 +76,6 @@ void UFaerieItemUsesToken::SetMaxUses(const int32 NewMax, const bool ClampRemain
 		MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, UsesRemaining, this);
 		UsesRemaining = FMath::Min(UsesRemaining, MaxUses);
 	}
+
+	NotifyOuterOfChange();
 }

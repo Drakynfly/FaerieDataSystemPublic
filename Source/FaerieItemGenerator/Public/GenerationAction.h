@@ -2,9 +2,13 @@
 
 #pragma once
 
+#include "FaerieItemStack.h"
 #include "Engine/StreamableManager.h"
+#include "ItemSlotHandle.h"
+
 #include "GenerationAction.generated.h"
 
+class IFaerieItemDataProxy;
 struct FFaerieItemSlotHandle;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogGenerationAction, Log, All)
@@ -18,19 +22,15 @@ enum class EGenerationActionResult : uint8
 };
 
 using FNativeGenerationActionCompletedCallback = TDelegate<void(EGenerationActionResult)>;
-DECLARE_DYNAMIC_DELEGATE_TwoParams(FGenerationActionOnCompleteBinding, EGenerationActionResult, Result, const TArray<UFaerieItemDataProxyBase*>&, Items);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FGenerationActionCompleted, EGenerationActionResult, Result, const TArray<UFaerieItemDataProxyBase*>&, Items);
+DECLARE_DYNAMIC_DELEGATE_TwoParams(FGenerationActionOnCompleteBinding, EGenerationActionResult, Result, const TArray<FFaerieItemStack>&, Items);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FGenerationActionCompleted, EGenerationActionResult, Result, const TArray<FFaerieItemStack>&, Items);
 
 USTRUCT(BlueprintType)
-struct FGenerationActionSparseClassStruct
+struct FCraftingActionSparseClassStruct
 {
 	GENERATED_BODY()
 
-	FGenerationActionSparseClassStruct() {}
-
-	// Flag for requiring a dedicated config function before this action can run.
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Configuration")
-	bool RequiresExplicitConfiguration = true;
+	FCraftingActionSparseClassStruct() {}
 
 	// The maximum duration an action can run, in seconds, before timing out.
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Configuration")
@@ -38,14 +38,13 @@ struct FGenerationActionSparseClassStruct
 };
 
 class IFaerieItemSlotInterface;
-class UFaerieItemDataProxyBase;
-class UFaerieItemGeneratorSubsystem;
+class UFaerieItemCraftingSubsystem;
 
 /**
  *
  */
-UCLASS(Abstract, ClassGroup = "Faerie", Within = FaerieItemGeneratorSubsystem, SparseClassDataTypes = GenerationActionSparseClassStruct)
-class FAERIEITEMGENERATOR_API UGenerationActionBase : public UObject
+UCLASS(Abstract, ClassGroup = "Faerie", Within = FaerieItemCraftingSubsystem, SparseClassDataTypes = CraftingActionSparseClassStruct)
+class FAERIEITEMGENERATOR_API UCraftingActionBase : public UObject
 {
 	GENERATED_BODY()
 
@@ -56,7 +55,7 @@ public:
 		FGenerationActionOnCompleteBinding Callback;
 	};
 
-	UGenerationActionBase();
+	UCraftingActionBase();
 
 	virtual UWorld* GetWorld() const override;
 
@@ -67,6 +66,8 @@ protected:
 	// Internal virtual run function. This must be implemented per subclass. It must finish before the timer has ran out.
 	virtual void Run() PURE_VIRTUAL(UGenerationActionBase::Run, )
 
+	bool IsRunning() const;
+
 private:
 	FTimerManager& GetTimerManager() const;
 
@@ -76,26 +77,23 @@ private:
 	void Finish(EGenerationActionResult Result);
 
 protected:
-	FStreamableManager& GetStreamableManager() { return StreamableManager; }
-
-	// If subclasses leave RequiresExplicitConfiguration true, then this must be called before trying to Run.
 	void Configure(FActionArgs& Args);
 
 protected:
-	UFUNCTION(BlueprintCallable, Category = "Invention Action Control")
+	UFUNCTION(BlueprintCallable, Category = "Faerie|CraftingAction")
 	void Complete();
 
-	UFUNCTION(BlueprintCallable, Category = "Invention Action Control")
+	UFUNCTION(BlueprintCallable, Category = "Faerie|CraftingAction")
 	void Fail();
 
 public:
-	UFUNCTION(BlueprintCallable, Category = "Invention Action Control")
+	UFUNCTION(BlueprintCallable, Category = "Faerie|CraftingAction")
 	void Start();
 
 public:
 	FNativeGenerationActionCompletedCallback OnCompletedCallback;
 
-	UPROPERTY(BlueprintAssignable, Category = "Action Events")
+	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FGenerationActionCompleted OnCompleted;
 
 protected:
@@ -104,7 +102,7 @@ protected:
 	TObjectPtr<UObject> Executor;
 
 	UPROPERTY()
-	TArray<TObjectPtr<UFaerieItemDataProxyBase>> OutProxies;
+	TArray<FFaerieItemStack> ProcessStacks;
 
 private:
 	UPROPERTY()
@@ -119,12 +117,10 @@ private:
 	UPROPERTY()
 	FDateTime TimeStarted;
 #endif
-
-	FStreamableManager StreamableManager;
 };
 
 UCLASS(Abstract)
-class FAERIEITEMGENERATOR_API UGenerationActionWithSlots : public UGenerationActionBase
+class FAERIEITEMGENERATOR_API UCraftingActionWithSlots : public UCraftingActionBase
 {
 	GENERATED_BODY()
 
@@ -136,13 +132,17 @@ public:
 	struct FActionArgs : Super::FActionArgs
 	{
 		bool RunConsumeStep = false;
-		TMap<FFaerieItemSlotHandle, TObjectPtr<UFaerieItemDataProxyBase>> FilledSlots;
+		TMap<FFaerieItemSlotHandle, FFaerieItemProxy> FilledSlots;
 	};
 
 	void Configure(FActionArgs& Args);
 
+protected:
+	virtual void Run() override;
+
+public:
 	UFUNCTION(BlueprintPure, Category = "Faerie|GenerationAction")
-	UFaerieItemDataProxyBase* GetProxyForSlot(const FFaerieItemSlotHandle& Filter, bool ExpectPresence = false) const;
+	FFaerieItemProxy GetProxyForSlot(const FFaerieItemSlotHandle& Filter, bool ExpectPresence = false) const;
 
 protected:
 	// Should ConsumeSlotCosts be called during Run. This is disabled to preview output before commiting to the action.
@@ -151,5 +151,5 @@ protected:
 
 	// Crafting slots, and the inventory key being used to provide data to them.
 	UPROPERTY()
-	TMap<FFaerieItemSlotHandle, TObjectPtr<UFaerieItemDataProxyBase>> FilledSlots;
+	TMap<FFaerieItemSlotHandle, FFaerieItemProxy> FilledSlots;
 };

@@ -3,11 +3,10 @@
 #pragma once
 
 #include "GenerationStructsLibrary.h"
-#include "GenerationActionConfig.h"
+#include "CraftingActionConfig.h"
 #include "InstancedStruct.h"
+#include "ItemSourcePool.h"
 #include "ItemGeneratorConfig.generated.h"
-
-class UItemSourcePool;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogItemGenConfig, Log, All);
 
@@ -40,24 +39,22 @@ struct FPendingItemGeneration
  * Configurable item generation wrapper class.
  */
 UCLASS()
-class FAERIEITEMGENERATOR_API UItemGenerationDriver : public UGenerationActionConfig
+class FAERIEITEMGENERATOR_API UItemGenerationConfig : public UCraftingActionConfig
 {
 	GENERATED_BODY()
 
 	friend class UCraftingLibrary;
 
 public:
-	UItemGenerationDriver();
+	UItemGenerationConfig();
 
 	virtual void PreSave(FObjectPreSaveContext SaveContext) override;
+	virtual void PostLoad() override;
 
 #if WITH_EDITOR
-	// Editor accessors
-	static FName GetMemberName_Pool() { return GET_MEMBER_NAME_CHECKED(ThisClass, Pool); }
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+	virtual void PostEditChangeChainProperty(FPropertyChangedChainEvent& PropertyChangedEvent) override;
 #endif
-
-	UFUNCTION(BlueprintCallable, Category = "Faerie|GenerationDriver")
-	UItemSourcePool* GetPool() const;
 
 	UFUNCTION(BlueprintCallable, Category = "Faerie|GenerationDriver")
 	FGeneratorAmountBase GetAmountResolver() const;
@@ -65,10 +62,9 @@ public:
 	FPendingItemGeneration Resolve() const;
 
 protected:
-	UPROPERTY(Instanced, VisibleInstanceOnly, Category = "Generator", meta = (ShowInnerProperties))
-	TObjectPtr<UItemSourcePool> Pool;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Table", meta = (ShowOnlyInnerProperties))
+	FFaerieWeightedDropPool DropPool;
 
-	UPROPERTY(EditAnywhere, NoClear, Category = "Generator", meta = (BaseStruct = "/Script/FaerieItemGenerator.GeneratorAmountBase",
-				ExcludeBaseStruct, DisplayName = "Amount"))
-	FInstancedStruct AmountResolver = FInstancedStruct::Make(FGeneratorAmount_Fixed());
+	UPROPERTY(EditAnywhere, NoClear, Category = "Generator", meta = (ExcludeBaseStruct, DisplayName = "Amount"))
+	TInstancedStruct<FGeneratorAmountBase> AmountResolver;
 };

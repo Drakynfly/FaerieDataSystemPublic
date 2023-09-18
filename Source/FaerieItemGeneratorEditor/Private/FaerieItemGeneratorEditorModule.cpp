@@ -7,7 +7,8 @@
 #include "ItemUpgradeConfig.h"
 #include "PropertyEditorModule.h"
 #include "PropertyEditorDelegates.h"
-#include "Customizations/ItemGenerationDriverCustomization.h"
+#include "Customizations/ItemGenerationConfigCustomization.h"
+#include "Customizations/ItemsArrayCustomization.h"
 #include "Customizations/OnTheFlyConfigCustomization.h"
 #include "Customizations/TableDropCustomization.h"
 #include "Customizations/WeightedDropCustomization.h"
@@ -21,8 +22,8 @@ void FFaerieItemGeneratorEditorModule::StartupModule()
 	TMap<FName, FOnGetDetailCustomizationInstance> ClassCustomizations;
 	TMap<FName, FOnGetPropertyTypeCustomizationInstance> StructCustomizations;
 
-	ClassCustomizations.Add(UItemGenerationDriver::StaticClass()->GetFName(),
-	FOnGetDetailCustomizationInstance::CreateStatic(&FItemGenerationDriverCustomization::MakeInstance));
+	ClassCustomizations.Add(UItemGenerationConfig::StaticClass()->GetFName(),
+	FOnGetDetailCustomizationInstance::CreateStatic(&FItemGenerationConfigCustomization::MakeInstance));
 
 	StructCustomizations.Add(FTableDrop::StaticStruct()->GetFName(),
 	FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FTableDropCustomization::MakeInstance));
@@ -32,6 +33,8 @@ void FFaerieItemGeneratorEditorModule::StartupModule()
 	FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FOnTheFlyConfigCustomization::MakeInstance));
 	StructCustomizations.Add(FOnTheFlyItemUpgradeConfig::StaticStruct()->GetFName(),
 	FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FOnTheFlyConfigCustomization::MakeInstance));
+	StructCustomizations.Add(FFaerieWeightedDropPool::StaticStruct()->GetFName(),
+	FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FItemsArrayCustomization::MakeInstance));
 
 	RegisterDetailCustomizations(ClassCustomizations);
 	RegisterPropertyCustomizations(StructCustomizations);

@@ -26,7 +26,16 @@ TArray<FSoftObjectPath> UGenerationAction_CraftItems::GetAssetsToLoad() const
 
 void UGenerationAction_CraftItems::Run()
 {
+	// Execute parent Run, as it validates some stuff, and then early out if it fails.
+	Super::Run();
+	if (!IsRunning()) return;
+
 	UE_LOG(LogCraftItems, Log, TEXT("Running CraftEntries"));
+
+	if (!ensure(IsValid(Config->Recipe)))
+	{
+		return;
+	}
 
 	UItemInstancingContext_Crafting* Context = NewObject<UItemInstancingContext_Crafting>(this);
 
@@ -41,10 +50,7 @@ void UGenerationAction_CraftItems::Run()
 		return Fail();
 	}
 
-	auto&& NewStack = NewObject<UFaerieItemDataStackLiteral>();
-	NewStack->SetValue(NewItem);
-
-	OutProxies.Add(NewStack);
+	ProcessStacks.Add({NewItem, 1});
 
 	if (RunConsumeStep && Config->Recipe->Implements<UFaerieItemSlotInterface>())
 	{

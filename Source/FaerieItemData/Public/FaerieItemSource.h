@@ -1,6 +1,7 @@
 ﻿// Copyright Guy (Drakynfly) Lundvall. All Rights Reserved.
 
 #pragma once
+
 #include "FaerieInfoObject.h"
 
 #include "FaerieItemSource.generated.h"
@@ -37,13 +38,13 @@ public:
 	virtual bool CanBeMutable() const { return false; }
 
 	// Allows sources to give info about generation results
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category = "Faerie|ItemSource")
 	virtual FFaerieAssetInfo GetSourceInfo() const { return FFaerieAssetInfo(); }
 
 	// Creates an item with the given outer.
 	virtual UFaerieItem* CreateItemInstance(UObject* Outer = GetTransientPackage()) const;
 
-	// Creates an item that can utilize contextual data given to it be the requester of the item.
+	// Creates an item that can utilize contextual data given to it by the requester of the item.
 	virtual UFaerieItem* CreateItemInstance(const UItemInstancingContext* Context) const;
 };
 

@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "InventoryExtensionBase.h"
+#include "ItemContainerExtensionBase.h"
 #include "FaerieItemStack.h"
 #include "Engine/StreamableManager.h"
 
@@ -33,15 +33,15 @@ class AItemRepresentationActor;
  * pickups for them.
  */
 UCLASS()
-class FAERIEINVENTORYCONTENT_API UInventoryEjectionHandlerExtension : public UInventoryExtensionBase
+class FAERIEINVENTORYCONTENT_API UInventoryEjectionHandlerExtension : public UItemContainerExtensionBase
 {
 	GENERATED_BODY()
 
 public:
-	//~ UInventoryExtensionBase
+	//~ UItemContainerExtensionBase
 	virtual EEventExtensionResponse AllowsRemoval(const UFaerieItemContainerBase* Container, const FEntryKey Key, const FFaerieInventoryTag Reason) const override;
-	virtual void PostRemoval(const UFaerieItemContainerBase* Container, const Faerie::FItemContainerEvent& Event) override;
-	//~ UInventoryExtensionBase
+	virtual void PostRemoval(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) override;
+	//~ UItemContainerExtensionBase
 
 private:
 	void HandleNextInQueue();
@@ -66,5 +66,4 @@ protected:
 
 private:
 	bool IsStreaming = false;
-	FStreamableManager StreamableManager;
 };

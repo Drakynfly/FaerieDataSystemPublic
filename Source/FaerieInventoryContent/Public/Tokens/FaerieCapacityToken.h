@@ -10,7 +10,7 @@
 /**
  *
  */
-UCLASS()
+UCLASS(DisplayName = "Token - Capacity")
 class FAERIEINVENTORYCONTENT_API UFaerieCapacityToken : public UFaerieItemToken
 {
 	GENERATED_BODY()
@@ -21,16 +21,16 @@ public:
 	FItemCapacity GetCapacity() const { return Capacity; }
 
 	UFUNCTION(BlueprintCallable, Category = "CapacityToken")
-	int32 GetWeightOfStack(const FInventoryStack Stack) const;
+	int32 GetWeightOfStack(const int32 Stack) const;
 
 	UFUNCTION(BlueprintCallable, Category = "CapacityToken")
-	int32 GetVolumeOfStack(const FInventoryStack Stack) const;
+	int32 GetVolumeOfStack(const int32 Stack) const;
 
 	UFUNCTION(BlueprintCallable, Category = "CapacityToken")
-	FWeightAndVolume GetWeightAndVolumeOfStack(const FInventoryStack Stack) const;
+	FWeightAndVolume GetWeightAndVolumeOfStack(const int32 Stack) const;
 
 	UFUNCTION(BlueprintCallable, Category = "CapacityToken")
-	FWeightAndVolume GetWeightAndVolumeOfStackForRemoval(const FInventoryStack Current, const FInventoryStack Removal) const;
+	FWeightAndVolume GetWeightAndVolumeOfStackForRemoval(const int32 Current, const int32 Removal) const;
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Replicated, meta = (ShowOnlyInnerProperties))

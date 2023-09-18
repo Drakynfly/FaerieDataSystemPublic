@@ -3,7 +3,7 @@
 #pragma once
 
 #include "FaerieItemToken.h"
-#include "ActorClasses/ItemRepresentationActor.h"
+#include "Actors/ItemRepresentationActor.h"
 
 #include "FaerieVisualActorClassToken.generated.h"
 

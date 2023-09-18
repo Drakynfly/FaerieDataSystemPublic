@@ -2,12 +2,15 @@
 
 #pragma once
 
+#include "FaerieItemDataProxy.h"
 #include "Kismet/BlueprintAsyncActionBase.h"
 
 #include "FaerieCardGenerateAsync.generated.h"
 
-class UFaerieItemDataProxyBase;
+class UFaerieCardGenerator;
+class IFaerieCardGeneratorInterface;
 class UFaerieCardBase;
+class UCustomCardClass;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FCardGenerateFailed);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FCardGenerateSuccess, UFaerieCardBase*, Card);
@@ -21,11 +24,11 @@ class FAERIEITEMCARD_API UFaerieCardGenerateAsync : public UBlueprintAsyncAction
 	GENERATED_BODY()
 
 public:
-	UFaerieCardGenerateAsync(const FObjectInitializer& ObjectInitializer);
+	UFUNCTION(BlueprintCallable, Category = "Faerie|ItemCards", meta = (ExpandBoolAsExecs = "ReturnValue"))
+	static bool GenerateItemCard(APlayerController* OwningPlayer, TScriptInterface<IFaerieCardGeneratorInterface> Generator, FFaerieItemProxy Proxy, TSubclassOf<UCustomCardClass> Type, UFaerieCardBase*& Widget);
 
-	// Logs out of the online service
-	UFUNCTION(BlueprintCallable, meta = (BlueprintInternalUseOnly = "true", WorldContext="WorldContextObject"), Category = "Online")
-	static UFaerieCardGenerateAsync* GenerateFaerieCardAsync(TScriptInterface<IFaerieCardGeneratorInterface> Generator, UFaerieItemDataProxyBase* Proxy, EFaerieCardGeneratorType Type);
+	UFUNCTION(BlueprintCallable, meta = (BlueprintInternalUseOnly = "true", WorldContext = "WorldContextObject"), Category = "Online")
+	static UFaerieCardGenerateAsync* GenerateItemCardAsync(APlayerController* OwningPlayer, TScriptInterface<IFaerieCardGeneratorInterface> Generator, FFaerieItemProxy Proxy, TSubclassOf<UCustomCardClass> Type);
 
 	// UBlueprintAsyncActionBase interface
 	virtual void Activate() override;
@@ -43,11 +46,14 @@ protected:
 
 private:
 	UPROPERTY()
-	TScriptInterface<IFaerieCardGeneratorInterface> Generator;
-
-	UPROPERTY();
-	TObjectPtr<UFaerieItemDataProxyBase> Proxy;
+	TObjectPtr<UFaerieCardGenerator> Generator;
 
 	UPROPERTY()
-	EFaerieCardGeneratorType Type;
+	TObjectPtr<APlayerController> OwningPlayer;
+
+	UPROPERTY();
+	FFaerieItemProxy Proxy;
+
+	UPROPERTY();
+	TSubclassOf<UCustomCardClass> Class;
 };

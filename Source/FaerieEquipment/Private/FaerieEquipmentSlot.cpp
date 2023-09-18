@@ -2,53 +2,42 @@
 
 #include "FaerieEquipmentSlot.h"
 
-#include "FaerieEquipmentManager.h"
 #include "FaerieEquipmentSlotDescription.h"
 #include "FaerieInfoObject.h"
 #include "FaerieItem.h"
 #include "FaerieItemTemplate.h"
-#include "InventoryExtensionBase.h"
+#include "ItemContainerEvent.h"
+#include "ItemContainerExtensionBase.h"
 #include "Net/UnrealNetwork.h"
 #include "Net/Core/PushModel/PushModel.h"
+#include "Tokens/FaerieChildSlotToken.h"
 
 FFaerieEquipmentSlotEvents FFaerieEquipmentSlotEvents::FaerieEquipmentSlotEvents;
 
 DEFINE_LOG_CATEGORY(LogFaerieEquipmentSlot)
 
-const UFaerieItem* UFaerieSlotInternalProxy::GetItemObject() const
-{
-	return Slot->GetItem();
-}
-
-int32 UFaerieSlotInternalProxy::GetCopies() const
-{
-	return 1;
-}
-
-TScriptInterface<IFaerieItemOwnerInterface> UFaerieSlotInternalProxy::GetOwner()
-{
-	return Slot;
-}
-
 UFaerieEquipmentSlot::UFaerieEquipmentSlot()
 {
-	SlotProxy = CreateDefaultSubobject<UFaerieSlotInternalProxy>(TEXT("SlotProxy"));
-	SlotProxy->Slot = this;
+	SingleItemSlot = true;
 }
 
 void UFaerieEquipmentSlot::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
+	// Config members only need to replicate once
+	DOREPLIFETIME_CONDITION(ThisClass, SlotID, COND_InitialOnly);
+	DOREPLIFETIME_CONDITION(ThisClass, SlotDescription, COND_InitialOnly);
+	DOREPLIFETIME_CONDITION(ThisClass, SingleItemSlot, COND_InitialOnly);
+
+	// State members are push based
 	FDoRepLifetimeParams SharedParams;
 	SharedParams.bIsPushBased = true;
-
-	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, SlotID, SharedParams);
-	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, SlotDescription, SharedParams);
-	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, Item, SharedParams);
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, ItemStack, SharedParams);
 	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, StoredKey, SharedParams);
 }
 
+//~ UFaerieItemContainerBase
 bool UFaerieEquipmentSlot::IsValidKey(const FEntryKey Key) const
 {
 	return StoredKey == Key;
@@ -62,122 +51,293 @@ void UFaerieEquipmentSlot::ForEachKey(const TFunctionRef<void(FEntryKey)>& Func)
 	}
 }
 
-FInventoryStack UFaerieEquipmentSlot::GetStack(const FEntryKey Key) const
+void UFaerieEquipmentSlot::OnItemMutated(const UFaerieItem* InItem, const UFaerieItemToken* Token)
 {
-	return 1;
+	Super::OnItemMutated(InItem, Token);
+	check(ItemStack.Item == InItem);
+
+	// Since we should be the only owner of Item, it shouldn't change under us, unless it has a child slot that has an item
+	// added or removed from it. Verify this by checking the class of the token.
+	// If at somepoint this ensure trips, first assume that something has wrongly mutated an item inside a slot (which
+	// shouldn't happen) or that a slot is wrongly holding onto something it shouldn't.
+	ensure(Token->IsA<UFaerieItemContainerToken>());
+
+	OnItemDataChanged.Broadcast(this);
 }
 
+FFaerieItemStackView UFaerieEquipmentSlot::View(FEntryKey Key) const
+{
+	return ItemStack;
+}
+
+FFaerieItemStackView UFaerieEquipmentSlot::View() const
+{
+	return ItemStack;
+}
+
+FFaerieItemProxy UFaerieEquipmentSlot::Proxy(FEntryKey Key) const
+{
+	return this;
+}
+
+FFaerieItemProxy UFaerieEquipmentSlot::Proxy() const
+{
+	return this;
+}
+
+int32 UFaerieEquipmentSlot::GetStack(const FEntryKey Key) const
+{
+	return ItemStack.Copies;
+}
+
+int32 UFaerieEquipmentSlot::GetStack() const
+{
+	return ItemStack.Copies;
+}
+//~ UFaerieItemContainerBase
+
+//~ IFaerieItemDataProxy
+const UFaerieItem* UFaerieEquipmentSlot::GetItemObject() const
+{
+	return ItemStack.Item;
+}
+
+int32 UFaerieEquipmentSlot::GetCopies() const
+{
+	return ItemStack.Copies;
+}
+bool UFaerieEquipmentSlot::CanMutate() const
+{
+	// Items should not be modified while in an equipment slot. Remove them first.
+	return false;
+}
+
+TScriptInterface<IFaerieItemOwnerInterface> UFaerieEquipmentSlot::GetOwner() const
+{
+	return const_cast<ThisClass*>(this);
+}
+//~ IFaerieItemDataProxy
+
+//~ IFaerieItemOwnerInterface
 FFaerieItemStack UFaerieEquipmentSlot::Release(const FFaerieItemStackView Stack)
 {
-	if (Item == Stack.Item)
+	if (Stack.Item == ItemStack.Item &&
+		Stack.Copies >= ItemStack.Copies)
 	{
-		return { TakeItemFromSlot(), 1 };
+		return TakeItemFromSlot(Stack.Copies);
 	}
 	return FFaerieItemStack();
 }
 
 bool UFaerieEquipmentSlot::Possess(const FFaerieItemStack Stack)
 {
-	if (CanSetInSlot(Stack.Item))
+	if (CanSetInSlot(Stack))
 	{
-		SetItemInSlot(Stack.Item);
+		SetItemInSlot(Stack);
 		return true;
 	}
 
 	return false;
 }
+//~ IFaerieItemOwnerInterface
 
-UFaerieEquipmentManager* UFaerieEquipmentSlot::GetOuterManager() const
+void UFaerieEquipmentSlot::BroadcastChange()
 {
-	return GetOuterUFaerieEquipmentManager();
+	OnItemChangedNative.Broadcast(this);
+	OnItemChanged.Broadcast(this);
 }
 
-bool UFaerieEquipmentSlot::CanSetInSlot(const UFaerieItem* TestItem) const
+bool UFaerieEquipmentSlot::CouldSetInSlot(const FFaerieItemStackView View) const
 {
-	if (!IsValid(TestItem)) return false;
+	if (!IsValid(View.Item)) return false;
 
-	auto&& Proxy = GetOuterManager()->CachedProxy;
-	if (ensure(IsValid(Proxy)))
+	if (SingleItemSlot)
 	{
-		GetOuterManager()->CachedProxy->SetValue({TestItem, 1}, nullptr);
-		return SlotDescription->Template->TryMatch(Proxy);
+		if (IsValid(ItemStack.Item))
+		{
+			return false;
+		}
+	}
+
+	if (Extensions->AllowsAddition(this, View) == EEventExtensionResponse::Disallowed)
+	{
+		return false;
+	}
+
+	if (IsValid(SlotDescription))
+	{
+		return SlotDescription->Template->TryMatch(View);
 	}
 	return false;
 }
 
-void UFaerieEquipmentSlot::SetItemInSlot(UFaerieItem* InItem)
+bool UFaerieEquipmentSlot::CanSetInSlot(const FFaerieItemStackView View) const
 {
-	if (IsValid(Item))
+	if (!IsValid(View.Item)) return false;
+
+	if (IsFilled())
 	{
-		UE_LOG(LogFaerieEquipmentSlot, Error,
-			TEXT("Cannot SetItemInSlot while slot '%s' is filled!"), *SlotDescription->SlotInfo.ObjectName.ToString())
+		// Cannot switch items. Remove current first.
+		if (View.Item != ItemStack.Item)
+		{
+			return false;
+		}
+
+		if (SingleItemSlot)
+		{
+			if (IsValid(ItemStack.Item))
+			{
+				return false;
+			}
+		}
+	}
+
+	if (Extensions->AllowsAddition(this, View) == EEventExtensionResponse::Disallowed)
+	{
+		return false;
+	}
+
+	if (IsValid(SlotDescription))
+	{
+		return SlotDescription->Template->TryMatch(View);
+	}
+	return false;
+}
+
+bool UFaerieEquipmentSlot::CanTakeFromSlot(const int32 Copies) const
+{
+	if (!Faerie::ItemData::IsValidStack(Copies) ||
+		!IsValid(ItemStack.Item)) return false;
+
+	if (Copies != Faerie::ItemData::UnlimitedStack &&
+		ItemStack.Copies < Copies)
+	{
+		return false;
+	}
+
+	if (Extensions->AllowsRemoval(this, StoredKey, FFaerieEquipmentSlotEvents::Get().Take) == EEventExtensionResponse::Disallowed)
+	{
+		return false;
+	}
+
+	return true;
+}
+
+void UFaerieEquipmentSlot::SetItemInSlot(const FFaerieItemStack Stack)
+{
+	if (!CanSetInSlot(Stack))
+	{
+		UE_LOG(LogFaerieEquipmentSlot, Warning,
+			TEXT("Invalid request to set into slot '%s'!"), *GetSlotInfo().ObjectName.ToString())
 		return;
 	}
 
-	Extensions->PreAddition(this, {Item, 1});
+	// If the above check passes, then either the Stack's item is the same as our's, or we are currently empty!
 
-	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, Item, this);
-	Item = InItem;
-	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, StoredKey, this);
-	StoredKey = NextKey();
+	Extensions->PreAddition(this, {ItemStack.Item, 1});
 
-	TakeOwnership(Item);
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, ItemStack, this);
+	// Increment key when stored item changes. This is only going to happen if ItemStack.Item is currently nullptr.
+	if (Stack.Item != ItemStack.Item)
+	{
+		MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, StoredKey, this);
+		StoredKey = NextKey();
 
-	Faerie::FItemContainerEvent Event;
-	Event.Item = Item;
+		ItemStack = Stack;
+
+		TakeOwnership(ItemStack.Item);
+	}
+	else
+	{
+		ItemStack.Copies += Stack.Copies;
+		Extensions->PostEntryChanged(this, StoredKey);
+	}
+
+	Faerie::Inventory::FEventLog Event;
+	Event.Item = ItemStack.Item;
 	Event.Amount = 1;
 	Event.Success = true;
 	Event.Type = FFaerieEquipmentSlotEvents::Get().Set;
 	Event.EntryTouched = StoredKey;
 	Extensions->PostAddition(this, Event);
 
-	OnItemChanged.Broadcast(this);
+	BroadcastChange();
 }
 
-UFaerieItem* UFaerieEquipmentSlot::TakeItemFromSlot()
+FFaerieItemStack UFaerieEquipmentSlot::TakeItemFromSlot(int32 Copies)
 {
-	if (!IsValid(Item))
+	if (!CanTakeFromSlot(Copies))
 	{
-		UE_LOG(LogFaerieEquipmentSlot, Error,
-			TEXT("Cannot TakeItemFromSlot while slot '%s' is empty!"), *SlotDescription->SlotInfo.ObjectName.ToString())
-		return nullptr;
+		UE_LOG(LogFaerieEquipmentSlot, Warning,
+			TEXT("Invalid request to set into slot '%s'!"), *GetSlotInfo().ObjectName.ToString())
+		return FFaerieItemStack();
 	}
 
-	Extensions->PreRemoval(this, StoredKey, 1);
+	if (Copies > ItemStack.Copies)
+	{
+		UE_LOG(LogFaerieEquipmentSlot, Error,
+			TEXT("Cannot remove more copies from a slot than what it contains. Slot: '%s', Requested Copies: '%i', Contained: '%i' !"),
+			*GetSlotInfo().ObjectName.ToString(), Copies, ItemStack.Copies)
+		return FFaerieItemStack();
+	}
 
-	ReleaseOwnership(Item);
+	if (Copies == Faerie::ItemData::UnlimitedStack)
+	{
+		Copies = ItemStack.Copies;
+	}
 
-	Faerie::FItemContainerEvent Event;
-	Event.Item = Item;
-	Event.Amount = 1;
+	Extensions->PreRemoval(this, StoredKey, Copies);
+
+	const FFaerieItemStack OutStack{ItemStack.Item, Copies};
+
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, ItemStack, this);
+	if (Copies == ItemStack.Copies)
+	{
+		MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, StoredKey, this);
+		StoredKey = FEntryKey::InvalidKey;
+
+		// Our local Item ptr must be nullptr before calling ReleaseOwnership
+		ItemStack = FFaerieItemStack();
+
+		// Take ownership of new items.
+		ReleaseOwnership(OutStack.Item);
+	}
+	else
+	{
+		ItemStack.Copies -= Copies;
+		Extensions->PostEntryChanged(this, StoredKey);
+	}
+
+	Faerie::Inventory::FEventLog Event;
+	Event.Item = OutStack.Item;
+	Event.Amount = OutStack.Copies;
 	Event.Success = true;
 	Event.Type = FFaerieEquipmentSlotEvents::Get().Take;
 	Event.EntryTouched = StoredKey;
 
-	UFaerieItem* OutItem = Item;
-	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, Item, this);
-	Item = nullptr;
-	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, StoredKey, this);
-	StoredKey = FEntryKey::InvalidKey;
-
 	Extensions->PostRemoval(this, Event);
 
-	OnItemChanged.Broadcast(this);
+	BroadcastChange();
 
-	return OutItem;
+	return OutStack;
 }
 
 FFaerieAssetInfo UFaerieEquipmentSlot::GetSlotInfo() const
 {
-	return SlotDescription ? SlotDescription->SlotInfo : FFaerieAssetInfo();
+	if (IsValid(SlotDescription) &&
+		IsValid(SlotDescription->Template))
+	{
+		return SlotDescription->Template->GetDescription();
+	}
+	return FFaerieAssetInfo();
 }
 
 bool UFaerieEquipmentSlot::IsFilled() const
 {
-	return IsValid(Item);
+	return IsValid(ItemStack.Item) && ItemStack.Copies > 0;
 }
 
 void UFaerieEquipmentSlot::OnRep_Item()
 {
-	OnItemChanged.Broadcast(this);
+	BroadcastChange();
 }

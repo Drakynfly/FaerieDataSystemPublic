@@ -15,13 +15,13 @@ class FAERIEINVENTORY_API UFaerieStackLimiterToken : public UFaerieItemToken
 
 public:
 	UFUNCTION(BlueprintCallable, Category = "MaxStackSizeToken")
-	static FInventoryStack GetItemStackLimit(const UFaerieItem* Item);
+	static int32 GetItemStackLimit(const UFaerieItem* Item);
 
 	UFUNCTION(BlueprintCallable, Category = "MaxStackSizeToken")
-	FInventoryStack GetStackLimit() const;
+	int32 GetStackLimit() const;
 
 protected:
 	// Max stack size
-	UPROPERTY(EditAnywhere)
-	FInventoryStack Size;
+	UPROPERTY(EditAnywhere, meta = (ClampMin = 0))
+	int32 MaxStackSize;
 };

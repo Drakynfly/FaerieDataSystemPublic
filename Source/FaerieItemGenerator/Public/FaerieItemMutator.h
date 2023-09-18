@@ -2,10 +2,10 @@
 
 #pragma once
 
+#include "FaerieItemDataProxy.h"
 #include "UObject/Object.h"
 #include "FaerieItemMutator.generated.h"
 
-class UFaerieItemDataProxyBase;
 class UFaerieItemTemplate;
 
 /**
@@ -17,11 +17,11 @@ class FAERIEITEMGENERATOR_API UFaerieItemMutator : public UObject
 	GENERATED_BODY()
 
 protected:
-	virtual bool CanApply(const UFaerieItemDataProxyBase* Container) const;
-	virtual bool Apply(UFaerieItemDataProxyBase* Entry) PURE_VIRTUAL(UFaerieItemMutator::Apply, return false; )
+	virtual bool CanApply(FFaerieItemProxy Proxy) const;
+	virtual bool Apply(FFaerieItemStack Stack) PURE_VIRTUAL(UFaerieItemMutator::Apply, return false; )
 
 public:
-	bool TryApply(UFaerieItemDataProxyBase* Entry);
+	bool TryApply(FFaerieItemStack Stack);
 
 	// Any soft assets required to be loaded when Apply is called should be registered here.
 	UFUNCTION(BlueprintNativeEvent, Category = "Mutator")

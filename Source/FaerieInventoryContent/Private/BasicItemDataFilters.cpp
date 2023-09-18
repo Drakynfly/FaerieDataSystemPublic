@@ -2,6 +2,7 @@
 
 #include "BasicItemDataFilters.h"
 #include "Tokens/FaerieStackLimiterToken.h"
+#include "Tokens/FaerieTagToken.h"
 
 #if WITH_EDITOR
 EItemDataMutabilityStatus UFilterRule_LogicalOr::GetMutabilityStatus() const
@@ -23,11 +24,11 @@ EItemDataMutabilityStatus UFilterRule_LogicalOr::GetMutabilityStatus() const
 }
 #endif
 
-bool UFilterRule_LogicalOr::Exec(const UFaerieItemDataProxyBase* Proxy) const
+bool UFilterRule_LogicalOr::Exec(const FFaerieItemStackView View) const
 {
 	for (auto&& Rule : Rules)
 	{
-		if (Rule->Exec(Proxy))
+		if (Rule->Exec(View))
 		{
 			return true;
 		}
@@ -54,13 +55,14 @@ EItemDataMutabilityStatus UFilterRule_LogicalAnd::GetMutabilityStatus() const
 
 	return Super::GetMutabilityStatus();
 }
+
 #endif
 
-bool UFilterRule_LogicalAnd::Exec(const UFaerieItemDataProxyBase* Proxy) const
+bool UFilterRule_LogicalAnd::ExecWithLog(const FFaerieItemStackView View, Faerie::ItemData::FFilterLogger* Logger) const
 {
 	for (auto&& Rule : Rules)
 	{
-		if (!Rule->Exec(Proxy))
+		if (!Rule->ExecWithLog(View, Logger))
 		{
 			return false;
 		}
@@ -69,18 +71,34 @@ bool UFilterRule_LogicalAnd::Exec(const UFaerieItemDataProxyBase* Proxy) const
 	return true;
 }
 
-EItemDataMutabilityStatus UFilterRule_Condition::GetMutabilityStatus() const
+bool UFilterRule_LogicalAnd::Exec(const FFaerieItemStackView View) const
 {
-	return Super::GetMutabilityStatus();
+	for (auto&& Rule : Rules)
+	{
+		if (!Rule->Exec(View))
+		{
+			return false;
+		}
+	}
+
+	return true;
 }
 
-bool UFilterRule_Condition::Exec(const UFaerieItemDataProxyBase* Proxy) const
+#if WITH_EDITOR
+EItemDataMutabilityStatus UFilterRule_Condition::GetMutabilityStatus() const
+{
+	// @TODO
+	return Super::GetMutabilityStatus();
+}
+#endif
+
+bool UFilterRule_Condition::Exec(const FFaerieItemStackView View) const
 {
 	if (!ConditionRule) return false;
-	if (ConditionRule->Exec(Proxy))
+	if (ConditionRule->Exec(View))
 	{
 		if (!TrueBranch) return false;
-		return TrueBranch->Exec(Proxy);
+		return TrueBranch->Exec(View);
 	}
 	return FalseBranch;
 }
@@ -93,16 +111,16 @@ EItemDataMutabilityStatus UFilterRule_Ternary::GetMutabilityStatus() const
 }
 #endif
 
-bool UFilterRule_Ternary::Exec(const UFaerieItemDataProxyBase* Proxy) const
+bool UFilterRule_Ternary::Exec(const FFaerieItemStackView View) const
 {
 	if (!ConditionRule) return false;
-	if (ConditionRule->Exec(Proxy))
+	if (ConditionRule->Exec(View))
 	{
 		if (!TrueBranch) return false;
-		return TrueBranch->Exec(Proxy);
+		return TrueBranch->Exec(View);
 	}
 	if (!FalseBranch) return false;
-	return FalseBranch->Exec(Proxy);
+	return FalseBranch->Exec(View);
 }
 
 #if WITH_EDITOR
@@ -116,9 +134,9 @@ EItemDataMutabilityStatus UFilterRule_LogicalNot::GetMutabilityStatus() const
 }
 #endif
 
-bool UFilterRule_LogicalNot::Exec(const UFaerieItemDataProxyBase* Proxy) const
+bool UFilterRule_LogicalNot::Exec(const FFaerieItemStackView View) const
 {
-	return !InvertedRule->Exec(Proxy);
+	return !InvertedRule->Exec(View);
 }
 
 #if WITH_EDITOR
@@ -128,9 +146,9 @@ EItemDataMutabilityStatus UFilterRule_Mutability::GetMutabilityStatus() const
 }
 #endif
 
-bool UFilterRule_Mutability::Exec(const UFaerieItemDataProxyBase* Proxy) const
+bool UFilterRule_Mutability::Exec(const FFaerieItemStackView View) const
 {
-	return Proxy->GetItemObject()->IsDataMutable() == RequireMutable;
+	return View.Item->IsDataMutable() == RequireMutable;
 }
 
 #if WITH_EDITOR
@@ -144,11 +162,11 @@ EItemDataMutabilityStatus UFilterRule_MatchTemplate::GetMutabilityStatus() const
 }
 #endif
 
-bool UFilterRule_MatchTemplate::Exec(const UFaerieItemDataProxyBase* Proxy) const
+bool UFilterRule_MatchTemplate::Exec(const FFaerieItemStackView View) const
 {
 	if (IsValid(Template))
 	{
-		return Template->TryMatch(Proxy);
+		return Template->TryMatch(View);
 	}
 	return false;
 }
@@ -168,12 +186,12 @@ EItemDataMutabilityStatus UFilterRule_HasTokens::GetMutabilityStatus() const
 }
 #endif
 
-bool UFilterRule_HasTokens::Exec(const UFaerieItemDataProxyBase* Proxy) const
+bool UFilterRule_HasTokens::Exec(const FFaerieItemStackView View) const
 {
-	auto TokenClassesCopy = TokenClasses;
-	auto&& Tokens = Proxy->GetItemObject()->GetTokens();
+	TArray<TSubclassOf<UFaerieItemToken>> TokenClassesCopy = TokenClasses;
 
-	for (auto&& Token : Tokens)
+	for (auto&& Tokens = View.Item->GetTokens();
+		const TObjectPtr<UFaerieItemToken>& Token : Tokens)
 	{
 		if (!IsValid(Token)) continue;
 
@@ -205,15 +223,15 @@ EItemDataMutabilityStatus UFilterRule_Copies::GetMutabilityStatus() const
 }
 #endif
 
-bool UFilterRule_Copies::Exec(const UFaerieItemDataProxyBase* Proxy) const
+bool UFilterRule_Copies::Exec(const FFaerieItemStackView View) const
 {
 	switch (Operator) {
-	case ECopiesCompareOperator::Less:				return Proxy->GetCopies() < AmountToCompare;
-	case ECopiesCompareOperator::LessOrEqual:		return Proxy->GetCopies() <= AmountToCompare;
-	case ECopiesCompareOperator::Greater:			return Proxy->GetCopies() > AmountToCompare;
-	case ECopiesCompareOperator::GreaterOrEqual:	return Proxy->GetCopies() >= AmountToCompare;
-	case ECopiesCompareOperator::Equal:				return Proxy->GetCopies() == AmountToCompare;
-	case ECopiesCompareOperator::NotEqual:			return Proxy->GetCopies() != AmountToCompare;
+	case ECopiesCompareOperator::Less:				return View.Copies < AmountToCompare;
+	case ECopiesCompareOperator::LessOrEqual:		return View.Copies <= AmountToCompare;
+	case ECopiesCompareOperator::Greater:			return View.Copies > AmountToCompare;
+	case ECopiesCompareOperator::GreaterOrEqual:	return View.Copies >= AmountToCompare;
+	case ECopiesCompareOperator::Equal:				return View.Copies == AmountToCompare;
+	case ECopiesCompareOperator::NotEqual:			return View.Copies != AmountToCompare;
 	default: return false;
 	}
 }
@@ -239,11 +257,10 @@ EItemDataMutabilityStatus UFilterRule_StackLimit::GetMutabilityStatus() const
 }
 #endif
 
-bool UFilterRule_StackLimit::Exec(const UFaerieItemDataProxyBase* Proxy) const
+bool UFilterRule_StackLimit::Exec(const FFaerieItemStackView View) const
 {
-	const FInventoryStack Limit = UFaerieStackLimiterToken::GetItemStackLimit(Proxy->GetItemObject());
-
-	if (Limit == FInventoryStack::UnlimitedStack)
+	if (const int32 Limit = UFaerieStackLimiterToken::GetItemStackLimit(View.Item);
+		Limit == Faerie::ItemData::UnlimitedStack)
 	{
 		switch (Operator) {
 		case EStackCompareOperator::Less:			return false;
@@ -271,4 +288,22 @@ bool UFilterRule_StackLimit::Exec(const UFaerieItemDataProxyBase* Proxy) const
 		default: return false;
 		}
 	}
+}
+
+bool UFilterRule_GameplayTagAny::Exec(const FFaerieItemStackView View) const
+{
+	if (const UFaerieTagToken* TagToken = View.Item->GetToken<UFaerieTagToken>())
+	{
+		return TagToken->GetTags().HasAny(Tags);
+	}
+	return false;
+}
+
+bool UFilterRule_GameplayTagAll::Exec(const FFaerieItemStackView View) const
+{
+	if (const UFaerieTagToken* TagToken = View.Item->GetToken<UFaerieTagToken>())
+	{
+		return TagToken->GetTags().HasAll(Tags);
+	}
+	return false;
 }

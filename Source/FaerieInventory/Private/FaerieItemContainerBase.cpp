@@ -3,14 +3,13 @@
 #include "FaerieItemContainerBase.h"
 
 #include "FaerieItemStorage.h"
-#include "InventoryExtensionBase.h"
+#include "ItemContainerExtensionBase.h"
 #include "Net/UnrealNetwork.h"
-#include "Net/Core/PushModel/PushModel.h"
 #include "Tokens/FaerieItemStorageToken.h"
 
 UFaerieItemContainerBase::UFaerieItemContainerBase()
 {
-	Extensions = CreateDefaultSubobject<UInventoryExtensionGroup>(TEXT("Extensions"));
+	Extensions = CreateDefaultSubobject<UItemContainerExtensionGroup>(FName{TEXTVIEW("Extensions")});
 	Extensions->InitializeExtension(this);
 }
 
@@ -43,14 +42,24 @@ FEntryKey UFaerieItemContainerBase::NextKey()
 	return FEntryKey(NextKeyInt++);
 }
 
-void UFaerieItemContainerBase::ReleaseOwnership(const UFaerieItem* Item)
+void UFaerieItemContainerBase::OnItemMutated(const UFaerieItem* Item, const UFaerieItemToken* Token)
+{
+}
+
+void UFaerieItemContainerBase::ReleaseOwnership(UFaerieItem* Item)
 {
 	if (!ensure(IsValid(Item))) return;
 
-	// Remove our group of extensions from any sub-storage
-	if (auto&& StorageToken = Item->GetToken<UFaerieItemStorageToken>())
+	if (Item->IsDataMutable())
 	{
-		StorageToken->GetItemStorage()->RemoveExtension(Extensions);
+		Item->GetNotifyOwnerOfSelfMutation().Unbind();
+	}
+
+	// Remove our group of extensions from any sub-storages
+	for (auto&& ChildContainers = UFaerieItemContainerToken::GetAllContainersInItem(Item);
+		 auto&& ChildContainer : ChildContainers)
+	{
+		ChildContainer->RemoveExtension(Extensions);
 	}
 }
 
@@ -58,35 +67,41 @@ void UFaerieItemContainerBase::TakeOwnership(UFaerieItem* Item)
 {
 	if (!ensure(IsValid(Item))) return;
 
-	// Add our group of extensions to any sub-storage
-	if (auto&& StorageToken = Item->GetToken<UFaerieItemStorageToken>())
+	if (Item->IsDataMutable())
 	{
-		StorageToken->GetItemStorage()->AddExtension(Extensions);
+		Item->GetNotifyOwnerOfSelfMutation().BindUObject(this, &ThisClass::OnItemMutated);
+	}
+
+	// Add our group of extensions to any sub-storages
+	for (auto&& ChildContainers = UFaerieItemContainerToken::GetAllContainersInItem(Item);
+		 auto&& Container : ChildContainers)
+	{
+		Container->AddExtension(Extensions);
 	}
 }
 
-bool UFaerieItemContainerBase::AddExtension(UInventoryExtensionBase* Extension)
+bool UFaerieItemContainerBase::AddExtension(UItemContainerExtensionBase* Extension)
 {
 	return Extensions->AddExtension(Extension);
 }
 
-bool UFaerieItemContainerBase::RemoveExtension(UInventoryExtensionBase* Extension)
+bool UFaerieItemContainerBase::RemoveExtension(UItemContainerExtensionBase* Extension)
 {
 	return Extensions->RemoveExtension(Extension);
 }
 
-bool UFaerieItemContainerBase::HasExtension(const TSubclassOf<UInventoryExtensionBase> ExtensionClass) const
+bool UFaerieItemContainerBase::HasExtension(const TSubclassOf<UItemContainerExtensionBase> ExtensionClass) const
 {
 	return Extensions->HasExtension(ExtensionClass);
 }
 
-UInventoryExtensionBase* UFaerieItemContainerBase::GetExtension(const TSubclassOf<UInventoryExtensionBase> ExtensionClass) const
+UItemContainerExtensionBase* UFaerieItemContainerBase::GetExtension(const TSubclassOf<UItemContainerExtensionBase> ExtensionClass) const
 {
 	return Extensions->GetExtension(ExtensionClass);
 }
 
-bool UFaerieItemContainerBase::GetExtensionChecked(const TSubclassOf<UInventoryExtensionBase> ExtensionClass,
-													UInventoryExtensionBase*& Extension) const
+bool UFaerieItemContainerBase::GetExtensionChecked(const TSubclassOf<UItemContainerExtensionBase> ExtensionClass,
+													UItemContainerExtensionBase*& Extension) const
 {
 	return Extensions->GetExtensionChecked(ExtensionClass, Extension);
 }

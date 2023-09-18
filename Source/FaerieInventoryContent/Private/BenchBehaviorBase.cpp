@@ -1,12 +1,6 @@
 // Copyright Guy (Drakynfly) Lundvall. All Rights Reserved.
 
 #include "BenchBehaviorBase.h"
-#include "ActorClasses/BenchVisualBase.h"
-
-ABenchVisualBase* UBenchBehaviorBase::GetBenchVisualActor() const
-{
-	return GetTypedOuter<ABenchVisualBase>();
-}
 
 bool UBenchBehaviorBase::CanPlayerInteract() const
 {

@@ -12,9 +12,9 @@ void UFaerieCardBase::NativeConstruct()
 	}
 }
 
-void UFaerieCardBase::SetItemData(const UFaerieItemDataProxyBase* InItemData, const bool bRefresh)
+void UFaerieCardBase::SetItemData(const FFaerieItemProxy InItemProxy, const bool bRefresh)
 {
-	ItemData = InItemData;
+	ItemProxy = InItemProxy;
 	if (bRefresh)
 	{
 		Refresh();

@@ -14,12 +14,12 @@ void UInventoryLoggerExtension::GetLifetimeReplicatedProps(TArray<FLifetimePrope
 	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, EventLog, SharedParams);
 }
 
-void UInventoryLoggerExtension::PostAddition(const UFaerieItemContainerBase* Container, const Faerie::FItemContainerEvent& Event)
+void UInventoryLoggerExtension::PostAddition(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event)
 {
 	HandleNewEvent({Container, Event});
 }
 
-void UInventoryLoggerExtension::PostRemoval(const UFaerieItemContainerBase* Container, const Faerie::FItemContainerEvent& Event)
+void UInventoryLoggerExtension::PostRemoval(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event)
 {
 	HandleNewEvent({Container, Event});
 }
@@ -50,15 +50,13 @@ void UInventoryLoggerExtension::OnRep_EventLog()
 {
 	// When the EventLog is replicated to clients, we need to check how many events behind we are.
 	const int32 BehindCount = EventLog.Num() - LocalEventLogCount;
+	LocalEventLogCount = EventLog.Num();
 
-	auto&& RecentLogs = GetRecentEvents(BehindCount);
-
-	for (auto RecentLog : RecentLogs)
+	for (auto&& RecentLogs = TConstArrayView<FLoggedInventoryEvent>(EventLog).Right(BehindCount);
+		auto&& RecentLog : RecentLogs)
 	{
 		OnInventoryEventLogged.Broadcast(RecentLog);
 	}
-
-	LocalEventLogCount = EventLog.Num();
 }
 
 void ULoggedInventoryEventLibrary::BreakLoggedInventoryEvent(const FLoggedInventoryEvent& LoggedEvent, FFaerieInventoryTag& Type,

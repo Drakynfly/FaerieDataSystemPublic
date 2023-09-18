@@ -6,15 +6,6 @@
 
 FFaerieInventoryMetaTags FFaerieInventoryMetaTags::FaerieInventoryMetaTags;
 
-UInventoryMetadataExtension::UInventoryMetadataExtension()
-{
-}
-
-void UInventoryMetadataExtension::DeinitializeExtension(const UFaerieItemContainerBase* Container)
-{
-	PerStorageMetadata.Remove(Container);
-}
-
 EEventExtensionResponse UInventoryMetadataExtension::AllowsRemoval(const UFaerieItemContainerBase* Container,
 	const FEntryKey Key, const FFaerieInventoryTag Reason) const
 {
@@ -22,7 +13,7 @@ EEventExtensionResponse UInventoryMetadataExtension::AllowsRemoval(const UFaerie
 	static FGameplayTagContainer RemovalDenyingTags = FGameplayTagContainer::CreateFromArray(
 		TArray<FGameplayTag>{
 			FFaerieInventoryMetaTags::Get().CannotRemove
-	});
+		});
 
 	// Tags that deny a specific reason
 	static TMap<FFaerieInventoryTag, FFaerieInventoryTag> OtherDenialTags = {
@@ -31,55 +22,49 @@ EEventExtensionResponse UInventoryMetadataExtension::AllowsRemoval(const UFaerie
 		{ FFaerieEjectionEvent::Get().Removal_Ejection, FFaerieInventoryMetaTags::Get().CannotEject }
 	};
 
-	if (auto&& StorageData = PerStorageMetadata.Find(Container))
+	FGameplayTagContainer ThisEventTags = RemovalDenyingTags;
+
+	// Check for a tag that might deny this reason
+	if (auto&& DenialTag = OtherDenialTags.Find(Reason))
 	{
-		if (auto&& Metadatum = StorageData->Metadata.Find(Key))
+		ThisEventTags.AddTag(*DenialTag);
+	}
+
+	if (const FConstStructView DataView = GetDataForEntry(Container, Key);
+		DataView.IsValid())
+	{
+		if (DataView.Get<const FInventoryEntryMetadata>().Tags.HasAny(ThisEventTags))
 		{
-			FGameplayTagContainer ThisEventTags = RemovalDenyingTags;
-
-			// Check for a tag that might deny this reason
-			if (auto&& DenialTag = OtherDenialTags.Find(Reason))
-			{
-				ThisEventTags.AddTag(*DenialTag);
-			}
-
-			if (Metadatum->Tags.HasAny(ThisEventTags))
-			{
-				return EEventExtensionResponse::Disallowed;
-			}
+			return EEventExtensionResponse::Disallowed;
 		}
 	}
 
 	return EEventExtensionResponse::Allowed;
 }
 
-void UInventoryMetadataExtension::PreRemoval(const UFaerieItemContainerBase* Container, const FEntryKey Key, const int32 Removal)
+UScriptStruct* UInventoryMetadataExtension::GetDataScriptStruct() const
 {
-	if (auto&& StorageData = PerStorageMetadata.Find(Container))
-	{
-		(*StorageData).Metadata.Remove(Key);
-	}
+	return FInventoryEntryMetadata::StaticStruct();
 }
 
-bool UInventoryMetadataExtension::DoesEntryHaveTag(UFaerieItemContainerBase* Container, const FEntryKey Key, const FFaerieInventoryMetaTag Tag) const
+bool UInventoryMetadataExtension::DoesEntryHaveTag(const UFaerieItemContainerBase* Container, const FEntryKey Key, const FFaerieInventoryMetaTag Tag) const
 {
-	if (auto&& StorageData = PerStorageMetadata.Find(Container))
+	const FConstStructView DataView = GetDataForEntry(Container, Key);
+	if (!DataView.IsValid())
 	{
-		if (auto&& Metadatum = StorageData->Metadata.Find(Key))
-		{
-			return Metadatum->Tags.HasTag(Tag);
-		}
+		return false;
 	}
-	return false;
+
+	return DataView.Get<const FInventoryEntryMetadata>().Tags.HasTag(Tag);
 }
 
-bool UInventoryMetadataExtension::CanSetEntryTag(UFaerieItemContainerBase* Container, const FEntryKey Key,
+bool UInventoryMetadataExtension::CanSetEntryTag(const UFaerieItemContainerBase* Container, const FEntryKey Key,
 												 const FFaerieInventoryMetaTag Tag, const bool StateToSetTo) const
 {
 	return DoesEntryHaveTag(Container, Key, Tag) != StateToSetTo;
 }
 
-bool UInventoryMetadataExtension::MarkStackWithTag(UFaerieItemContainerBase* Container, const FEntryKey Key, const FFaerieInventoryMetaTag Tag)
+bool UInventoryMetadataExtension::MarkStackWithTag(const UFaerieItemContainerBase* Container, const FEntryKey Key, const FFaerieInventoryMetaTag Tag)
 {
 	if (!Tag.IsValid())
 	{
@@ -96,17 +81,20 @@ bool UInventoryMetadataExtension::MarkStackWithTag(UFaerieItemContainerBase* Con
 		return false;
 	}
 
-	PerStorageMetadata.FindOrAdd(Container).Metadata.FindOrAdd(Key).Tags.AddTag(Tag);
-	return true;
+	return EditDataForEntry(Container, Key,
+		[Tag](FInstancedStruct& Data)
+		{
+			Data.GetMutable<FInventoryEntryMetadata>().Tags.AddTag(Tag);
+		});
 }
 
-void UInventoryMetadataExtension::TrySetTags(UFaerieItemContainerBase* Container, const FEntryKey Key, const FGameplayTagContainer Tags)
+void UInventoryMetadataExtension::TrySetTags(const UFaerieItemContainerBase* Container, const FEntryKey Key, const FGameplayTagContainer Tags)
 {
 	// @todo implement
 	unimplemented();
 }
 
-bool UInventoryMetadataExtension::ClearTagFromStack(UFaerieItemContainerBase* Container, const FEntryKey Key, const FFaerieInventoryMetaTag Tag)
+bool UInventoryMetadataExtension::ClearTagFromStack(const UFaerieItemContainerBase* Container, const FEntryKey Key, const FFaerieInventoryMetaTag Tag)
 {
 	if (!Tag.IsValid())
 	{
@@ -118,13 +106,9 @@ bool UInventoryMetadataExtension::ClearTagFromStack(UFaerieItemContainerBase* Co
 		return false;
 	}
 
-	if (auto&& StorageData = PerStorageMetadata.Find(Container))
-	{
-		if (auto* Metadatum = StorageData->Metadata.Find(Key))
+	return EditDataForEntry(Container, Key,
+		[Tag](FInstancedStruct& Data)
 		{
-			return Metadatum->Tags.RemoveTag(Tag);
-		}
-	}
-
-	return false;
+			Data.GetMutable<FInventoryEntryMetadata>().Tags.RemoveTag(Tag);
+		});
 }

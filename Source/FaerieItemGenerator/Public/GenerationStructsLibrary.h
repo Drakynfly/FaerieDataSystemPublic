@@ -8,18 +8,13 @@
 
 #include "GenerationStructsLibrary.generated.h"
 
-class USquirrel;
-
 USTRUCT(BlueprintType)
-struct FTableDropResourceSlot
+struct FRecursiveTableDrop
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "TableDropResourceSlot")
-	FFaerieItemSlotHandle SlotID;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "TableDropResourceSlot", NoClear, meta = (BaseStruct = "/Script/FaerieItemGenerator.TableDrop"))
-	FInstancedStruct Drop;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RecursiveTableDrop")
+	TInstancedStruct<struct FTableDrop> Drop;
 };
 
 USTRUCT(BlueprintType)
@@ -32,9 +27,8 @@ struct FAERIEITEMGENERATOR_API FTableDrop
 	FFaerieItemSourceObject Asset;
 
 	// Used to fill Required/Optional Slots for graph-based instances.
-	// @todo this aren't being used anywhere !! they should be
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "TableDrop")
-	TArray<FTableDropResourceSlot> StaticResourceSlots;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "TableDrop", meta = (ForceInlineRow))
+	TMap<FFaerieItemSlotHandle, FRecursiveTableDrop> StaticResourceSlots;
 
 	// @todo make this callable via blueprints at some point...
 	UFaerieItem* Resolve(const class UItemInstancingContext_Crafting* Context) const;
@@ -89,6 +83,7 @@ struct FAERIEITEMGENERATOR_API FWeightedDrop
 	}
 };
 
+class USquirrel;
 
 USTRUCT(BlueprintType, meta = (HideDropdown))
 struct FAERIEITEMGENERATOR_API FGeneratorAmountBase
@@ -110,6 +105,21 @@ struct FGeneratorAmount_Fixed : public FGeneratorAmountBase
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Fixed Amount", meta = (ClampMin = "1"))
 	int32 AmountInt = 1;
+};
+
+/** Random value between a min and max. */
+USTRUCT(BlueprintType, meta = (DisplayName = "Range"))
+struct FGeneratorAmount_Range : public FGeneratorAmountBase
+{
+	GENERATED_BODY()
+
+	virtual int32 Resolve(USquirrel* Squirrel) const override;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Range Amount", meta = (ClampMin = "1"))
+	int32 AmountMin = 1;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Range Amount", meta = (ClampMin = "1"))
+	int32 AmountMax = 3;
 };
 
 /**

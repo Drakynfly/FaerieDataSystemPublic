@@ -9,7 +9,7 @@ void UGenerationAction_UpgradeItems::Configure(FActionArgs& Args)
 	UpgradeConfig = Args.UpgradeConfig;
 	ItemBeingUpgraded = Args.ItemBeingUpgraded;
 	check(UpgradeConfig);
-	check(ItemBeingUpgraded);
+	check(IsValid(ItemBeingUpgraded.GetObject()));
 	Super::Configure(Args);
 }
 
@@ -31,13 +31,28 @@ TArray<FSoftObjectPath> UGenerationAction_UpgradeItems::GetAssetsToLoad() const
 
 void UGenerationAction_UpgradeItems::Run()
 {
-	// Apply the mutator
-	if (!UpgradeConfig->Mutator->TryApply(ItemBeingUpgraded))
+	// Execute parent Run, as it validates some stuff, and then early out if it fails.
+	Super::Run();
+	if (!IsRunning()) return;
+
+	// @todo batching
+	int32 Copies = 1;
+
+	const FFaerieItemStackView ReleaseRequest{ItemBeingUpgraded->GetItemObject(), Copies};
+	const FFaerieItemStack Stack = ItemBeingUpgraded->GetOwner()->Release(ReleaseRequest);
+
+	if (Stack.Copies == 0)
 	{
 		return Fail();
 	}
 
-	OutProxies.Add(ItemBeingUpgraded);
+	// Apply the mutator
+	if (!UpgradeConfig->Mutator->TryApply(Stack))
+	{
+		return Fail();
+	}
+
+	ProcessStacks.Add(Stack);
 
 	if (RunConsumeStep)
 	{

@@ -9,8 +9,9 @@ DECLARE_LOG_CATEGORY_EXTERN(LogCraftItems, Log, All);
 
 class UItemCraftingConfig;
 
+// @todo should be renamed to UCraftingAction_Combine
 UCLASS()
-class UGenerationAction_CraftItems : public UGenerationActionWithSlots
+class UGenerationAction_CraftItems : public UCraftingActionWithSlots
 {
 	GENERATED_BODY()
 

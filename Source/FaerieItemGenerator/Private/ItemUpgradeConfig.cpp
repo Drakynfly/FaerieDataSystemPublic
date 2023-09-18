@@ -1,6 +1,11 @@
 ﻿// Copyright Guy (Drakynfly) Lundvall. All Rights Reserved.
 
 #include "ItemUpgradeConfig.h"
+#include "FaerieItemMutator.h"
+
+#if WITH_EDITOR
+#include "Misc/DataValidation.h"
+#endif
 
 DEFINE_LOG_CATEGORY(LogItemUpgradeConfig)
 
@@ -8,19 +13,19 @@ DEFINE_LOG_CATEGORY(LogItemUpgradeConfig)
 
 #define LOCTEXT_NAMESPACE "ItemUpgradeConfigValidation"
 
-EDataValidationResult UItemUpgradeConfig::IsDataValid(TArray<FText>& ValidationErrors)
+EDataValidationResult UItemUpgradeConfig::IsDataValid(FDataValidationContext& Context) const
 {
-	FText ErrorMessage;
-	bool HasError = false;
-
 	if (!Mutator)
 	{
-		ErrorMessage = LOCTEXT("MutatorNotValid", "Mutators is invalid.");
-		ValidationErrors.Add(ErrorMessage);
-		HasError = true;
+		Context.AddError(LOCTEXT("MutatorNotValid", "Mutators is invalid."));
 	}
 
-	return HasError ? EDataValidationResult::Invalid : EDataValidationResult::Valid;
+	if (Context.GetNumErrors())
+	{
+		return EDataValidationResult::Invalid;
+	}
+
+	return Super::IsDataValid(Context);
 }
 
 #undef LOCTEXT_NAMESPACE

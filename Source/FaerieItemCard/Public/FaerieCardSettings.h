@@ -2,8 +2,10 @@
 
 #pragma once
 
+#include "Engine/DeveloperSettings.h"
 #include "FaerieCardSettings.generated.h"
 
+class UCustomCardClass;
 class UFaerieCardBase;
 
 /**
@@ -20,8 +22,5 @@ public:
 	// End UDeveloperSettings implementation
 
 	UPROPERTY(Config, EditAnywhere, Category = "Classes")
-	TSoftClassPtr<UFaerieCardBase> DefaultPaletteCardClass;
-
-	UPROPERTY(Config, EditAnywhere, Category = "Classes")
-    TSoftClassPtr<UFaerieCardBase> DefaultInfoCardClass;
+	TMap<TSubclassOf<UCustomCardClass>, TSoftClassPtr<UFaerieCardBase>> DefaultClasses;
 };

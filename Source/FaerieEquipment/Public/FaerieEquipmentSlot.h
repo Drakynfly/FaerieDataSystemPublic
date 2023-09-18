@@ -36,44 +36,25 @@ private:
 
 DECLARE_LOG_CATEGORY_EXTERN(LogFaerieEquipmentSlot, Log, All)
 
-class UFaerieEquipmentManager;
 class UFaerieEquipmentSlotDescription;
 class UFaerieItem;
 
 class UFaerieEquipmentSlot;
-DECLARE_MULTICAST_DELEGATE_OneParam(FEquipmentSlotEventNative, UFaerieEquipmentSlot*);
+using FEquipmentSlotEventNative = TMulticastDelegate<void(UFaerieEquipmentSlot*)>;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FEquipmentSlotEvent, UFaerieEquipmentSlot*, Slot);
 
-UCLASS()
-class UFaerieSlotInternalProxy : public UFaerieItemDataProxyBase
-{
-	GENERATED_BODY()
-
-	friend UFaerieEquipmentSlot;
-
-public:
-	//~ UFaerieItemDataProxyBase
-	virtual const UFaerieItem* GetItemObject() const override;
-	virtual int32 GetCopies() const override;
-	virtual TScriptInterface<IFaerieItemOwnerInterface> GetOwner() override;
-	//~ UFaerieItemDataProxyBase
-
-	TObjectPtr<UFaerieEquipmentSlot> GetSlot() const { return Slot; }
-
-protected:
-	UPROPERTY(BlueprintReadOnly, Category = "Faerie|SlotProxy")
-	TObjectPtr<UFaerieEquipmentSlot> Slot;
-};
 
 /**
  *
  */
-UCLASS(BlueprintType, Within = FaerieEquipmentManager)
-class FAERIEEQUIPMENT_API UFaerieEquipmentSlot : public UFaerieItemContainerBase
+UCLASS(BlueprintType)
+class FAERIEEQUIPMENT_API UFaerieEquipmentSlot : public UFaerieItemContainerBase, public IFaerieItemDataProxy
 {
 	GENERATED_BODY()
 
-	friend UFaerieEquipmentManager;
+	// We friend the only classes allowed to set our SlotDescription
+	friend class UFaerieEquipmentManager;
+	friend class UFaerieChildSlotToken;
 
 public:
 	UFaerieEquipmentSlot();
@@ -83,31 +64,57 @@ public:
 	//~ UFaerieItemContainerBase
 	virtual bool IsValidKey(FEntryKey Key) const override;
 	virtual void ForEachKey(const TFunctionRef<void(FEntryKey)>& Func) const override;
-	virtual FInventoryStack GetStack(FEntryKey Key) const override;
+	virtual void OnItemMutated(const UFaerieItem* InItem, const UFaerieItemToken* Token) override;
+
+private:
+	virtual FFaerieItemStackView View(FEntryKey Key) const override;
+	virtual FFaerieItemProxy Proxy(FEntryKey Key) const override;
+	virtual int32 GetStack(FEntryKey Key) const override;
+
+public:
+	FFaerieItemStackView View() const;
+	FFaerieItemProxy Proxy() const;
+	int32 GetStack() const;
 	//~ UFaerieItemContainerBase
+
+	//~ IFaerieItemDataProxy
+	virtual const UFaerieItem* GetItemObject() const override;
+	virtual int32 GetCopies() const override;
+	virtual bool CanMutate() const override;
+	virtual TScriptInterface<IFaerieItemOwnerInterface> GetOwner() const override;
+	//~ IFaerieItemDataProxy
 
 	//~ IFaerieItemOwnerInterface
 	virtual FFaerieItemStack Release(FFaerieItemStackView Stack) override;
 	virtual bool Possess(FFaerieItemStack Stack) override;
 	//~ IFaerieItemOwnerInterface
 
+protected:
+	virtual void BroadcastChange();
+
 public:
 	FFaerieSlotTag GetSlotID() const { return SlotID; }
-	const UFaerieItem* GetItem() const { return Item; }
 
 	FEquipmentSlotEventNative& GetOnItemChangedNative() { return OnItemChangedNative; }
 
+	// This checks if the stack could ever be contained by this slot, ignoring its current state.
 	UFUNCTION(BlueprintCallable, Category = "Faerie|EquipmentSlot")
-	UFaerieEquipmentManager* GetOuterManager() const;
+	bool CouldSetInSlot(FFaerieItemStackView View) const;
 
+	// This checks if the stack can be set to this slot. This is always called during SetItemInSlot, so do not feel the
+	// need to always call this first, unless to preemptively check for User-facing purposes.
 	UFUNCTION(BlueprintCallable, Category = "Faerie|EquipmentSlot")
-	bool CanSetInSlot(const UFaerieItem* TestItem) const;
+	bool CanSetInSlot(FFaerieItemStackView View) const;
+
+	// Use to check beforehand if a removal will go through.
+	UFUNCTION(BlueprintCallable, Category = "Faerie|EquipmentSlot")
+	bool CanTakeFromSlot(int32 Copies) const;
 
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Faerie|EquipmentSlot")
-	void SetItemInSlot(UFaerieItem* InItem);
+	void SetItemInSlot(FFaerieItemStack Stack);
 
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Faerie|EquipmentSlot")
-	UFaerieItem* TakeItemFromSlot();
+	FFaerieItemStack TakeItemFromSlot(int32 Copies);
 
 	UFUNCTION(BlueprintCallable, Category = "Faerie|EquipmentSlot")
 	FFaerieAssetInfo GetSlotInfo() const;
@@ -122,27 +129,33 @@ protected:
 protected:
 	FEquipmentSlotEventNative OnItemChangedNative;
 
+public:
+	// Broadcast when the item filling this slot is removed, or a new item is set.
 	UPROPERTY(BlueprintAssignable, Category = "Faerie|EquipmentSlot|Events")
 	FEquipmentSlotEvent OnItemChanged;
 
+	// Broadcast when the Item filling this slot has its data mutated. Usually by a sub-item being added/removed.
+	UPROPERTY(BlueprintAssignable, Category = "Faerie|EquipmentSlot|Events")
+	FEquipmentSlotEvent OnItemDataChanged;
+
 protected:
 	// Unique ID for this slot.
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Replicated, Category = "EquipmentSlot")
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Replicated, Category = "Config")
 	FFaerieSlotTag SlotID;
 
 	// Info about this slot.
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Replicated, Category = "EquipmentSlot")
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Replicated, Category = "Config")
 	TObjectPtr<UFaerieEquipmentSlotDescription> SlotDescription;
 
-	// Current item being contained in this slot.
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, ReplicatedUsing = "OnRep_Item", Category = "EquipmentSlot")
-	TObjectPtr<UFaerieItem> Item;
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Replicated, Category = "Config")
+	bool SingleItemSlot;
 
-	// Proxy used to store the item for use in proxy functions.
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "EquipmentSlot")
-	TObjectPtr<UFaerieSlotInternalProxy> SlotProxy;
+	// Current item stack being contained in this slot.
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, ReplicatedUsing = "OnRep_Item", Category = "State")
+	FFaerieItemStack ItemStack;
 
 private:
+	// Incremented each time a new item is stored in this stack. Not changed when stack Copies is edited.
 	UPROPERTY(Replicated)
 	FEntryKey StoredKey;
 };

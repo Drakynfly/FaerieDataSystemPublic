@@ -56,7 +56,7 @@ void FInventoryWeightCustomization::UpdateWeightHelp() const
     WeightHandlePtr.Get()->GetValue(NewValue);
 
     const double Pounds = FUnitConversion::Convert(static_cast<double>(NewValue), EUnit::Grams, EUnit::Pounds);
-    const FString PoundsString = FString::Printf(TEXT("lbs: %.1f"), Pounds);
+    const FString PoundsString = FString::Printf(TEXT("lbs: %.2f"), Pounds);
 
     if (WeightHelpText.IsValid())
     {
@@ -70,8 +70,8 @@ TSharedRef<IPropertyTypeCustomization> FItemCapacityCustomization::MakeInstance(
 }
 
 void FItemCapacityCustomization::CustomizeHeader(const TSharedRef<IPropertyHandle> PropertyHandle,
-                                                  FDetailWidgetRow& HeaderRow,
-                                                  IPropertyTypeCustomizationUtils& CustomizationUtils)
+                                                 FDetailWidgetRow& HeaderRow,
+                                                 IPropertyTypeCustomizationUtils& CustomizationUtils)
 {}
 
 void FItemCapacityCustomization::CustomizeChildren(const TSharedRef<IPropertyHandle> StructPropertyHandle,
@@ -108,7 +108,7 @@ void FItemCapacityCustomization::CustomizeChildren(const TSharedRef<IPropertyHan
     UpdateInfo();
 
     FSimpleDelegate Delegate;
-    Delegate.BindRaw(this, &FItemCapacityCustomization::UpdateInfo);
+    Delegate.BindSP(this, &FItemCapacityCustomization::UpdateInfo);
 
     WeightHandle->SetOnChildPropertyValueChanged(Delegate);
     BoundsHandle->SetOnChildPropertyValueChanged(Delegate);

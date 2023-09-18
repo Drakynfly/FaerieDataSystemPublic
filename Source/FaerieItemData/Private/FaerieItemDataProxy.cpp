@@ -63,31 +63,3 @@ UFaerieItemDataStackLiteral* UFaerieItemDataStackLiteral::CreateItemDataStackLit
 	Literal->SetValue(InStack);
 	return Literal;
 }
-
-const UFaerieItem* UFaerieItemDataStackViewLiteral::GetItemObject() const
-{
-	return Stack.Item;
-}
-
-int32 UFaerieItemDataStackViewLiteral::GetCopies() const
-{
-	return Stack.Copies;
-}
-
-TScriptInterface<IFaerieItemOwnerInterface> UFaerieItemDataStackViewLiteral::GetOwner()
-{
-	return Owner;
-}
-
-void UFaerieItemDataStackViewLiteral::SetValue(const FFaerieItemStackView InStack, const TScriptInterface<IFaerieItemOwnerInterface> InOwner)
-{
-	Stack = InStack;
-	Owner = InOwner;
-}
-
-UFaerieItemDataStackViewLiteral* UFaerieItemDataStackViewLiteral::CreateItemDataStackLiteral(const FFaerieItemStackView InStack, const TScriptInterface<IFaerieItemOwnerInterface> InOwner)
-{
-	auto&& Literal = NewObject<UFaerieItemDataStackViewLiteral>();
-	Literal->SetValue(InStack, InOwner);
-	return Literal;
-}

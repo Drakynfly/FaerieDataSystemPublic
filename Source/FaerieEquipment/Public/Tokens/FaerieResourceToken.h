@@ -18,8 +18,8 @@ class FAERIEEQUIPMENT_API UFaerieResourceToken : public UFaerieItemToken
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Resource Set")
-	TObjectPtr<UMaterialInterface> Material;
+	TSoftObjectPtr<UMaterialInterface> Material;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Resource Set")
-	TObjectPtr<UDurabilityGradeAsset> Grade;
+	TSoftObjectPtr<UDurabilityGradeAsset> Grade;
 };

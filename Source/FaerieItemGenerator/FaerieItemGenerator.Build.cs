@@ -20,7 +20,8 @@ public class FaerieItemGenerator : ModuleRules
         PublicDependencyModuleNames.AddRange(
             new []
             {
-                "FaerieItemData"
+                "FaerieItemData",
+                "FaerieDataUtils"
             }
         );
 

@@ -3,30 +3,55 @@
 #include "FaerieCardGenerateAsync.h"
 #include "FaerieCardGenerator.h"
 #include "FaerieCardGeneratorInterface.h"
+#include "FaerieItemCardModule.h"
 #include "FaerieItemDataProxy.h"
+#include "CardTokens/CustomCardClass.h"
 
-UFaerieCardGenerateAsync::UFaerieCardGenerateAsync(const FObjectInitializer& ObjectInitializer)
+bool UFaerieCardGenerateAsync::GenerateItemCard(APlayerController* OwningPlayer,
+												const TScriptInterface<IFaerieCardGeneratorInterface> Generator,
+												const FFaerieItemProxy Proxy, const TSubclassOf<UCustomCardClass> Type,
+												UFaerieCardBase*& Widget)
 {
+	if (Generator.GetInterface() == nullptr) return false;
+
+	auto&& GeneratorImpl = Generator->GetGenerator();
+	if (!IsValid(GeneratorImpl))
+	{
+		UE_LOG(LogFaerieItemCard, Error, TEXT("Failed to get Generator from interface!"))
+		return false;
+	}
+
+	Widget = GeneratorImpl->Generate(Faerie::Card::FSyncGeneration(OwningPlayer, Proxy, Type));
+	return IsValid(Widget);
 }
 
-UFaerieCardGenerateAsync* UFaerieCardGenerateAsync::GenerateFaerieCardAsync(const TScriptInterface<IFaerieCardGeneratorInterface> Generator,
-	UFaerieItemDataProxyBase* Proxy, const EFaerieCardGeneratorType Type)
+UFaerieCardGenerateAsync* UFaerieCardGenerateAsync::GenerateItemCardAsync(APlayerController* OwningPlayer,
+	const TScriptInterface<IFaerieCardGeneratorInterface> Generator, const FFaerieItemProxy Proxy,
+	const TSubclassOf<UCustomCardClass> Type)
 {
+	if (!IsValid(Generator.GetObject()))
+	{
+		return nullptr;
+	}
+
 	UFaerieCardGenerateAsync* AsyncAction = NewObject<UFaerieCardGenerateAsync>();
-	AsyncAction->Generator = Generator;
+	AsyncAction->Generator = Generator->GetGenerator();
+	if (!IsValid(AsyncAction->Generator))
+	{
+		UE_LOG(LogFaerieItemCard, Error, TEXT("Failed to get Generator from interface!"))
+		return nullptr;
+	}
+
+	AsyncAction->OwningPlayer = OwningPlayer;
 	AsyncAction->Proxy = Proxy;
-	AsyncAction->Type = Type;
+	AsyncAction->Class = Type;
+
 	return AsyncAction;
 }
 
 void UFaerieCardGenerateAsync::Activate()
 {
-	Super::Activate();
-
-	if (IsValid(Generator.GetObject()) && IsValid(Proxy))
-	{
-		Generator->GetGenerator()->Generate(Proxy, Type, FFaerieCardGenerationResult::CreateUObject(this, &ThisClass::OnCardGenerationFinished));
-	}
+	Generator->GenerateAsync(Faerie::Card::FAsyncGeneration(OwningPlayer, Proxy, Class, FFaerieCardGenerationResult::CreateUObject(this, &ThisClass::OnCardGenerationFinished)));
 }
 
 void UFaerieCardGenerateAsync::OnCardGenerationFinished(const bool Success, UFaerieCardBase* Widget)

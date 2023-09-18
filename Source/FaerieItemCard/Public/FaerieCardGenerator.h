@@ -9,15 +9,51 @@
 
 #include "FaerieCardGenerator.generated.h"
 
-UENUM(BlueprintType)
-enum class EFaerieCardGeneratorType : uint8
-{
-	Palette,
-	Info
-};
+class UCustomCardClass;
 
 using FFaerieCardGenerationResult = TDelegate<void(bool, UFaerieCardBase*)>;
 DECLARE_DYNAMIC_DELEGATE_TwoParams(FFaerieCardGenerationResultDynamic, bool, Success, UFaerieCardBase*, Widget);
+
+namespace Faerie::Card
+{
+	struct FSyncGeneration
+	{
+		APlayerController* Player;
+		FFaerieItemProxy Proxy;
+		TSubclassOf<UCustomCardClass> CardType;
+	};
+
+	struct FAsyncGeneration
+	{
+		FAsyncGeneration(APlayerController* Player, const FFaerieItemProxy ItemProxy,
+									const TSubclassOf<UCustomCardClass> Type, const FFaerieCardGenerationResult& Callback)
+		  : Player(Player),
+			Proxy(ItemProxy),
+			CardType(Type),
+			Callback(Callback) {}
+
+		FAsyncGeneration(APlayerController* Player, const FFaerieItemProxy ItemProxy,
+									const TSubclassOf<UCustomCardClass> Type, const FFaerieCardGenerationResultDynamic& InCallback)
+		  : Player(Player),
+			Proxy(ItemProxy),
+			CardType(Type)
+		{
+			if (Callback.IsBound())
+			{
+				Callback.BindWeakLambda(Callback.GetUObject(), [InCallback](const bool Success, UFaerieCardBase* Widget)
+				{
+					InCallback.Execute(Success, Widget);
+				});
+			}
+		}
+
+		APlayerController* Player;
+		FFaerieItemProxy Proxy;
+		TSubclassOf<UCustomCardClass> CardType;
+		FFaerieCardGenerationResult Callback;
+	};
+}
+
 
 /**
  *
@@ -30,19 +66,23 @@ class FAERIEITEMCARD_API UFaerieCardGenerator : public UObject
 	friend class UFaerieCardSubsystem;
 
 public:
-	void Generate(const UFaerieItemDataProxyBase* ItemData, EFaerieCardGeneratorType Type, const FFaerieCardGenerationResultDynamic& Callback);
-	void Generate(const UFaerieItemDataProxyBase* ItemData, EFaerieCardGeneratorType Type, const FFaerieCardGenerationResult& Callback);
+	TSoftClassPtr<UFaerieCardBase> GetCardClassFromProxy(FFaerieItemProxy Proxy, TSubclassOf<UCustomCardClass> Type) const;
 
-protected:
-	void OnCardClassLoaded(TSoftClassPtr<UFaerieCardBase> Class, const UFaerieItemDataProxyBase* ItemData, FFaerieCardGenerationResult Callback);
-
-protected:
-	UPROPERTY()
-	TSoftClassPtr<UFaerieCardBase> DefaultPaletteClass;
-
-	UPROPERTY()
-	TSoftClassPtr<UFaerieCardBase> DefaultInfoClass;
+	UFaerieCardBase* Generate(const Faerie::Card::FSyncGeneration& Params);
+	void GenerateAsync(const Faerie::Card::FAsyncGeneration& Params);
 
 private:
-	FStreamableManager StreamableManager;
+	struct FAsyncCallback
+    {
+    	APlayerController* Player;
+    	FFaerieItemProxy Proxy;
+    	TSoftClassPtr<UFaerieCardBase> CardClass;
+    	FFaerieCardGenerationResult Callback;
+    };
+
+	void OnCardClassLoaded(FAsyncCallback Params);
+
+protected:
+	UPROPERTY()
+	TMap<TSubclassOf<UCustomCardClass>, TSoftClassPtr<UFaerieCardBase>> DefaultClasses;
 };

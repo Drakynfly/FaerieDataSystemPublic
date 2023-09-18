@@ -2,10 +2,14 @@
 
 #pragma once
 
+#include "InventoryDataStructs.h"
 #include "Components/ActorComponent.h"
-#include "FaerieItemStorage.h"
-#include "InventoryExtensionBase.h"
+
 #include "FaerieInventoryComponent.generated.h"
+
+class UItemContainerExtensionGroup;
+class UItemContainerExtensionBase;
+class UFaerieItemStorage;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogFaerieInventoryComponent, Log, All);
 
@@ -13,8 +17,8 @@ DECLARE_LOG_CATEGORY_EXTERN(LogFaerieInventoryComponent, Log, All);
  *	This is the core of the inventory system. The actual component added to actors to allow them to contain item data.
  *	It supports extension objects which customize and add to its functionality, eg: adding capacity limits, or crafting features.
  */
-UCLASS(ClassGroup = ("Faerie Inventory"), meta = (BlueprintSpawnableComponent, ChildCannotTick),
-	HideCategories = (Cooking, Collision, ComponentTick, Replication, ComponentReplication, Activation, Sockets))
+UCLASS(ClassGroup = ("Faerie"), meta = (BlueprintSpawnableComponent, ChildCannotTick),
+	HideCategories = (Collision, ComponentTick, Replication, ComponentReplication, Activation, Sockets, Navigation))
 class FAERIEINVENTORY_API UFaerieInventoryComponent : public UActorComponent
 {
 	GENERATED_BODY()
@@ -25,7 +29,7 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	//~ UActorComponent
-	virtual void BeginPlay() override;
+	virtual void PostInitProperties() override;
 	virtual void ReadyForReplication() override;
 	//~ UActorComponent
 
@@ -33,43 +37,34 @@ public:
 	void PostEntryChanged(UFaerieItemStorage* Storage, FEntryKey Key);
 	void PreEntryRemoved(UFaerieItemStorage* Storage, FEntryKey Key);
 
-#if WITH_EDITOR
-	virtual EDataValidationResult IsDataValid(TArray<FText>& ValidationErrors) override;
-#endif
-
-private:
-	UFUNCTION()
-	void OnRep_ItemStorage();
-
 
 	/**------------------------------*/
 	/*	 INVENTORY API - ALL USERS   */
 	/**------------------------------*/
 
 public:
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	UFUNCTION(BlueprintCallable, Category = "Faerie|InventoryComponent")
 	UFaerieItemStorage* GetStorage() const { return ItemStorage; }
 
-	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Inventory|Extensions",
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Faerie|InventoryComponent",
 		meta = (DeterminesOutputType = ExtensionClass, DynamicOutputParam = Extension, ExpandBoolAsExecs = "ReturnValue"))
-	bool GetExtensionChecked(UPARAM(meta = (AllowAbstract = "false")) TSubclassOf<UInventoryExtensionBase> ExtensionClass,
-		UInventoryExtensionBase*& Extension) const;
+	bool GetExtensionChecked(UPARAM(meta = (AllowAbstract = "false")) TSubclassOf<UItemContainerExtensionBase> ExtensionClass,
+		UItemContainerExtensionBase*& Extension) const;
 
 	// Add a new extension of the given class, and return the result. If an extension of this class already exists, it
 	// will be returned instead.
-	UFUNCTION(BlueprintCallable, Category = "Inventory", BlueprintAuthorityOnly, meta = (DeterminesOutputType = "ExtensionClass"))
-	UInventoryExtensionBase* AddExtension(TSubclassOf<UInventoryExtensionBase> ExtensionClass);
+	UFUNCTION(BlueprintCallable, Category = "Faerie|InventoryComponent", BlueprintAuthorityOnly, meta = (DeterminesOutputType = "ExtensionClass"))
+	UItemContainerExtensionBase* AddExtension(TSubclassOf<UItemContainerExtensionBase> ExtensionClass);
 
 
 	/**-------------*/
 	/*	 VARIABLES	*/
 	/**-------------*/
-
 private:
-	UPROPERTY(ReplicatedUsing = "OnRep_ItemStorage")
+	UPROPERTY(Replicated)
 	TObjectPtr<UFaerieItemStorage> ItemStorage;
 
 	// Subobjects responsible for adding or customizing Inventory behavior.
-	UPROPERTY(EditAnywhere, Instanced, NoClear, Category = "Extensions")
-	TArray<TObjectPtr<UInventoryExtensionBase>> Extensions;
+	UPROPERTY(EditAnywhere, Instanced, NoClear, Category = "ItemStorage")
+	TObjectPtr<UItemContainerExtensionGroup> Extensions;
 };

@@ -82,3 +82,30 @@ class TTypedTagStaticImpl2
 
 template <typename TagT>
 TTypedTagStaticImpl2<TagT> TTypedTagStaticImpl2<TagT>::StaticImpl;
+
+// Intended to be the absolute last thing in the definition of a UI tag
+#define END_TAG_DECL2(TagType, TagRoot)	\
+public:	\
+	TagType() {}	\
+	static TagType GetRootTag() { return TTypedTagStaticImpl2<TagType>::StaticImpl.RootTag; }	\
+	static TagType TryConvert(FGameplayTag FromTag) { return TTypedTagStaticImpl2<TagType>::TryConvert(FromTag, false); }	\
+	static TagType ConvertChecked(FGameplayTag FromTag) { return TTypedTagStaticImpl2<TagType>::TryConvert(FromTag, true); }	\
+	static TagType AddNativeTag(const FString& TagBody, const FString& Comment) { return TTypedTagStaticImpl2<TagType>::AddNativeTag(TagBody, Comment); }	\
+	bool ExportTextItem(FString& ValueStr, const TagType& DefaultValue, UObject* Parent, int32 PortFlags, UObject* ExportRootScope) const	\
+	{	\
+		return TTypedTagStaticImpl2<TagType>::ExportTextItem(*this, ValueStr, PortFlags);	\
+	}	\
+protected:	\
+	TagType(FGameplayTag Tag) { TagName = Tag.GetTagName(); }	\
+	static const TCHAR* GetRootTagStr() { return TagRoot; }	\
+	friend class TTypedTagStaticImpl2<TagType>;	\
+};	\
+Expose_TNameOf(TagType)	\
+template<>	\
+struct TStructOpsTypeTraits<TagType> : public TStructOpsTypeTraitsBase2<TagType>	\
+{	\
+	enum	\
+	{	\
+		WithExportTextItem = true,	\
+		WithImportTextItem = true	\
+	};

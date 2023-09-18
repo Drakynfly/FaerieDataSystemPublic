@@ -17,36 +17,40 @@ class FAERIEINVENTORY_API UInventoryContentStructsLibrary final : public UBluepr
 	GENERATED_BODY()
 
 public:
-	// Get the inventory system Empty Stack.
-	UFUNCTION(BlueprintPure, Category = "Inventory|Macros")
-	static FInventoryStack EmptyStack();
-
 	// Get the inventory system Unlimited Stack.
-	UFUNCTION(BlueprintPure, Category = "Inventory|Macros")
-	static FInventoryStack UnlimitedStack();
+	// @todo move this function to ItemData module
+	UFUNCTION(BlueprintPure, Category = "Faerie|Inventory|Macros")
+	static int32 UnlimitedStack();
 
 	// Tests if a stack is equal to Unlimited Stack.
-	UFUNCTION(BlueprintPure, Category = "Inventory|Macros")
-	static bool IsUnlimited(FInventoryStack Stack);
+	// @todo move this function to ItemData module
+	UFUNCTION(BlueprintPure, Category = "Faerie|Inventory|Macros")
+	static bool IsUnlimited(int32 Stack);
 
-    UFUNCTION(BlueprintPure, Category = "Inventory|Utils")
+    UFUNCTION(BlueprintPure, Category = "Faerie|Inventory|Utils")
     static bool IsValid(const FEntryKey Key) { return Key.IsValid(); }
 
-	UFUNCTION(BlueprintPure, Category = "Inventory|Utils")
+	UFUNCTION(BlueprintPure, Category = "Faerie|Inventory|Utils")
 	static FString ToString(const FEntryKey Key) { return Key.ToString(); }
 
-	UFUNCTION(BlueprintPure, Category = "Inventory|Utils")
+	UFUNCTION(BlueprintPure, Category = "Faerie|Inventory|Utils")
 	static bool IsValid_InventoryKey(const FInventoryKey Key) { return Key.IsValid(); }
 
-	UFUNCTION(BlueprintPure, Category = "Inventory|Utils")
+	UFUNCTION(BlueprintPure, Category = "Faerie|Inventory|Utils")
 	static FString ToString_InventoryKey(const FInventoryKey Key) { return Key.ToString(); }
 
 	// Selectively equivalate two entries.
-	UFUNCTION(BlueprintPure, Category = "Inventory|Utils", meta = (CompactNodeTitle = "=="))
+	UFUNCTION(BlueprintPure, Category = "Faerie|Inventory|Utils", meta = (CompactNodeTitle = "=="))
 	static bool Equal_EntryEntry(const FInventoryEntry& A, const FInventoryEntry& B,
 		UPARAM(meta = (Bitmask, BitmaskEnum = "/Script/FaerieInventory.EEntryEquivelancyFlags")) int32 Checks);
 
 	// Sort an array of inventory entries by date modified.
-	UFUNCTION(BlueprintCallable, Category = "Inventory|Utils")
+	UFUNCTION(BlueprintCallable, Category = "Faerie|Inventory|Utils")
 	static void SortEntriesLastModified(UPARAM(ref)TArray<FInventoryEntry>& Entries);
+
+	UFUNCTION(BlueprintPure, Category = "Faerie|Inventory|Utils")
+	static int32 GetStackSum(const FInventoryEntry& Entry);
+
+	UFUNCTION(BlueprintPure, Category = "Faerie|Inventory|Utils")
+	static FFaerieItemStackView EntryToStackView(const FInventoryEntry& Entry);
 };

@@ -7,15 +7,16 @@
 
 class UItemUpgradeConfig;
 
+// @todo should be renamed to UCraftingAction_Upgrade
 UCLASS()
-class UGenerationAction_UpgradeItems : public UGenerationActionWithSlots
+class UGenerationAction_UpgradeItems : public UCraftingActionWithSlots
 {
 	GENERATED_BODY()
 
 public:
 	struct FActionArgs : Super::FActionArgs
 	{
-		TObjectPtr<UFaerieItemDataProxyBase> ItemBeingUpgraded = nullptr;
+		TScriptInterface<IFaerieItemDataProxy> ItemBeingUpgraded = nullptr;
 		TObjectPtr<UItemUpgradeConfig> UpgradeConfig = nullptr;
 	};
 
@@ -27,7 +28,7 @@ protected:
 
 private:
 	UPROPERTY()
-	TObjectPtr<UFaerieItemDataProxyBase> ItemBeingUpgraded = nullptr;
+	TScriptInterface<IFaerieItemDataProxy> ItemBeingUpgraded = nullptr;
 
 	UPROPERTY()
 	TObjectPtr<UItemUpgradeConfig> UpgradeConfig = nullptr;

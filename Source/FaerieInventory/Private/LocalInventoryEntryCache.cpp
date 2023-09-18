@@ -4,131 +4,75 @@
 #include "FaerieItem.h"
 #include "FaerieItemStorage.h"
 #include "Logging.h"
-#include "Tokens/FaerieStackLimiterToken.h"
 
 TArray<FKeyedStack> UInventoryEntryProxyBase::GetAllStacks() const
 {
-	auto&& Entry = GetInventoryEntry();
-	if (ensure(Entry.IsValid()))
+	if (auto&& Entry = GetInventoryEntry();
+		ensure(Entry.IsValid()))
 	{
 		return Entry.Stacks;
 	}
 	return {};
 }
 
-FInventoryStack UInventoryEntryProxyBase::GetStackLimit() const
+int32 UInventoryEntryProxyBase::GetStackLimit() const
 {
-	auto&& Entry = GetInventoryEntry();
-	if (ensure(Entry.IsValid()))
+	if (auto&& Entry = GetInventoryEntry();
+		ensure(Entry.IsValid()))
 	{
 		return Entry.Limit;
 	}
-	return FInventoryStack();
+	return 0;
 }
 
-FDateTime UInventoryEntryProxyBase::GetDateModified() const
-{
-	auto&& Entry = GetInventoryEntry();
-	if (ensure(Entry.IsValid()))
-	{
-		return Entry.ItemObject->GetLastModified();
-	}
-	return FDateTime();
-}
-
-const UFaerieItem* UInventoryEntryLiteral::GetItemObject() const
-{
-	return Entry.ItemObject;
-}
-
-int32 UInventoryEntryLiteral::GetCopies() const
-{
-	return Entry.StackSum().GetAmount();
-}
-
-FFaerieItemStack UInventoryEntryLiteral::Release(const FFaerieItemStackView Stack)
-{
-	FFaerieItemStack OutStack;
-
-	if (Entry.ItemObject == Stack.Item &&
-		Entry.StackSum().GetAmount() >= Stack.Copies)
-	{
-		Entry.RemoveFromAnyStack(Stack.Copies);
-		OutStack.Item = Entry.ItemObject;
-		OutStack.Copies = Stack.Copies;
-
-		if (Entry.StackSum().GetAmount() <= 0)
-		{
-			Entry = FInventoryEntry();
-		}
-	}
-
-	return OutStack;
-}
-
-bool UInventoryEntryLiteral::Possess(const FFaerieItemStack Stack)
-{
-	// @todo this is wonky behavior
-	if (Entry.ItemObject == Stack.Item)
-	{
-		Entry.AddToAnyStack(Stack.Copies);
-	}
-	else
-	{
-		Entry.ItemObject = Stack.Item;
-		Entry.Limit = UFaerieStackLimiterToken::GetItemStackLimit(Stack.Item);
-		Entry.AddToAnyStack(Stack.Copies);
-	}
-	return true;
-}
-
-FInventoryEntry UInventoryEntryLiteral::GetInventoryEntry() const
-{
-	return Entry;
-}
-
-void UInventoryEntryLiteral::SetValue(const FInventoryEntry& InEntry)
-{
-	Entry = InEntry;
-}
-
-UInventoryEntryLiteral* UInventoryEntryLiteral::CreateInventoryEntryLiteral(const FInventoryEntry& Entry)
-{
-	auto&& Literal = NewObject<UInventoryEntryLiteral>();
-	Literal->SetValue(Entry);
-	return Literal;
-}
-
-const UFaerieItem* UInventoryEntryProxy::GetItemObject() const
+const UFaerieItem* UInventoryEntryStorageProxy::GetItemObject() const
 {
 	if (!VerifyStatus())
 	{
 		return nullptr;
 	}
 
-	FInventoryEntry Entry;
-	Handle.ItemStorage->GetEntry(Handle.Key.EntryKey, Entry);
-	return Entry.ItemObject;
+	const FConstStructView EntryView = GetStorage()->GetEntryView(GetKey());
+	if (!ensure(EntryView.IsValid()))
+	{
+		return nullptr;
+	}
+
+	return EntryView.Get<const FInventoryEntry>().ItemObject;
 }
 
-int32 UInventoryEntryProxy::GetCopies() const
+int32 UInventoryEntryStorageProxy::GetCopies() const
 {
 	if (!VerifyStatus())
 	{
 		return 0;
 	}
 
-	FInventoryEntry Entry;
-	Handle.ItemStorage->GetEntry(Handle.Key.EntryKey, Entry);
-	return Entry.GetStack(Handle.Key.StackKey).GetAmount();
+	const FConstStructView EntryView = GetStorage()->GetEntryView(GetKey());
+	if (!ensure(EntryView.IsValid()))
+	{
+		return 0;
+	}
+
+	return EntryView.Get<const FInventoryEntry>().StackSum();
 }
 
-TScriptInterface<IFaerieItemOwnerInterface> UInventoryEntryProxy::GetOwner()
+bool UInventoryEntryStorageProxy::CanMutate() const
 {
-	return Handle.ItemStorage.Get();
+	if (!VerifyStatus())
+	{
+		return false;
+	}
+
+	return GetStorage()->CanEditEntry(GetKey());
 }
 
-FInventoryEntry UInventoryEntryProxy::GetInventoryEntry() const
+TScriptInterface<IFaerieItemOwnerInterface> UInventoryEntryStorageProxy::GetOwner() const
+{
+	return GetStorage();
+}
+
+FInventoryEntry UInventoryEntryStorageProxy::GetInventoryEntry() const
 {
 	if (!VerifyStatus())
 	{
@@ -136,45 +80,77 @@ FInventoryEntry UInventoryEntryProxy::GetInventoryEntry() const
 	}
 
 	FInventoryEntry Entry;
-	Handle.ItemStorage->GetEntry(Handle.Key.EntryKey, Entry);
+	GetStorage()->GetEntry(GetKey(), Entry);
 	return Entry;
 }
 
-FInventoryStack UInventoryEntryProxy::GetStack() const
+void UInventoryEntryStorageProxy::NotifyCreation()
 {
-	auto&& Entry = GetInventoryEntry();
-	return Entry.GetStack(Handle.Key.StackKey);
-}
-
-void UInventoryEntryProxy::NotifyCreation(const FInventoryKeyHandle& InHandle)
-{
-	Handle = InHandle;
 	LocalItemVersion = 0;
 }
 
-void UInventoryEntryProxy::NotifyUpdate()
+void UInventoryEntryStorageProxy::NotifyUpdate()
 {
 	LocalItemVersion++;
 	OnCacheUpdated.Broadcast(this);
 }
 
-void UInventoryEntryProxy::NotifyRemoval()
+void UInventoryEntryStorageProxy::NotifyRemoval()
 {
 	LocalItemVersion = -1;
 	OnCacheRemoved.Broadcast(this);
 }
 
-bool UInventoryEntryProxy::VerifyStatus() const
+bool UInventoryEntryStorageProxy::VerifyStatus() const
 {
-	if (!Handle.ItemStorage.IsValid() || !Handle.ItemStorage.Get()->IsValidKey(Handle.Key))
+	auto&& Storage = GetStorage();
+	auto&& Key = GetKey();
+
+	if (!IsValid(Storage) || !Storage->IsValidKey(Key))
 	{
-		UE_LOG(LogFaerieInventory, Warning, TEXT("LocalInventoryEntryCache is invalid! Debug State will follow:"))\
+		UE_LOG(LogFaerieInventory, Warning, TEXT("InventoryEntryProxy is invalid! Debug State will follow:"))\
 		UE_LOG(LogFaerieInventory, Warning, TEXT("     Entry Cache: %s"), *GetName());
-		UE_LOG(LogFaerieInventory, Warning, TEXT("     OwningInventory: %s"), Handle.ItemStorage.IsValid() ? *Handle.ItemStorage.Get()->GetName() : TEXT("Invalid"));
-		UE_LOG(LogFaerieInventory, Warning, TEXT("     Key: %s"), *Handle.Key.ToString());
+		UE_LOG(LogFaerieInventory, Warning, TEXT("     OwningInventory: %s"), IsValid(Storage) ? *Storage->GetName() : TEXT("Invalid"));
+		UE_LOG(LogFaerieInventory, Warning, TEXT("     Key: %s"), *Key.ToString());
 		UE_LOG(LogFaerieInventory, Warning, TEXT("     Item Version : %i"), LocalItemVersion);
 		return false;
 	}
 
 	return true;
+}
+
+UFaerieItemStorage* UInventoryEntryProxy::GetStorage() const
+{
+	return ItemStorage.Get();
+}
+
+FEntryKey UInventoryEntryProxy::GetKey() const
+{
+	return Key;
+}
+
+int32 UInventoryStackProxy::GetCopies() const
+{
+	if (!VerifyStatus())
+	{
+		return 0;
+	}
+
+	const FConstStructView EntryView = Handle.ItemStorage->GetEntryView(Handle.Key.EntryKey);
+	if (!ensure(EntryView.IsValid()))
+	{
+		return 0;
+	}
+
+	return EntryView.Get<const FInventoryEntry>().GetStack(Handle.Key.StackKey);
+}
+
+UFaerieItemStorage* UInventoryStackProxy::GetStorage() const
+{
+	return Handle.ItemStorage.Get();
+}
+
+FEntryKey UInventoryStackProxy::GetKey() const
+{
+	return Handle.Key.EntryKey;
 }

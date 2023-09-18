@@ -3,7 +3,6 @@
 #include "FaerieEquipmentModule.h"
 
 #include "FaerieSlotTag.h"
-#include "Developer/Settings/Public/ISettingsModule.h"
 
 #define LOCTEXT_NAMESPACE "FaerieEquipmentModule"
 

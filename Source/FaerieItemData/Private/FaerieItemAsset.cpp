@@ -3,9 +3,13 @@
 #include "FaerieItemAsset.h"
 
 #include "FaerieItem.h"
-#include "FaerieItemToken.h"
 #include "FaerieItemTemplate.h"
+
+#if WITH_EDITOR
 #include "Misc/DataValidation.h"
+#endif
+
+#include "FaerieItemDataProxy.h"
 #include "Tokens/FaerieInfoToken.h"
 #include "UObject/ObjectSaveContext.h"
 
@@ -31,14 +35,18 @@ void UFaerieItemAsset::PreSave(FObjectPreSaveContext SaveContext)
 
 #define LOCTEXT_NAMESPACE "ValidateFaerieItemAsset"
 
-EDataValidationResult UFaerieItemAsset::IsDataValid(FDataValidationContext& Context)
+EDataValidationResult UFaerieItemAsset::IsDataValid(FDataValidationContext& Context) const
 {
-	bool HasError = false;
+	EDataValidationResult Result = CombineDataValidationResults(Super::IsDataValid(Context), EDataValidationResult::Valid);
 
-	if (!Item)
+	if (!IsValid(Item))
 	{
 		Context.AddError(LOCTEXT("InvalidItemObject", "Item is invalid! Please try making sure Tokens are correctly configured and resave this asset."));
-		HasError = true;
+		Result = EDataValidationResult::Invalid;
+	}
+	else
+	{
+		Result = CombineDataValidationResults(Result, Item->IsDataValid(Context));
 	}
 
 	if (!IsValid(Template))
@@ -46,25 +54,29 @@ EDataValidationResult UFaerieItemAsset::IsDataValid(FDataValidationContext& Cont
 		Context.AddWarning(LOCTEXT("InvalidTemplateObject", "Template is invalid! Unable to check Item for pattern-correctness."));
 	}
 
-	if (Item && IsValid(Template))
+	for (auto Token : Tokens)
 	{
-		UFaerieItemDataStackLiteral* Literal = NewObject<UFaerieItemDataStackLiteral>();
-		Literal->SetValue(Item);
+		Result = CombineDataValidationResults(Result, Token->IsDataValid(Context));
+	}
 
-		if (!Template->TryMatch(Literal))
+	if (IsValid(Item) && IsValid(Template))
+	{
+		if (TArray<FText> TemplateMatchErrors;
+			!Template->TryMatchWithDescriptions({Item, 1}, TemplateMatchErrors))
 		{
 			Context.AddError(LOCTEXT("PatternMatchFailed", "Item failed to match the pattern of its Template!"));
-			HasError = true;
+
+			for (auto&& TemplateMatchError : TemplateMatchErrors)
+			{
+				Context.AddError(TemplateMatchError);
+			}
 		}
 	}
 
-	if (HasError)
-	{
-		return EDataValidationResult::Invalid;
-	}
-
-	return Super::IsDataValid(Context);
+	return Result;
 }
+
+#endif
 
 FFaerieAssetInfo UFaerieItemAsset::GetSourceInfo() const
 {
@@ -77,8 +89,6 @@ FFaerieAssetInfo UFaerieItemAsset::GetSourceInfo() const
 
 #undef LOCTEXT_NAMESPACE
 
-#endif
-
 UFaerieItem* UFaerieItemAsset::CreateItemInstance(UObject* Outer) const
 {
 	UFaerieItem* NewInstance;
@@ -87,22 +97,6 @@ UFaerieItem* UFaerieItemAsset::CreateItemInstance(UObject* Outer) const
 	{
 		// Make a copy of the static item stored in this asset if we might need to modify the data
 		NewInstance = Item->CreateDuplicate();
-
-		// @todo this is super weird. why are we doing this here???
-		AActor* Actor = NewInstance->GetTypedOuter<AActor>();
-		if (IsValid(Actor))
-		{
-#if !NO_LOGGING
-			if (!Actor->IsUsingRegisteredSubObjectList())
-			{
-				UE_LOG(LogTemp, Warning,
-					TEXT("Actor outer '%s' for item instance '%s' does not replicate using SubObject list. Item will not be replicated normally!"),
-					*Actor->GetName(), *NewInstance->GetName())
-			}
-#endif
-
-			Actor->AddReplicatedSubObject(NewInstance);
-		}
 	}
 	else
 	{

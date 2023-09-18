@@ -9,6 +9,26 @@
 
 #include "ItemSourcePool.generated.h"
 
+USTRUCT(BlueprintType)
+struct FFaerieWeightedDropPool
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Table")
+	TArray<FWeightedDrop> DropList;
+
+	// Generates a drop from this pool, using the provided random weight, which must be a value between 0 and 1.
+	FTableDrop GenerateDrop(double RanWeight) const;
+
+#if WITH_EDITOR
+	// Calculate the percentage each drop has to be chosen.
+	void CalculatePercentages();
+
+	// Keeps the table sorted by Weight.
+	void SortTable();
+#endif
+};
+
 class USquirrel;
 
 /**
@@ -26,22 +46,10 @@ public:
 	virtual void PostLoad() override;
 
 #if WITH_EDITOR
-	virtual EDataValidationResult IsDataValid(class FDataValidationContext& Context) override;
+	virtual EDataValidationResult IsDataValid(class FDataValidationContext& Context) const override;
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 	virtual void PostEditChangeChainProperty(FPropertyChangedChainEvent& PropertyChangedEvent) override;
-
-	// Calculate the percentage each drop has to be chosen.
-	void CalculatePercentages();
-
-	// Keeps the table sorted by Weight.
-	void SortTable();
-
-	// Editor accessors
-	static FName GetMemberName_DropList() { return GET_MEMBER_NAME_CHECKED(ThisClass, DropList); }
 #endif
-
-protected:
-	FTableDrop GenerateDrop_Internal(double RanWeight) const;
 
 public:
 	//~ IFaerieItemSource
@@ -51,20 +59,16 @@ public:
 	virtual UFaerieItem* CreateItemInstance(const UItemInstancingContext* Context) const override;
 	//~ IFaerieItemSource
 
-	// Generates a drop from this table using a Squirrel as a RNG provider.
-	UFUNCTION(Blueprintable, BlueprintPure = false, Category = "Faerie|ItemSourcePool", meta = (DisplayName = "Generate Drop (Seeded)"))
-	FTableDrop GenerateDrop(USquirrel* Squirrel) const;
-
-	// Generates a drop from this table using FRand as a RNG provider.
-	UFUNCTION(Blueprintable, BlueprintPure = false, Category = "Faerie|ItemSourcePool", meta = (DisplayName = "Generate Drop (Non-Seeded)"))
-	FTableDrop GenerateDrop_NonSeeded() const;
+	// Generates a drop from this table, using the provided random weight, which must be a value between 0 and 1.
+	UFUNCTION(Blueprintable, BlueprintPure = false, Category = "Faerie|ItemSourcePool")
+	FTableDrop GenerateDrop(double RanWeight) const;
 
 protected:
-	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Table")
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Table", meta = (Pr))
 	FFaerieAssetInfo TableInfo;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Table")
-	TArray<FWeightedDrop> DropList;
+	FFaerieWeightedDropPool DropPool;
 
 private:
 	UPROPERTY()

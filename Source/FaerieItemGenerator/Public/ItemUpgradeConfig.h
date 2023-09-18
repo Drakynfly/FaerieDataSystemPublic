@@ -3,7 +3,7 @@
 #pragma once
 
 #include "FaerieItemSlotUtils.h"
-#include "GenerationActionConfig.h"
+#include "CraftingActionConfig.h"
 #include "ItemUpgradeConfig.generated.h"
 
 DECLARE_LOG_CATEGORY_EXTERN(LogItemUpgradeConfig, Log, All);
@@ -12,13 +12,13 @@ DECLARE_LOG_CATEGORY_EXTERN(LogItemUpgradeConfig, Log, All);
  *
  */
 UCLASS()
-class FAERIEITEMGENERATOR_API UItemUpgradeConfig : public UGenerationActionConfig, public IFaerieItemSlotInterface
+class FAERIEITEMGENERATOR_API UItemUpgradeConfig : public UCraftingActionConfig, public IFaerieItemSlotInterface
 {
 	GENERATED_BODY()
 
 public:
 #if WITH_EDITOR
-	virtual EDataValidationResult IsDataValid(TArray<FText>& ValidationErrors) override;
+	virtual EDataValidationResult IsDataValid(FDataValidationContext& Context) const override;
 #endif
 
 	virtual FConstStructView GetCraftingSlots() const override;

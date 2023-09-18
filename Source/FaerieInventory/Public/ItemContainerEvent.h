@@ -33,8 +33,8 @@ protected:
 		Removal_Moving = FFaerieInventoryTag::AddNativeTag(TEXT("Removal.Moving"),
 						"Remove an item for the purpose of moving it elsewhere");
 
-		RemovalTagsAllowedByDefault.Add(Removal_Deletion);
-		RemovalTagsAllowedByDefault.Add(Removal_Moving);
+		RemovalTagsAllowedByDefault.Emplace(Removal_Deletion);
+		RemovalTagsAllowedByDefault.Emplace(Removal_Moving);
 	}
 
 private:
@@ -45,41 +45,41 @@ public:
 	static TSet<FFaerieInventoryTag> RemovalTagsAllowedByDefault;
 };
 
-namespace Faerie
+namespace Faerie::Inventory
 {
-	class FAERIEINVENTORY_API FItemContainerEvent
+	// Logs that record data about additions to and removals from an item container.
+	class FAERIEINVENTORY_API FEventLog
 	{
 	public:
-		FItemContainerEvent()
+		FEventLog()
 		  : EventID(FGuid::NewGuid()),
 			Timestamp(FDateTime::UtcNow()) {}
 
 	private:
-		static FItemContainerEvent CreateFailureEvent_Internal(const FFaerieInventoryTag Type, const FString& Message)
+		static FEventLog CreateFailureEvent_Internal(const FFaerieInventoryTag Type, const FString& Message)
 		{
-			FItemContainerEvent NewErrorEvent;
+			FEventLog NewErrorEvent;
 			NewErrorEvent.Type = Type;
 			NewErrorEvent.Success = false;
-			NewErrorEvent.Timestamp = FDateTime::UtcNow();
 			NewErrorEvent.ErrorMessage = Message;
 			return NewErrorEvent;
 		}
 
 	public:
-		static FItemContainerEvent AdditionFailed(const FString& Message)
+		static FEventLog AdditionFailed(const FString& Message)
 		{
 			return CreateFailureEvent_Internal(FFaerieItemStorageEvents::Get().Addition, Message);
 		}
 
 		const FDateTime& GetTimestamp() const { return Timestamp; }
-		const FDateTime& GetEventID() const { return Timestamp; }
+		const FGuid& GetEventID() const { return EventID; }
 
-		friend bool operator==(const FItemContainerEvent& Lhs, const FItemContainerEvent& Rhs)
+		friend bool operator==(const FEventLog& Lhs, const FEventLog& Rhs)
 		{
 			return Lhs.EventID == Rhs.EventID;
 		}
 
-		friend bool operator!=(const FItemContainerEvent& Lhs, const FItemContainerEvent& Rhs)
+		friend bool operator!=(const FEventLog& Lhs, const FEventLog& Rhs)
 		{
 			return !(Lhs == Rhs);
 		}
@@ -94,7 +94,7 @@ namespace Faerie
 		TWeakObjectPtr<const UFaerieItem> Item;
 		FString ErrorMessage;
 
-		friend FArchive& operator<<(FArchive& Ar, FItemContainerEvent& Val)
+		friend FArchive& operator<<(FArchive& Ar, FEventLog& Val)
 		{
 			return Ar << Val.Type
 					  << Val.Success
@@ -112,4 +112,3 @@ namespace Faerie
 		FDateTime Timestamp;
 	};
 }
-

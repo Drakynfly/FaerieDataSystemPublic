@@ -38,7 +38,8 @@ void UFaerieCardTokenBase::OnCardRefreshed()
 
 	if (auto&& OuterCard = GetTypedOuter<UFaerieCardBase>())
 	{
-		if (auto&& ItemData = OuterCard->GetItemData())
+		if (auto&& ItemData = OuterCard->GetItemData();
+			ItemData.IsValid())
 		{
 			if (auto&& Object = ItemData->GetItemObject())
 			{

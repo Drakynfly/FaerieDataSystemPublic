@@ -47,9 +47,10 @@ public:
 
 	// Request that the server set the item in a slot.
 	UFUNCTION(BlueprintCallable, Server, Reliable, Category = "Faerie|EquipmentClient")
-	void RequestSetItemInSlot(UFaerieEquipmentSlot* Slot, UFaerieItem* Item);
+	void RequestSetItemInSlot(UFaerieEquipmentSlot* Slot, FFaerieItemStack Stack);
 
-	// Request that the server move the item in one slot to another.
+	// Request that the server move the item in one slot to another, or swaps the items between two slots. If CanSwapSlots
+	// is false, and FromSlot is empty, nothing will happen.
 	UFUNCTION(BlueprintCallable, Server, Reliable, Category = "Faerie|EquipmentClient")
 	void RequestMoveItemBetweenSlots(UFaerieEquipmentSlot* FromSlot, UFaerieEquipmentSlot* ToSlot, bool CanSwapSlots);
 
@@ -57,5 +58,5 @@ public:
 	void RequestMoveEntryToEquipmentSlot(const FInventoryKeyHandle Handle, UFaerieEquipmentSlot* Slot);
 
 	UFUNCTION(BlueprintCallable, Server, Reliable, Category = "Faerie|InventoryClient")
-	void RequestMoveEquipmentSlotToInventory(UFaerieEquipmentSlot* Slot, UFaerieItemStorage* ToStorage);
+	void RequestMoveEquipmentSlotToInventory(UFaerieEquipmentSlot* Slot, UFaerieItemStorage* ToStorage, int32 Amount = -1);
 };

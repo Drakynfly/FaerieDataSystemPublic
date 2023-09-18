@@ -4,19 +4,14 @@
 
 DEFINE_LOG_CATEGORY(LogInventoryLibrary);
 
-FInventoryStack UInventoryContentStructsLibrary::EmptyStack()
+int32 UInventoryContentStructsLibrary::UnlimitedStack()
 {
-	return FInventoryStack::EmptyStack;
+	return Faerie::ItemData::UnlimitedStack;
 }
 
-FInventoryStack UInventoryContentStructsLibrary::UnlimitedStack()
+bool UInventoryContentStructsLibrary::IsUnlimited(const int32 Stack)
 {
-	return FInventoryStack::UnlimitedStack;
-}
-
-bool UInventoryContentStructsLibrary::IsUnlimited(const FInventoryStack Stack)
-{
-	return Stack == FInventoryStack::UnlimitedStack;
+	return Stack == Faerie::ItemData::UnlimitedStack;
 }
 
 bool UInventoryContentStructsLibrary::Equal_EntryEntry(const FInventoryEntry& A, const FInventoryEntry& B, const int32 Checks)
@@ -30,4 +25,14 @@ void UInventoryContentStructsLibrary::SortEntriesLastModified(TArray<FInventoryE
 		{
 			return A.ItemObject->GetLastModified() < B.ItemObject->GetLastModified();
 		});
+}
+
+int32 UInventoryContentStructsLibrary::GetStackSum(const FInventoryEntry& Entry)
+{
+	return Entry.StackSum();
+}
+
+FFaerieItemStackView UInventoryContentStructsLibrary::EntryToStackView(const FInventoryEntry& Entry)
+{
+	return Entry.ToItemStackView();
 }

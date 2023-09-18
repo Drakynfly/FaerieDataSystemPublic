@@ -1,32 +1,39 @@
 // Copyright Guy (Drakynfly) Lundvall. All Rights Reserved.
 
 #include "GenerationAction.h"
-
+#include "ItemSlotHandle.h"
 #include "FaerieItem.h"
 #include "FaerieItemDataProxy.h"
-#include "FaerieItemGeneratorSubsystem.h"
+#include "FaerieItemCraftingSubsystem.h"
 #include "FaerieItemSlotUtils.h"
 #include "Algo/ForEach.h"
+#include "Engine/AssetManager.h"
+#include "DelegateCommon.h"
 #include "Tokens/FaerieItemUsesToken.h"
 
 DEFINE_LOG_CATEGORY(LogGenerationAction)
 
-UGenerationActionBase::UGenerationActionBase()
+UCraftingActionBase::UCraftingActionBase()
 {
 }
 
-UWorld* UGenerationActionBase::GetWorld() const
+UWorld* UCraftingActionBase::GetWorld() const
 {
-	return GetOuterUFaerieItemGeneratorSubsystem()->GetWorld();
+	return GetOuterUFaerieItemCraftingSubsystem()->GetWorld();
 }
 
-FTimerManager& UGenerationActionBase::GetTimerManager() const
+bool UCraftingActionBase::IsRunning() const
+{
+	return TimerHandle.IsValid();
+}
+
+FTimerManager& UCraftingActionBase::GetTimerManager() const
 {
 	auto&& World = GetWorld();
 	return World->GetTimerManager();
 }
 
-void UGenerationActionBase::OnTimeout()
+void UCraftingActionBase::OnTimeout()
 {
 #if WITH_EDITORONLY_DATA
 	if (!IsRunning_EditorOnlyTracker)
@@ -38,7 +45,7 @@ void UGenerationActionBase::OnTimeout()
 	Finish(EGenerationActionResult::Timeout);
 }
 
-void UGenerationActionBase::Finish(const EGenerationActionResult Result)
+void UCraftingActionBase::Finish(const EGenerationActionResult Result)
 {
 #if WITH_EDITORONLY_DATA
 	if (!IsRunning_EditorOnlyTracker)
@@ -67,21 +74,20 @@ void UGenerationActionBase::Finish(const EGenerationActionResult Result)
 
 	GetTimerManager().ClearTimer(TimerHandle);
 
-	OnCompleted.Broadcast(Result, OutProxies);
 	OnCompletedCallback.ExecuteIfBound(Result);
+
+	OnCompleted.Broadcast(Result, ProcessStacks);
 }
 
-void UGenerationActionBase::Configure(FActionArgs& Args)
+void UCraftingActionBase::Configure(FActionArgs& Args)
 {
 	check(Args.Executor);
 
 	Executor = Args.Executor;
-	TScriptDelegate Delegate;
-	Delegate.BindUFunction(Args.Callback.GetUObject(), Args.Callback.GetFunctionName());
-	OnCompleted.Add(Delegate);
+	OnCompleted.Add(DYNAMIC_TO_SCRIPT(Args.Callback));
 }
 
-void UGenerationActionBase::Start()
+void UCraftingActionBase::Start()
 {
 #if WITH_EDITORONLY_DATA
 	if (IsRunning_EditorOnlyTracker)
@@ -114,7 +120,7 @@ void UGenerationActionBase::Start()
 	{
 		// Suspend generation to async load drop assets, then continue
 		const FStreamableDelegate Delegate = FStreamableDelegate::CreateUObject(this, &ThisClass::Run);
-		StreamableManager.RequestAsyncLoad(ObjectsToLoad, Delegate);
+		UAssetManager::GetStreamableManager().RequestAsyncLoad(ObjectsToLoad, Delegate);
 	}
 	else
 	{
@@ -128,17 +134,17 @@ void UGenerationActionBase::Start()
 	}
 }
 
-void UGenerationActionBase::Complete()
+void UCraftingActionBase::Complete()
 {
 	Finish(EGenerationActionResult::Succeeded);
 }
 
-void UGenerationActionBase::Fail()
+void UCraftingActionBase::Fail()
 {
 	Finish(EGenerationActionResult::Failed);
 }
 
-UFaerieItemDataProxyBase* UGenerationActionWithSlots::GetProxyForSlot(const FFaerieItemSlotHandle& Filter, const bool ExpectPresence) const
+FFaerieItemProxy UCraftingActionWithSlots::GetProxyForSlot(const FFaerieItemSlotHandle& Filter, const bool ExpectPresence) const
 {
 	if (auto&& Key = FilledSlots.Find(Filter))
 	{
@@ -154,33 +160,41 @@ UFaerieItemDataProxyBase* UGenerationActionWithSlots::GetProxyForSlot(const FFae
 	return nullptr;
 }
 
-void UGenerationActionWithSlots::ConsumeSlotCosts(const IFaerieItemSlotInterface* Interface)
+void UCraftingActionWithSlots::ConsumeSlotCosts(const IFaerieItemSlotInterface* Interface)
 {
-	const FConstStructView SlotsView = UFaerieItemSlotLibrary::GetCraftingSlotsFromInterface(Interface);
-	const FFaerieItemCraftingSlots* SlotsPtr = SlotsView.GetPtr<FFaerieItemCraftingSlots>();
-
 	auto CanEat = [this](const TPair<FFaerieItemSlotHandle, TObjectPtr<UFaerieItemTemplate>>& Slot)
 		{
-			const bool HasSlotBeenFilled = FilledSlots.Contains(Slot.Key);
-			if (!ensure(HasSlotBeenFilled))
+			auto&& ItemProxy = *FilledSlots.Find(Slot.Key);
+
+			if (!ensure(IsValid(ItemProxy.GetObject())))
 			{
-				UE_LOG(LogGenerationAction, Error, TEXT("ConsumeSlotCosts was unable to find a filled slot!"))
+				UE_LOG(LogGenerationAction, Error, TEXT("ConsumeSlotCosts is unable to find a filled slot [%s]!"), *Slot.Key.ToString())
+				return false;
 			}
-			return HasSlotBeenFilled;
+
+			if (!ItemProxy->CanMutate())
+			{
+				UE_LOG(LogGenerationAction, Error, TEXT("ConsumeSlotCosts is unable to mutate the item in slot [%s]!"), *Slot.Key.ToString())
+				return false;
+			}
+
+			return true;
 		};
 
 	auto EatUse = [this](const TPair<FFaerieItemSlotHandle, TObjectPtr<UFaerieItemTemplate>>& Slot)
 		{
 			auto&& ItemProxy = *FilledSlots.Find(Slot.Key);
 
-			const UFaerieItem* Item = ItemProxy->GetItemObject();
+			// This *is* safe to const_cast because we have already checked (twice) that it's mutable, but still.
+			// There should be a "correct" way in the API to get a mutable Item pointer.
+			UFaerieItem* Item = const_cast<UFaerieItem*>(ItemProxy->GetItemObject());
 
 			bool RemovedUse = false;
 
 			// If the item can be used as a resource multiple times.
 			if (Item->IsInstanceMutable())
 			{
-				if (auto&& Uses = Item->GetToken<UFaerieItemUsesToken>())
+				if (auto&& Uses = Item->GetEditableToken<UFaerieItemUsesToken>())
 				{
 					RemovedUse = Uses->RemoveUses(1);
 				}
@@ -193,13 +207,30 @@ void UGenerationActionWithSlots::ConsumeSlotCosts(const IFaerieItemSlotInterface
 			}
 		};
 
-	Algo::ForEachIf(SlotsPtr->RequiredSlots, CanEat, EatUse);
-	Algo::ForEachIf(SlotsPtr->OptionalSlots, CanEat, EatUse);
+	const FConstStructView SlotsView = UFaerieItemSlotLibrary::GetCraftingSlotsFromInterface(Interface);
+	const FFaerieItemCraftingSlots& SlotsPtr = SlotsView.Get<const FFaerieItemCraftingSlots>();
+
+	Algo::ForEachIf(SlotsPtr.RequiredSlots, CanEat, EatUse);
+	Algo::ForEachIf(SlotsPtr.OptionalSlots, CanEat, EatUse);
 }
 
-void UGenerationActionWithSlots::Configure(FActionArgs& Args)
+void UCraftingActionWithSlots::Configure(FActionArgs& Args)
 {
 	RunConsumeStep = Args.RunConsumeStep;
 	FilledSlots = Args.FilledSlots;
 	Super::Configure(Args);
+}
+
+void UCraftingActionWithSlots::Run()
+{
+	for (auto Element : FilledSlots)
+	{
+		if (!IsValid(Element.Value.GetObject()) ||
+			!IsValid(Element.Value->GetItemObject()) ||
+			!Element.Value->CanMutate())
+		{
+			UE_LOG(LogGenerationAction, Error, TEXT("A filled slot [%s] is invalid!)"), *Element.Key.ToString())
+			Fail();
+		}
+	}
 }

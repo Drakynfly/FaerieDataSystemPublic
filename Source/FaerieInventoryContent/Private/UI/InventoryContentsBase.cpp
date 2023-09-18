@@ -4,9 +4,8 @@
 #include "UI/InventoryFillMeterBase.h"
 #include "UI/InventoryUIAction.h"
 
+#include "FaerieItemDataComparator.h"
 #include "FaerieItemDataFilter.h"
-
-#include "Extensions/InventoryCapacityExtension.h"
 
 #include "Components/PanelWidget.h"
 
@@ -16,9 +15,9 @@ DEFINE_LOG_CATEGORY(LogInventoryContents)
 
 bool UInventoryContentsBase::Initialize()
 {
-	DefaultFilterProxyObject = NewObject<UInventoryEntryLiteral>(this);
-	DefaultSortProxyAObject = NewObject<UInventoryEntryLiteral>(this);
-	DefaultSortProxyBObject = NewObject<UInventoryEntryLiteral>(this);
+	Query.Filter.BindUObject(this, &ThisClass::ExecFilter);
+	Query.Sort.BindUObject(this, &ThisClass::ExecSort);
+
 	return Super::Initialize();
 }
 
@@ -44,7 +43,7 @@ void UInventoryContentsBase::NativeTick(const FGeometry& MyGeometry, const float
 		{
 			ItemStorage->QueryAll(Query, Entries);
 		}
-		Faerie::Inventory::Utils::BreakKeyedEntriesIntoInventoryKeys(Entries, SortedAndFilteredKeys);
+		Faerie::Inventory::BreakKeyedEntriesIntoInventoryKeys(Entries, SortedAndFilteredKeys);
 		NeedsReconstructEntries = true;
 		NeedsResort = false;
 	}
@@ -59,7 +58,9 @@ void UInventoryContentsBase::NativeTick(const FGeometry& MyGeometry, const float
 void UInventoryContentsBase::Reset()
 {
 	SortedAndFilteredKeys.Empty();
+	ActiveFilterRule = nullptr;
 	ActiveSortRule = nullptr;
+	Query.InvertFilter = false;
 	Query.InvertSort = false;
 	Actions.Empty();
 
@@ -92,24 +93,21 @@ void UInventoryContentsBase::CreateActions()
 
 // ReSharper disable once CppMemberFunctionMayBeConst
 // Cannot be const to bind
-bool UInventoryContentsBase::DefaultFilter(const FInventoryEntry& Entry)
+bool UInventoryContentsBase::ExecFilter(const FFaerieItemProxy& Entry)
 {
-	if (IsValid(DefaultFilterRule))
+	if (IsValid(ActiveFilterRule))
 	{
-		DefaultFilterProxyObject->SetValue(Entry);
-		return DefaultFilterRule->Exec(DefaultFilterProxyObject);
+		return ActiveFilterRule->Exec(Entry);
 	}
 	return Entry.IsValid();
 }
 
 // ReSharper disable once CppMemberFunctionMayBeConst
 // Cannot be const to bind
-bool UInventoryContentsBase::DefaultSort(const FInventoryEntry& A, const FInventoryEntry& B)
+bool UInventoryContentsBase::ExecSort(const FFaerieItemProxy& A, const FFaerieItemProxy& B)
 {
 	if (!IsValid(ActiveSortRule)) return false;
-	DefaultSortProxyAObject->SetValue(A);
-	DefaultSortProxyBObject->SetValue(B);
-	return ActiveSortRule->Exec(DefaultSortProxyAObject, DefaultSortProxyBObject);
+	return ActiveSortRule->Exec(A, B);
 }
 
 void UInventoryContentsBase::NativeEntryAdded(UFaerieItemStorage* Storage, const FEntryKey Key)
@@ -211,32 +209,17 @@ void UInventoryContentsBase::AddToSortOrder(const FInventoryKey Key, const bool 
 {
 	struct FInsertKeyPredicate
 	{
-		FInsertKeyPredicate(UFaerieItemDataComparator* Rule, const TWeakObjectPtr<UFaerieItemStorage> Storage, const bool Reverse)
-		  : Rule(Rule),
-			Storage(Storage),
-			Reverse(Reverse)
-		{}
+		FInsertKeyPredicate(const FFaerieItemStorageNativeQuery& Query, const UFaerieItemStorage* Storage)
+		  : Query(Query),
+			Storage(Storage) {}
 
-		UFaerieItemDataComparator* Rule;
-		TWeakObjectPtr<UFaerieItemStorage> Storage;
-		bool Reverse;
+		const FFaerieItemStorageNativeQuery& Query;
+		const UFaerieItemStorage* Storage;
 
 		bool operator()(const FInventoryKey A, const FInventoryKey B) const
 		{
-			UInventoryEntryProxy* EntryA;
-			UInventoryEntryProxy* EntryB;
-
-			Storage->GetProxyForEntry(A, EntryA);
-			Storage->GetProxyForEntry(B, EntryB);
-
-			bool Result = false;
-
-			if (EntryA && EntryB && IsValid(Rule))
-			{
-				Result = Rule->Exec(EntryA, EntryB);
-			}
-
-			return Reverse ? !Result : Result;
+			const bool Result = Query.Sort.Execute(Storage->Proxy(A.EntryKey), Storage->Proxy(B.EntryKey));
+			return Query.InvertSort ? !Result : Result;
 		}
 	};
 
@@ -246,12 +229,30 @@ void UInventoryContentsBase::AddToSortOrder(const FInventoryKey Key, const bool 
 	}
 	else
 	{
-		// Binary search to find position to insert the new key.
-		const int32 Index = Algo::UpperBound(SortedAndFilteredKeys, Key, FInsertKeyPredicate(ActiveSortRule, ItemStorage, Query.InvertSort));
+		if (!ActiveSortRule)
+		{
+			UE_LOG(LogInventoryContents, Warning, TEXT("ActiveSortRule is invalid. Content will not be sorted!"));
+			if (SortedAndFilteredKeys.Find(Key) != INDEX_NONE)
+			{
+				if (WarnIfAlreadyExists)
+				{
+					UE_LOG(LogInventoryContents, Warning, TEXT("Cannot add sort key that already exists in the array"));
+				}
+			}
+			else
+			{
+				SortedAndFilteredKeys.Add(Key);
+				NeedsReconstructEntries = true;
+			}
+			return;
+		}
 
-		// Error and return if the key we were sorted above is ourself.
+		// Binary search to find position to insert the new key.
+		const int32 Index = Algo::LowerBound(SortedAndFilteredKeys, Key, FInsertKeyPredicate(Query, ItemStorage.Get()));
+
+		// Return if the key we were sorted to or above is ourself.
 		if (SortedAndFilteredKeys.IsValidIndex(Index) && SortedAndFilteredKeys[Index] == Key ||
-			(SortedAndFilteredKeys.IsValidIndex(Index-1) && SortedAndFilteredKeys[Index-1] == Key))
+			(SortedAndFilteredKeys.IsValidIndex(Index+1) && SortedAndFilteredKeys[Index+1] == Key))
 		{
 			if (WarnIfAlreadyExists)
 			{
@@ -276,9 +277,9 @@ void UInventoryContentsBase::SetFilterByDelegate(const FBlueprintStorageFilter& 
 	Query.Filter.Unbind();
 	if (Filter.IsBound())
 	{
-		Query.Filter.BindLambda([Filter](const FInventoryEntry& Entry)
+		Query.Filter.BindLambda([Filter](const FFaerieItemProxy& Proxy)
 			{
-				return Filter.Execute(Entry);
+				return Filter.Execute(Proxy);
 			});
 	}
 
@@ -291,14 +292,15 @@ void UInventoryContentsBase::SetFilterByDelegate(const FBlueprintStorageFilter& 
 void UInventoryContentsBase::ResetFilter(const bool bResort)
 {
 	UE_LOG(LogInventoryContents, Log, TEXT("Resetting to the default filter rule"));
-	Query.Filter.BindUObject(this, &ThisClass::DefaultFilter);
+	Query.Filter.BindUObject(this, &ThisClass::ExecFilter);
+	ActiveFilterRule = DefaultFilterRule;
 	if (bResort)
 	{
 		NeedsResort = true;
 	}
 }
 
-void UInventoryContentsBase::SetSortRule(UInventorySortRule* Rule, const bool bResort)
+void UInventoryContentsBase::SetSortRule(UFaerieItemDataComparator* Rule, const bool bResort)
 {
 	if (IsValid(Rule))
 	{
@@ -324,7 +326,9 @@ void UInventoryContentsBase::SetSortReverse(const bool Reverse, const bool bReso
 
 void UInventoryContentsBase::ResetSort(const bool bResort)
 {
-	Query.Sort.BindUObject(this, &ThisClass::DefaultSort);
+	UE_LOG(LogInventoryContents, Log, TEXT("Resetting to the default sort rule"));
+	Query.Sort.BindUObject(this, &ThisClass::ExecSort);
+	ActiveSortRule = DefaultSortRule;
 	if (bResort)
 	{
 		NeedsResort = true;

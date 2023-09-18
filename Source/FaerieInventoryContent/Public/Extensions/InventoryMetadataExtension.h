@@ -3,7 +3,8 @@
 #pragma once
 
 #include "GameplayTagContainer.h"
-#include "InventoryExtensionBase.h"
+#include "ItemContainerExtensionBase.h"
+#include "InventoryReplicatedDataExtensionBase.h"
 #include "InventoryMetadataExtension.generated.h"
 
 /**
@@ -13,33 +14,7 @@ USTRUCT(BlueprintType, meta = (Categories = "Fae.Inventory.Meta"))
 struct FAERIEINVENTORYCONTENT_API FFaerieInventoryMetaTag : public FFaerieInventoryTag
 {
 	GENERATED_BODY()
-
-	FFaerieInventoryMetaTag() {}
-	static FFaerieInventoryMetaTag GetRootTag() { return TTypedTagStaticImpl2<FFaerieInventoryMetaTag>::StaticImpl.RootTag; }
-	static FFaerieInventoryMetaTag TryConvert(const FGameplayTag FromTag) { return TTypedTagStaticImpl2<FFaerieInventoryMetaTag>::TryConvert(FromTag, false); }
-	static FFaerieInventoryMetaTag ConvertChecked(const FGameplayTag FromTag) { return TTypedTagStaticImpl2<FFaerieInventoryMetaTag>::TryConvert(FromTag, true); }
-	static FFaerieInventoryMetaTag AddNativeTag(const FString& TagBody, const FString& DevComment) { return TTypedTagStaticImpl2<FFaerieInventoryMetaTag>::AddNativeTag(TagBody, DevComment); }
-	bool ExportTextItem(FString& ValueStr, const FFaerieInventoryMetaTag& DefaultValue, UObject* Parent, const int32 PortFlags, UObject* ExportRootScope) const
-	{
-		return TTypedTagStaticImpl2<FFaerieInventoryMetaTag>::ExportTextItem(*this, ValueStr, PortFlags);
-	}
-
-protected:
-	FFaerieInventoryMetaTag(const FGameplayTag& Tag) { TagName = Tag.GetTagName(); }
-	static const TCHAR* GetRootTagStr() { return TEXT("Fae.Inventory.Meta"); }
-	friend class TTypedTagStaticImpl2<FFaerieInventoryMetaTag>;
-};
-
-template<> struct TNameOf<FFaerieInventoryMetaTag> { FORCEINLINE static TCHAR const* GetName() { return TEXT("FFaerieInventoryMetaTag"); } };
-
-template<>
-struct TStructOpsTypeTraits<FFaerieInventoryMetaTag> : public TStructOpsTypeTraitsBase2<FFaerieInventoryMetaTag>
-{
-	enum
-	{
-		WithExportTextItem = true,
-		WithImportTextItem = true
-	};
+	END_TAG_DECL2(FFaerieInventoryMetaTag, TEXT("Fae.Inventory.Meta"))
 };
 
 // Server-only metadata flags
@@ -86,45 +61,30 @@ struct FInventoryEntryMetadata
 	FGameplayTagContainer Tags;
 };
 
-USTRUCT()
-struct FStorageMetadata
-{
-	GENERATED_BODY()
-
-	UPROPERTY()
-	TMap<FEntryKey, FInventoryEntryMetadata> Metadata;
-};
-
 /**
- *
+ * An extension for programmatic control over entry key permissions.
  */
 UCLASS()
-class FAERIEINVENTORYCONTENT_API UInventoryMetadataExtension : public UInventoryExtensionBase
+class FAERIEINVENTORYCONTENT_API UInventoryMetadataExtension : public UInventoryReplicatedDataExtensionBase
 {
 	GENERATED_BODY()
 
-public:
-	UInventoryMetadataExtension();
-
 protected:
-	//~ UInventoryExtensionBase
-	virtual void DeinitializeExtension(const UFaerieItemContainerBase* Container) override;
+	//~ UItemContainerExtensionBase
 	virtual EEventExtensionResponse AllowsRemoval(const UFaerieItemContainerBase* Container, const FEntryKey Key, const FFaerieInventoryTag Reason) const override;
-	virtual void PreRemoval(const UFaerieItemContainerBase* Container, const FEntryKey Key, const int32 Removal) override;
-	//~ UInventoryExtensionBase
+	//~ UItemContainerExtensionBase
 
-	bool DoesEntryHaveTag(UFaerieItemContainerBase* Container, const FEntryKey Key, FFaerieInventoryMetaTag Tag) const;
+	//~ UInventoryReplicatedDataExtensionBase
+	virtual UScriptStruct* GetDataScriptStruct() const override;
+	//~ UInventoryReplicatedDataExtensionBase
 
-	bool CanSetEntryTag(UFaerieItemContainerBase* Container, const FEntryKey Key, const FFaerieInventoryMetaTag Tag, const bool StateToSetTo) const;
+public:
+	bool DoesEntryHaveTag(const UFaerieItemContainerBase* Container, const FEntryKey Key, FFaerieInventoryMetaTag Tag) const;
 
-	bool MarkStackWithTag(UFaerieItemContainerBase* Container, const FEntryKey Key, FFaerieInventoryMetaTag Tag);
-	void TrySetTags(UFaerieItemContainerBase* Container, const FEntryKey Key, FGameplayTagContainer Tags);
+	bool CanSetEntryTag(const UFaerieItemContainerBase* Container, const FEntryKey Key, const FFaerieInventoryMetaTag Tag, const bool StateToSetTo) const;
 
-	bool ClearTagFromStack(UFaerieItemContainerBase* Container, const FEntryKey Key, FFaerieInventoryMetaTag Tag);
+	bool MarkStackWithTag(const UFaerieItemContainerBase* Container, const FEntryKey Key, FFaerieInventoryMetaTag Tag);
+	void TrySetTags(const UFaerieItemContainerBase* Container, const FEntryKey Key, FGameplayTagContainer Tags);
 
-private:
-	// Doesn't replicate or serialize, and shouldn't. For any tags that should, use UInventoryUserdataExtension instead.
-	// This is used exclusively for procedural metadata, such as quest tags.
-	UPROPERTY()
-	TMap<TWeakObjectPtr<const UFaerieItemContainerBase>, FStorageMetadata> PerStorageMetadata;
+	bool ClearTagFromStack(const UFaerieItemContainerBase* Container, const FEntryKey Key, FFaerieInventoryMetaTag Tag);
 };

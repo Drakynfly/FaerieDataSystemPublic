@@ -9,7 +9,7 @@ class UFaerieItem;
 DECLARE_DYNAMIC_DELEGATE_RetVal_OneParam(bool, FBlueprintTokenEdit, UFaerieItemToken*, Token);
 
 /**
- * A fragment of an inventory item, encapsulating a single feature of an item.
+ * A fragment of an inventory item, encapsulating a single feature of the item.
  */
 UCLASS(BlueprintType, DefaultToInstanced, EditInlineNew, Abstract, CollapseCategories, HideDropdown)
 class FAERIEITEMDATA_API UFaerieItemToken : public UObject
@@ -26,17 +26,21 @@ public:
 	virtual bool IsMutable() const;
 
 protected:
-	// Compare the data of this token to another. Most of the time, there is no need to override this. This function is
-	// used to determine if two items are identical, data-wise, but since only *one* token on an item needs to differ for
-	// the item to be considered distinct, not every token needs to implement this.
-	// Tokens that *should* implement this are ones that are primarily used to identify items, like Name or Info tokens,
-	// or any token that explicitily is used to differentiate items when their primary identifiers match.
-	// Further note that any token that is mutable is automatically dissimilar even if it is data-wise identical, so it
-	// is meaningless to implement this it that case.
+	/*
+	 * Compare the data of this token to another. Most of the time, there is no need to override this. This function is
+	 * used to determine if two items are identical, data-wise, but since only *one* token on an item needs to differ for
+	 * the item to be considered distinct, not every token needs to implement this.
+	 * Tokens that *should* implement this are ones that are primarily used to identify items, like Name or Info tokens,
+	 * or any token that explicitily is used to differentiate items when their primary identifiers match.
+	 * Further note that any token that is mutable is automatically dissimilar even if it is data-wise identical, so it
+	 * is meaningless to implement this it that case.
+	 */
 	virtual bool CompareWithImpl(const UFaerieItemToken* FaerieItemToken) const;
 
 	// Are we in an item that is mutable
 	bool IsOuterItemMutable() const;
+
+	void NotifyOuterOfChange();
 
 public:
 	UFaerieItem* GetOuterItem() const;
@@ -47,7 +51,7 @@ public:
 	void EditToken(const TFunction<bool(UFaerieItemToken*)>& EditFunc);
 
 	template <typename TFaerieItemToken>
-	void EditTokenTyped(TFunction<bool(TFaerieItemToken*)> EditFunc)
+	void EditToken(const TFunction<bool(TFaerieItemToken*)>& EditFunc)
 	{
 		static_assert(TIsDerivedFrom<TFaerieItemToken, UFaerieItemToken>::Value, TEXT("TFaerieItemToken must be derived from UFaerieItemToken"));
 		EditToken(EditFunc);

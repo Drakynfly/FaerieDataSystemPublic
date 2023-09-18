@@ -21,9 +21,9 @@ UFaerieItem* FTableDrop::Resolve(const UItemInstancingContext_Crafting* Context)
 
 	UItemInstancingContext_Crafting* TempContext = DuplicateObject(Context, GetTransientPackage());
 
-	for (const FTableDropResourceSlot& StaticResourceSlot : StaticResourceSlots)
+	for (auto&& StaticResourceSlot : StaticResourceSlots)
 	{
-		const FTableDrop& ChildDrop = StaticResourceSlot.Drop.Get<FTableDrop>();
+		const FTableDrop& ChildDrop = StaticResourceSlot.Value.Drop.Get<FTableDrop>();
 
 		// For Subgraph instances, automatically set the stack to the required amount for the filter.
 		//UFaerieItemTemplate* Slot;
@@ -40,12 +40,17 @@ UFaerieItem* FTableDrop::Resolve(const UItemInstancingContext_Crafting* Context)
 		{
 			UFaerieItemDataStackLiteral* Literal = NewObject<UFaerieItemDataStackLiteral>();
 			Literal->SetValue(StaticInstanceItem);
-			TempContext->InputEntryData.Add(StaticResourceSlot.SlotID, Literal);
+			TempContext->InputEntryData.Add(StaticResourceSlot.Key, Literal);
 		}
 	}
 
 	auto&& Item = ItemSource->CreateItemInstance(TempContext);
 	return Item;
+}
+
+int32 FGeneratorAmount_Range::Resolve(USquirrel* Squirrel) const
+{
+	return Squirrel->NextInt32InRange(AmountMin, AmountMax);
 }
 
 int32 FGeneratorAmount_Curve::Resolve(USquirrel* Squirrel) const

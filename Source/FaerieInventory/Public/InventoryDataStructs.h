@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "BinarySearchOptimizedArray.h"
 #include "FaerieItem.h"
 #include "FaerieItemStack.h"
 #include "GameplayTagContainer.h"
@@ -18,16 +19,16 @@ enum class EEntryEquivelancyFlags : uint8
 	None = 0 UMETA(Hidden),
 
 	// When set, all generated data will be checked.
-	ItemData = 1 << 0,
+	Test_ItemData = 1 << 0 UMETA(DisplayName = "Item Data"),
 
 	// When set, stack sums will be checked.
-	StackSum = 1 << 1,
+	Test_StackSum = 1 << 1 UMETA(DisplayName = "Stack Sum"),
 
 	// When set, stack limit will be checked.
-	Limit = 1 << 2,
+	Test_Limit = 1 << 2 UMETA(DisplayName = "Limit"),
 
 	// When set, all other flags are considered set.
-	All = ItemData | StackSum | Limit UMETA(Hidden),
+	All = Test_ItemData | Test_StackSum | Test_Limit UMETA(Hidden),
 };
 ENUM_CLASS_FLAGS(EEntryEquivelancyFlags)
 
@@ -60,7 +61,6 @@ private:
 	int32 KeyValue;
 
 public:
-
 	bool IsValid() const
 	{
 		return KeyValue > INDEX_NONE;
@@ -81,13 +81,14 @@ public:
 		return Key.KeyValue;
 	}
 
-	struct FCompare
-    {
-    	FORCEINLINE bool operator()(const FFaerieItemKeyBase& A, const FFaerieItemKeyBase& B) const
-        {
-    		return A.KeyValue < B.KeyValue;
-    	}
-    };
+	friend bool operator<(const FFaerieItemKeyBase& Lhs, const FFaerieItemKeyBase& Rhs)
+	{
+		return Lhs.KeyValue < Rhs.KeyValue;
+	}
+
+	friend bool operator<=(const FFaerieItemKeyBase& Lhs, const FFaerieItemKeyBase& Rhs) { return Rhs >= Lhs; }
+	friend bool operator>(const FFaerieItemKeyBase& Lhs, const FFaerieItemKeyBase& Rhs) { return Rhs < Lhs; }
+	friend bool operator>=(const FFaerieItemKeyBase& Lhs, const FFaerieItemKeyBase& Rhs) { return !(Lhs < Rhs); }
 
 	int32 Value() const { return KeyValue; }
 
@@ -100,6 +101,7 @@ public:
 	}
 };
 
+// Typesafe wrapper around an FFaerieItemKeyBase used for keying entries.
 USTRUCT(BlueprintType)
 struct FAERIEINVENTORY_API FEntryKey : public FFaerieItemKeyBase
 {
@@ -109,6 +111,7 @@ struct FAERIEINVENTORY_API FEntryKey : public FFaerieItemKeyBase
 	static FEntryKey InvalidKey;
 };
 
+// Typesafe wrapper around an FFaerieItemKeyBase used for keying stacks.
 USTRUCT(BlueprintType)
 struct FAERIEINVENTORY_API FStackKey : public FFaerieItemKeyBase
 {
@@ -116,95 +119,6 @@ struct FAERIEINVENTORY_API FStackKey : public FFaerieItemKeyBase
 	using FFaerieItemKeyBase::FFaerieItemKeyBase;
 };
 
-// ReSharper disable CppUE4CodingStandardNamingViolationWarning
-// These will just be compiled out anyway, they exist to give meaning to certain keywords, so numbers can be inserted
-// and preserve their meaning when read.
-enum { INVENTORY_MAXIMUM_SLOTS = 32767 };
-enum { INVENTORY_MAXIMUM_ITEM_COUNT = 32767 };
-
-USTRUCT(BlueprintType)
-struct FAERIEINVENTORY_API FInventoryStack
-{
-	GENERATED_BODY()
-
-	FInventoryStack() {}
-
-	FInventoryStack(const int32 Amount)
-	  : Amount(Amount)
-	{
-		check(Amount >= 0);
-	}
-
-protected:
-	// Amount in the stack
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InventoryStack", meta = (UIMin = 0, ClampMin = -1))
-	int32 Amount = 0;
-
-public:
-	int32 GetAmount() const { return Amount; }
-
-	bool IsValid() const;
-
-	friend bool operator==(const FInventoryStack& Lhs, const FInventoryStack& Rhs)
-	{
-		return Lhs.Amount == Rhs.Amount;
-	}
-
-	friend bool operator!=(const FInventoryStack& Lhs, const FInventoryStack& Rhs)
-	{
-		return !(Lhs == Rhs);
-	}
-
-	void operator+=(const FInventoryStack& Other)
-	{
-		Amount += Other.Amount;
-	}
-
-	void operator-=(const FInventoryStack& Other)
-	{
-		check(Amount >= Other.Amount);
-		Amount -= Other.Amount;
-	}
-
-	friend FInventoryStack operator+(const FInventoryStack& A, const FInventoryStack& B)
-	{
-		return A.Amount + B.Amount;
-	}
-
-	friend FInventoryStack operator-(const FInventoryStack& A, const FInventoryStack& B)
-	{
-		check(A >= B);
-		return A.Amount - B.Amount;
-	}
-
-	bool operator<(const FInventoryStack& Other) const
-	{
-		return Amount < Other.Amount;
-	}
-
-	bool operator<=(const FInventoryStack& Other) const
-	{
-		return Amount <= Other.Amount;
-	}
-
-	bool operator>(const FInventoryStack& Other) const
-	{
-		return Amount > Other.Amount;
-	}
-
-	bool operator>=(const FInventoryStack& Other) const
-	{
-		return Amount >= Other.Amount;
-	}
-
-	static int32 EmptyStackNum;
-	static int32 UnlimitedNum;
-	static FInventoryStack EmptyStack;
-	static FInventoryStack UnlimitedStack;
-
-private:
-	static FInventoryStack MakeUnlimitedStack();
-};
 
 USTRUCT(BlueprintType)
 struct FAERIEINVENTORY_API FKeyedStack
@@ -217,7 +131,7 @@ struct FAERIEINVENTORY_API FKeyedStack
 
 	// Amount in the stack
 	UPROPERTY(VisibleAnywhere, Category = "Keyed Stack")
-	FInventoryStack Stack;
+	int32 Stack = 0;
 
 	friend bool operator==(const FKeyedStack& Lhs, const FStackKey& Rhs)
 	{
@@ -281,34 +195,8 @@ struct FInventoryKey
 USTRUCT(BlueprintType, meta = (Categories = "Fae.Inventory"))
 struct FFaerieInventoryTag : public FGameplayTag
 {
-	GENERATED_BODY()
-
-	FFaerieInventoryTag() {}
-	static FFaerieInventoryTag GetRootTag() { return TTypedTagStaticImpl2<FFaerieInventoryTag>::StaticImpl.RootTag; }
-	static FFaerieInventoryTag TryConvert(const FGameplayTag FromTag) { return TTypedTagStaticImpl2<FFaerieInventoryTag>::TryConvert(FromTag, false); }
-	static FFaerieInventoryTag ConvertChecked(const FGameplayTag FromTag) { return TTypedTagStaticImpl2<FFaerieInventoryTag>::TryConvert(FromTag, true); }
-	static FFaerieInventoryTag AddNativeTag(const FString& TagBody, const FString& DevComment) { return TTypedTagStaticImpl2<FFaerieInventoryTag>::AddNativeTag(TagBody, DevComment); }
-	bool ExportTextItem(FString& ValueStr, const FFaerieInventoryTag& DefaultValue, UObject* Parent, const int32 PortFlags, UObject* ExportRootScope) const
-	{
-		return TTypedTagStaticImpl2<FFaerieInventoryTag>::ExportTextItem(*this, ValueStr, PortFlags);
-	}
-
-protected:
-	FFaerieInventoryTag(const FGameplayTag& Tag) { TagName = Tag.GetTagName(); }
-	static const TCHAR* GetRootTagStr() { return TEXT("Fae.Inventory"); }
-	friend class TTypedTagStaticImpl2<FFaerieInventoryTag>;
-};
-
-template<> struct TNameOf<FFaerieInventoryTag> { FORCEINLINE static TCHAR const* GetName() { return TEXT("FFaerieInventoryTag"); } };
-
-template<>
-struct TStructOpsTypeTraits<FFaerieInventoryTag> : public TStructOpsTypeTraitsBase2<FFaerieInventoryTag>
-{
-	enum
-	{
-		WithExportTextItem = true,
-		WithImportTextItem = true
-	};
+	GENERATED_BODY(FFaerieInventoryTag)
+	END_TAG_DECL2(FFaerieInventoryTag, TEXT("Fae.Inventory"))
 };
 
 class UFaerieItem;
@@ -331,32 +219,33 @@ struct FAERIEINVENTORY_API FInventoryEntry
 	TArray<FKeyedStack> Stacks;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "InventoryEntry")
-	FInventoryStack Limit = 0;
+	int32 Limit = 0;
 
 private:
-	// Internal count of how many stacks we've made.
+	// Internal count of how many stacks we've made. Used to track key creation. Only valid on the server.
 	int32 StackCount = 0;
 
 public:
-	FInventoryStack GetStack(const FStackKey& Key) const;
+	int32 GetStack(const FStackKey& Key) const;
 
-	TArray<FStackKey> GetKeys() const;
+	TArray<FStackKey> CopyKeys() const;
 
-	FInventoryStack StackSum() const;
+	int32 StackSum() const;
 
-	void Set(const FStackKey& Key, const FInventoryStack Stack);
+	void SetStack(const FStackKey& Key, const int32 Stack);
 
 	// Add the Amount to the stacks, adding new stacks as needed. Can optionally return the list of added stacks.
-	// ReturnValue is FInventoryStack::Empty if Stack was successfully added, or the remainder, if not.
-	FInventoryStack AddToAnyStack(FInventoryStack Stack, TArray<FStackKey>* OutAddedKeys = nullptr);
+	// ReturnValue is 0 if Stack was successfully added, or the remainder, otherwise.
+	int32 AddToAnyStack(int32 Stack, TArray<FStackKey>* OutAddedKeys = nullptr);
 
 	// Remove the amount from any number of stacks. Can optionally return the list of modified stacks, and/or just the removed stacks
 	// ReturnValue is 0 if Stack was successfully removed, or the remainder, if not.
-	FInventoryStack RemoveFromAnyStack(FInventoryStack Amount, TArray<FStackKey>* OutAllModifiedKeys = nullptr, TArray<FStackKey>* OutRemovedKeys = nullptr);
+	int32 RemoveFromAnyStack(int32 Amount, TArray<FStackKey>* OutAllModifiedKeys = nullptr, TArray<FStackKey>* OutRemovedKeys = nullptr);
 
 	bool IsValid() const;
 
-    FFaerieItemStack ToItemStack() const;
+	// Gets a view of the item and stack
+    FFaerieItemStackView ToItemStackView() const;
 
     static bool IsEqualTo(const FInventoryEntry& A, const FInventoryEntry& B, EEntryEquivelancyFlags CheckFlags);
 };
@@ -372,11 +261,9 @@ struct FKeyedInventoryEntry : public FFastArraySerializerItem
 
 	FKeyedInventoryEntry() {}
 
-	FKeyedInventoryEntry(const FEntryKey Key, const FInventoryEntry& Entry)
-		: Key(Key),
-		  Entry(Entry)
-	{
-	}
+	FKeyedInventoryEntry(const FEntryKey Key, const FInventoryEntry& Value)
+	  : Key(Key),
+		Value(Value) {}
 
 	// Unique key to identify this entry.
 	UPROPERTY(VisibleAnywhere, Category = "Inventory Key and Entry")
@@ -384,7 +271,7 @@ struct FKeyedInventoryEntry : public FFastArraySerializerItem
 
 	// A canonical entry.
 	UPROPERTY(VisibleAnywhere, Category = "Inventory Key and Entry")
-	FInventoryEntry Entry;
+	FInventoryEntry Value;
 
 	void PreReplicatedRemove(const FInventoryContent& InArraySerializer);
 	void PostReplicatedAdd(const FInventoryContent& InArraySerializer);
@@ -392,36 +279,30 @@ struct FKeyedInventoryEntry : public FFastArraySerializerItem
 };
 
 /**
- * FInventoryContent is a Fast Array, containing all FInventoryEntries for an inventory. Lookup is O(Log(n)), as FInventoryKeys
- * are used to keep Items in numeric order, allowing for binary searches on getter.
+ * FInventoryContent is a Fast Array, containing all FInventoryEntries for an inventory. Lookup is O(Log(n)), as FEntryKeys
+ * are used to keep Entries in numeric order, allowing for binary-search accelerated accessors.
  */
 USTRUCT()
-struct FInventoryContent : public FFastArraySerializer
+struct FInventoryContent : public FFastArraySerializer,
+						   public TBinarySearchOptimizedArray<FInventoryContent, FKeyedInventoryEntry>
 {
 	GENERATED_BODY()
 
+	friend TBinarySearchOptimizedArray;
 	friend class UFaerieItemStorage;
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Content")
-	TArray<FKeyedInventoryEntry> Items;
+	TArray<FKeyedInventoryEntry> Entries;
 
-	/** Owning inventory to send Fast Array callbacks to */
+	// Enables TBinarySearchOptimizedArray
+	TArray<FKeyedInventoryEntry>& GetArray() { return Entries; }
+
+	/** Owning storage to send Fast Array callbacks to */
 	UPROPERTY()
 	TWeakObjectPtr<UFaerieItemStorage> ChangeListener;
 
-private:
-	int32 IndexOf(const FEntryKey Key) const;
-
 public:
-	bool Contains(FEntryKey Key) const;
-
-	const FInventoryEntry* Find(FEntryKey Key) const;
-
-	const FInventoryEntry& operator[](const FEntryKey Key) const;
-
-	FEntryKey GetKeyAt(int32 Index) const;
-
 	/**
 	 * Adds a new key and entry to the end of the Items array. Performs a quick check that the new key is sequentially
 	 * following the end of the array, but does not enforce or check for the entire array being sorted. Use this function
@@ -431,36 +312,28 @@ public:
 	FKeyedInventoryEntry& Append(FEntryKey Key, const FInventoryEntry& Entry);
 
 	/**
+	 * Works like Append, but doesn't check that the key is sequential. Use this when adding multiple items in quick
+	 * succession, and you don't need the array sorted in the meantime. Sort must be called when you are done, to bring
+	 * everything back into shape.
+	 */
+	FKeyedInventoryEntry& AppendUnsafe(FEntryKey Key, const FInventoryEntry& Entry);
+
+	/**
 	 * Performs a binary search to find where to insert this new key. Needed when Key is not guaranteed to be sequential.
 	 * @see Append
 	 */
 	void Insert(FEntryKey Key, const FInventoryEntry& Entry);
 
-	/**
-	 * Force a full resort of the contained items. Must be called whenever there are changes made to the array without
-	 * verifying sort order. Example use case is mass addition of items of unknown order. Instead of sorting each one
-	 * as they are added, it's more efficient to add them all in whatever order they came in, or perform one sort after.
-	 */
-	void Sort();
-
 	void Remove(FEntryKey Key);
 
-	bool IsEmpty() const { return Items.IsEmpty(); }
+	bool IsEmpty() const { return Entries.IsEmpty(); }
 
-	int32 Num() const { return Items.Num(); }
-
-	void GetKeys(TArray<FEntryKey>& Array) const
-	{
-		for (const FKeyedInventoryEntry& Item : Items)
-		{
-			Array.Add(Item.Key);
-		}
-	}
+	int32 Num() const { return Entries.Num(); }
 
 	struct FScopedItemHandle
 	{
 		FScopedItemHandle(const FEntryKey Key, FInventoryContent& Source)
-		  : Handle(Source.Items[Source.IndexOf(Key)]),
+		  : Handle(Source.Entries[Source.IndexOf(Key)]),
 			Source(Source) {}
 
 		~FScopedItemHandle();
@@ -472,18 +345,18 @@ public:
 		FInventoryContent& Source;
 
 	public:
-		FInventoryEntry* operator->() const { return &Handle.Entry; }
-		FInventoryEntry& Get() const { return Handle.Entry; }
+		FInventoryEntry* operator->() const { return &Handle.Value; }
+		FInventoryEntry& Get() const { return Handle.Value; }
 	};
 
-	FScopedItemHandle GetMutableHandle(const FEntryKey Key)
+	FScopedItemHandle GetHandle(const FEntryKey Key)
 	{
 		return FScopedItemHandle(Key, *this);
 	}
 
 	bool NetDeltaSerialize(FNetDeltaSerializeInfo& DeltaParms)
 	{
-		return FastArrayDeltaSerialize<FKeyedInventoryEntry, FInventoryContent>(Items, DeltaParms, *this);
+		return FastArrayDeltaSerialize<FKeyedInventoryEntry, FInventoryContent>(Entries, DeltaParms, *this);
 	}
 
 	/*
@@ -498,8 +371,8 @@ public:
 
 	// Only const iteration is allowed.
 	using TRangedForConstIterator = TArray<FKeyedInventoryEntry>::RangedForConstIteratorType;
-	FORCEINLINE TRangedForConstIterator begin() const { return TRangedForConstIterator(Items.begin()); }
-	FORCEINLINE TRangedForConstIterator end() const   { return TRangedForConstIterator(Items.end());   }
+	FORCEINLINE TRangedForConstIterator begin() const { return TRangedForConstIterator(Entries.begin()); }
+	FORCEINLINE TRangedForConstIterator end() const   { return TRangedForConstIterator(Entries.end());   }
 };
 
 template<>
@@ -520,7 +393,7 @@ struct FAERIEINVENTORY_API FInventoryKeyHandle
 	GENERATED_BODY()
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-	TWeakObjectPtr<class UFaerieItemStorage> ItemStorage;
+	TWeakObjectPtr<UFaerieItemStorage> ItemStorage;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	FInventoryKey Key;
@@ -528,9 +401,5 @@ struct FAERIEINVENTORY_API FInventoryKeyHandle
 
 namespace Faerie::Inventory
 {
-	class FAERIEINVENTORY_API Utils
-	{
-	public:
-		static void BreakKeyedEntriesIntoInventoryKeys(const TArray<FKeyedInventoryEntry>& Entries, TArray<FInventoryKey>& OutKeys);
-	};
+	FAERIEINVENTORY_API void BreakKeyedEntriesIntoInventoryKeys(const TArray<FKeyedInventoryEntry>& Entries, TArray<FInventoryKey>& OutKeys);
 }

@@ -5,8 +5,8 @@
 #include "GenerationStructsLibrary.h"
 #include "CraftingLibrary.generated.h"
 
-class UItemSourcePool;
-class UItemGenerationDriver;
+struct FFaerieWeightedDropPool;
+class UItemGenerationConfig;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogCraftingLibrary, Log, All);
 
@@ -17,5 +17,5 @@ class FAERIEITEMGENERATOR_API UCraftingLibrary final : public UBlueprintFunction
 
 public:
 	UFUNCTION(BlueprintCallable, Category = "Faerie|Crafting")
-	static UItemGenerationDriver* CreateGenerationDriver(UItemSourcePool* Pool, const FGeneratorAmountBase& Amount);
+	static UItemGenerationConfig* CreateGenerationDriver(const FFaerieWeightedDropPool& Pool, const FGeneratorAmountBase& Amount);
 };

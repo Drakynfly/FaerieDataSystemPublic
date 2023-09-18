@@ -2,8 +2,9 @@
 
 #pragma once
 
-#include "InventoryExtensionBase.h"
+#include "ItemContainerExtensionBase.h"
 #include "FaerieItemContainerBase.h"
+#include "ItemContainerEvent.h"
 #include "InventoryLoggerExtension.generated.h"
 
 USTRUCT(BlueprintType, meta = (HasNativeBreak = "/Script/FaerieInventoryContent.LoggedInventoryEventLibrary.BreakLoggedInventoryEvent"))
@@ -16,7 +17,7 @@ struct FLoggedInventoryEvent
 	TWeakObjectPtr<const UFaerieItemContainerBase> Container = nullptr;
 
 	// The logged event
-	Faerie::FItemContainerEvent Event;
+	Faerie::Inventory::FEventLog Event;
 
 	friend bool operator==(const FLoggedInventoryEvent& Lhs, const FLoggedInventoryEvent& Rhs)
 	{
@@ -48,7 +49,6 @@ struct TStructOpsTypeTraits<FLoggedInventoryEvent> : public TStructOpsTypeTraits
 {
 	enum
 	{
-
 		WithNetSerializer = true,
 	};
 };
@@ -60,7 +60,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FInventoryEventLogged, const FLogged
  * Logs events from additions, changes, and removals, and can parse them for data at request.
  */
 UCLASS()
-class FAERIEINVENTORYCONTENT_API UInventoryLoggerExtension : public UInventoryExtensionBase
+class FAERIEINVENTORYCONTENT_API UInventoryLoggerExtension : public UItemContainerExtensionBase
 {
 	GENERATED_BODY()
 
@@ -68,8 +68,8 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 protected:
-	virtual void PostAddition(const UFaerieItemContainerBase* Container, const Faerie::FItemContainerEvent& Event) override;
-	virtual void PostRemoval(const UFaerieItemContainerBase* Container, const Faerie::FItemContainerEvent& Event) override;
+	virtual void PostAddition(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) override;
+	virtual void PostRemoval(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) override;
 
 	void HandleNewEvent(const FLoggedInventoryEvent& Event);
 

@@ -15,11 +15,13 @@ class FAERIEITEMDATA_API UFaerieInfoToken : public UFaerieItemToken
 public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-	//~ UFaerieItemToken
-	virtual bool IsMutable() const override;
+protected:
+	// This is usually the first and only token needed to determine equivilancy, by a simple check of the item's name.
+	// Info tokens are inherantly immutable, and they must be since they are used to identify items.
+	// This doesn't mean that an item *cannot* be renamed, just that if it is, it's considered a seperate item.
 	virtual bool CompareWithImpl(const UFaerieItemToken* FaerieItemToken) const override;
-	//~ UFaerieItemToken
 
+public:
 	UFUNCTION(BlueprintCallable, Category = "Faerie|InfoToken")
 	const FFaerieAssetInfo& GetInfoObject() const;
 

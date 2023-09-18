@@ -3,77 +3,23 @@
 #include "Extensions/InventoryUserdataExtension.h"
 
 #include "FaerieItemStorage.h"
-#include "Net/UnrealNetwork.h"
 
 FFaerieInventoryUserTags FFaerieInventoryUserTags::FaerieInventoryUserTags;
 
-UInventoryUserdataExtension::UInventoryUserdataExtension()
+UScriptStruct* UInventoryUserdataExtension::GetDataScriptStruct() const
 {
-
+	return FInventoryEntryUserdata::StaticStruct();
 }
 
-void UInventoryUserdataExtension::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+bool UInventoryUserdataExtension::DoesStackHaveTag(UFaerieItemContainerBase* Container, const FEntryKey Key, const FFaerieInventoryUserTag Tag) const
 {
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	FDoRepLifetimeParams SharedParams;
-	SharedParams.bIsPushBased = true;
-
-	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, PerStorageUserdata, SharedParams);
-}
-
-void UInventoryUserdataExtension::DeinitializeExtension(const UFaerieItemContainerBase* Container)
-{
-	PerStorageUserdata.RemoveAll([Container](const FStorageUserdata& Userdata)
-		{
-			return Userdata.Container == Container;
-		});
-}
-
-void UInventoryUserdataExtension::PreRemoval(const UFaerieItemContainerBase* Container, const FEntryKey Key, const int32 Removal)
-{
-	if (auto&& Userdata = FindUserdataForContainer(Container))
+	const FConstStructView DataView = GetDataForEntry(Container, Key);
+	if (!DataView.IsValid())
 	{
-		if (Userdata->Userdata.RemoveAllSwap([Key](const FInventoryEntryUserdata& Datum)
-		{
-			return Datum.Key == Key;
-		}) != 0)
-		{
-			MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, PerStorageUserdata, this);
-		}
-	}
-}
-
-FStorageUserdata* UInventoryUserdataExtension::FindUserdataForContainer(const UFaerieItemContainerBase* Container)
-{
-	return PerStorageUserdata.FindByPredicate([Container](const FStorageUserdata& Userdata)
-		{
-			return Userdata.Container == Container;
-		});
-}
-
-const FStorageUserdata* UInventoryUserdataExtension::FindUserdataForContainer(const UFaerieItemContainerBase* Container) const
-{
-	return PerStorageUserdata.FindByPredicate([Container](const FStorageUserdata& Userdata)
-		{
-			return Userdata.Container == Container;
-		});
-}
-
-bool UInventoryUserdataExtension::DoesStackHaveTag(UFaerieItemContainerBase* Container, FEntryKey Key, const FFaerieInventoryUserTag Tag) const
-{
-	if (auto&& Userdata = FindUserdataForContainer(Container))
-	{
-		if (auto&& Userdatum = Userdata->Userdata.FindByPredicate([Key](const FInventoryEntryUserdata& Datum)
-		{
-			return Datum.Key == Key;
-		}))
-		{
-			return Userdatum->Tags.HasTag(Tag);
-		}
+		return false;
 	}
 
-	return false;
+	return DataView.Get<const FInventoryEntryUserdata>().Tags.HasTag(Tag);
 }
 
 bool UInventoryUserdataExtension::CanSetStackTag(UFaerieItemContainerBase* Container, const FEntryKey Key, const FFaerieInventoryUserTag Tag,
@@ -99,27 +45,11 @@ bool UInventoryUserdataExtension::MarkStackWithTag(UFaerieItemContainerBase* Con
 		return false;
 	}
 
-	FStorageUserdata* Userdata = FindUserdataForContainer(Container);
-	if (!Userdata)
-	{
-		Userdata = &PerStorageUserdata.AddDefaulted_GetRef();
-		Userdata->Container = Container;
-	}
-
-	if (auto&& Userdatum = Userdata->Userdata.FindByPredicate([Key](const FInventoryEntryUserdata& Datum)
+	return EditDataForEntry(Container, Key,
+		[Tag](FInstancedStruct& Data)
 		{
-			return Datum.Key == Key;
-		}))
-	{
-		Userdatum->Tags.AddTag(Tag);
-	}
-	else
-	{
-		MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, PerStorageUserdata, this);
-		Userdata->Userdata.Add({Key, Tag.GetSingleTagContainer()});
-	}
-
-	return true;
+			Data.GetMutable<FInventoryEntryUserdata>().Tags.AddTag(Tag);
+		});
 }
 
 bool UInventoryUserdataExtension::ClearTagFromStack(UFaerieItemContainerBase* Container, const FEntryKey Key, const FFaerieInventoryUserTag Tag)
@@ -134,17 +64,9 @@ bool UInventoryUserdataExtension::ClearTagFromStack(UFaerieItemContainerBase* Co
 		return false;
 	}
 
-	if (auto&& Userdata = FindUserdataForContainer(Container))
-	{
-		if (auto&& Userdatum = Userdata->Userdata.FindByPredicate([Key](const FInventoryEntryUserdata& Datum)
-    		{
-    			return Datum.Key == Key;
-    		}))
-    	{
-    		MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, PerStorageUserdata, this);
-    		return Userdatum->Tags.RemoveTag(Tag);
-    	}
-	}
-
-	return false;
+	return EditDataForEntry(Container, Key,
+		[Tag](FInstancedStruct& Data)
+		{
+			Data.GetMutable<FInventoryEntryUserdata>().Tags.RemoveTag(Tag);
+		});
 }

@@ -29,7 +29,7 @@ void UFaerieItemSlotLibrary::GetCraftingSlots(const TScriptInterface<IFaerieItem
 		if (const FConstStructView SlotsView = Interface->GetCraftingSlots();
 			SlotsView.IsValid())
 		{
-			Slots = SlotsView.Get<FFaerieItemCraftingSlots>();
+			Slots = SlotsView.Get<const FFaerieItemCraftingSlots>();
 		}
 	}
 }
@@ -47,8 +47,7 @@ bool UFaerieItemSlotLibrary::IsSlotOptional(const TScriptInterface<IFaerieItemSl
 	if (Interface.GetInterface() == nullptr) return false;
 
 	const FConstStructView SlotsView = GetCraftingSlotsFromInterface(Interface.GetInterface());
-	const FFaerieItemCraftingSlots* SlotsPtr = SlotsView.GetPtr<FFaerieItemCraftingSlots>();
-	return SlotsPtr->OptionalSlots.Contains(Name);
+	return SlotsView.Get<const FFaerieItemCraftingSlots>().OptionalSlots.Contains(Name);
 }
 
 bool UFaerieItemSlotLibrary::FindSlot(const TScriptInterface<IFaerieItemSlotInterface> Interface,
@@ -57,17 +56,17 @@ bool UFaerieItemSlotLibrary::FindSlot(const TScriptInterface<IFaerieItemSlotInte
 	if (Interface.GetInterface() == nullptr) return false;
 
 	const FConstStructView SlotsView = GetCraftingSlotsFromInterface(Interface.GetInterface());
-	const FFaerieItemCraftingSlots* SlotsPtr = SlotsView.GetPtr<FFaerieItemCraftingSlots>();
+	const FFaerieItemCraftingSlots& SlotsPtr = SlotsView.Get<const FFaerieItemCraftingSlots>();
 
-	if (SlotsPtr->RequiredSlots.Contains(Name))
+	if (SlotsPtr.RequiredSlots.Contains(Name))
 	{
-		OutSlot = SlotsPtr->RequiredSlots[Name];
+		OutSlot = SlotsPtr.RequiredSlots[Name];
 		return true;
 	}
 
-	if (SlotsPtr->OptionalSlots.Contains(Name))
+	if (SlotsPtr.OptionalSlots.Contains(Name))
 	{
-		OutSlot = SlotsPtr->OptionalSlots[Name];
+		OutSlot = SlotsPtr.OptionalSlots[Name];
 		return true;
 	}
 

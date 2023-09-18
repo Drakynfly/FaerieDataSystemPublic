@@ -86,7 +86,7 @@ struct FAERIEINVENTORYCONTENT_API FItemCapacity
 
     bool IsInsignificant() const
     {
-        return Weight == 0 || FMath::IsNearlyZero(Bounds.GetMin(), static_cast<double>(0.01f));
+        return Weight == 0 || FMath::IsNearlyZero(Bounds.GetMin(), 0.01);
     }
 
     // Get the product of the physical dimensions of this entry.
@@ -95,7 +95,7 @@ struct FAERIEINVENTORYCONTENT_API FItemCapacity
         return Bounds.X * Bounds.Y * Bounds.Z;
     }
 
-	int64 GetEfficientVolume() const
+	double GetEfficientVolume() const
     {
     	return GetVolume() * Efficiency;
     }
@@ -103,8 +103,7 @@ struct FAERIEINVENTORYCONTENT_API FItemCapacity
 	// Get the approximate weight for one square centimeter of this capacity.
 	double WeightOfSquareCentimeter() const
     {
-    	const double WeightPerCentimeter = static_cast<double>(Weight) / static_cast<double>(GetEfficientVolume());
-    	return WeightPerCentimeter;
+    	return static_cast<double>(Weight) / GetEfficientVolume();
     }
 };
 
@@ -174,7 +173,8 @@ struct FWeightAndVolume
 		return Out;
 	}
 
-	friend FWeightAndVolume& operator-(const FWeightAndVolume& Other)
+	// Negation operator
+	friend FWeightAndVolume operator-(const FWeightAndVolume& Other)
 	{
 		FWeightAndVolume Out;
 		Out.GramWeight = -Other.GramWeight;
@@ -193,17 +193,17 @@ class FAERIEINVENTORYCONTENT_API UCapacityStructsUtilities : public UBlueprintFu
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(BlueprintCallable, Category = "Inventory|Utils")
+	UFUNCTION(BlueprintCallable, Category = "Faerie|Inventory|Utils")
 	static FItemCapacity WeightOfScaledComparison(const FItemCapacity& Original, const FItemCapacity& Comparison);
 
 	UFUNCTION(BlueprintPure, meta = (DisplayName = "WeightAndVolume + WeightAndVolume", CompactNodeTitle = "+", ScriptMethod = "Add",
-		ScriptOperator = "+;+=", Keywords = "+ add plus", CommutativeAssociativeBinaryOperator = "true"), Category = "Inventory|Utils")
+		ScriptOperator = "+;+=", Keywords = "+ add plus", CommutativeAssociativeBinaryOperator = "true"), Category = "Faerie|Inventory|Utils")
 	static FWeightAndVolume Add_WeightAndVolume(const FWeightAndVolume& A, const FWeightAndVolume& B) { return A + B; }
 
 	UFUNCTION(BlueprintPure, meta = (DisplayName = "WeightAndVolume - WeightAndVolume", CompactNodeTitle = "-", ScriptMethod = "Subtract",
-		ScriptOperator = "-;-=", Keywords = "- subtract minus", CommutativeAssociativeBinaryOperator = "true"), Category = "Inventory|Utils")
+		ScriptOperator = "-;-=", Keywords = "- subtract minus", CommutativeAssociativeBinaryOperator = "true"), Category = "Faerie|Inventory|Utils")
 	static FWeightAndVolume Subtract_WeightAndVolume(const FWeightAndVolume& A, const FWeightAndVolume& B) { return A - B; }
 
-	UFUNCTION(BlueprintPure, Category = "Inventory|Utils")
+	UFUNCTION(BlueprintPure, Category = "Faerie|Inventory|Utils")
 	static FWeightAndVolume ToWeightAndVolume_ItemCapacity(const FItemCapacity& ItemCapacity);
 };

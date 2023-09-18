@@ -1,9 +1,8 @@
 // Copyright Guy (Drakynfly) Lundvall. All Rights Reserved.
 
 #include "FaerieInventoryComponent.h"
-
-#include "InventoryContentStructsLibrary.h"
-#include "Engine/ActorChannel.h"
+#include "FaerieItemStorage.h"
+#include "ItemContainerExtensionBase.h"
 #include "Net/UnrealNetwork.h"
 
 DEFINE_LOG_CATEGORY(LogFaerieInventoryComponent);
@@ -13,6 +12,9 @@ UFaerieInventoryComponent::UFaerieInventoryComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 	SetIsReplicatedByDefault(true);
 	bReplicateUsingRegisteredSubObjectList = true;
+
+	ItemStorage = CreateDefaultSubobject<UFaerieItemStorage>(FName{TEXTVIEW("ItemStorage")});
+	Extensions = CreateDefaultSubobject<UItemContainerExtensionGroup>(FName{TEXTVIEW("Extensions")});
 }
 
 void UFaerieInventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -25,26 +27,13 @@ void UFaerieInventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimePrope
 	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, ItemStorage, SharedParams);
 }
 
-void UFaerieInventoryComponent::BeginPlay()
+void UFaerieInventoryComponent::PostInitProperties()
 {
-	Super::BeginPlay();
+	Super::PostInitProperties();
 
-	if (GetOwner()->HasAuthority())
-	{
-		MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, ItemStorage, this);
-		ItemStorage = NewObject<UFaerieItemStorage>(this);
-
-		ItemStorage->GetOnKeyAdded().AddUObject(this, &ThisClass::PostEntryAdded);
-		ItemStorage->GetOnKeyUpdated().AddUObject(this, &ThisClass::PostEntryChanged);
-		ItemStorage->GetOnKeyRemoved().AddUObject(this, &ThisClass::PreEntryRemoved);
-
-		for (auto&& Extension : Extensions)
-		{
-			ItemStorage->AddExtension(Extension);
-		}
-
-		AddReplicatedSubObject(ItemStorage);
-	}
+	ItemStorage->GetOnKeyAdded().AddUObject(this, &ThisClass::PostEntryAdded);
+	ItemStorage->GetOnKeyUpdated().AddUObject(this, &ThisClass::PostEntryChanged);
+	ItemStorage->GetOnKeyRemoved().AddUObject(this, &ThisClass::PreEntryRemoved);
 }
 
 void UFaerieInventoryComponent::ReadyForReplication()
@@ -61,12 +50,12 @@ void UFaerieInventoryComponent::ReadyForReplication()
 	}
 	else
 	{
-		for (auto&& Extension : Extensions)
+		AddReplicatedSubObject(ItemStorage);
+		AddReplicatedSubObject(Extensions);
+
+		if (IsValid(Extensions))
 		{
-			if (IsValid(Extension))
-			{
-				AddReplicatedSubObject(Extension);
-			}
+			ItemStorage->AddExtension(Extensions);
 		}
 	}
 }
@@ -113,57 +102,26 @@ void UFaerieInventoryComponent::PreEntryRemoved(UFaerieItemStorage* Storage, con
 #endif
 }
 
-#if WITH_EDITOR
-
-#define LOCTEXT_NAMESPACE "FaerieInventoryComponent_Validation"
-
-EDataValidationResult UFaerieInventoryComponent::IsDataValid(TArray<FText>& ValidationErrors)
-{
-	for (const TObjectPtr<UInventoryExtensionBase>& Extension : Extensions)
-	{
-		if (!Extension)
-		{
-			ValidationErrors.Add(LOCTEXT("InvalidExtension", "An Extension is not assigned correctly!"));
-		}
-	}
-
-	return Super::IsDataValid(ValidationErrors);
-}
-
-#undef LOCTEXT_NAMESPACE
-
-#endif
-
-void UFaerieInventoryComponent::OnRep_ItemStorage()
-{
-	if (IsValid(ItemStorage))
-	{
-		ItemStorage->GetOnKeyAdded().AddUObject(this, &ThisClass::PostEntryAdded);
-		ItemStorage->GetOnKeyUpdated().AddUObject(this, &ThisClass::PostEntryChanged);
-		ItemStorage->GetOnKeyRemoved().AddUObject(this, &ThisClass::PreEntryRemoved);
-	}
-}
-
-bool UFaerieInventoryComponent::GetExtensionChecked(const TSubclassOf<UInventoryExtensionBase> ExtensionClass,
-                                                    UInventoryExtensionBase*& Extension) const
+bool UFaerieInventoryComponent::GetExtensionChecked(const TSubclassOf<UItemContainerExtensionBase> ExtensionClass,
+                                                    UItemContainerExtensionBase*& Extension) const
 {
 	if (!ItemStorage) return false;
 	return ItemStorage->GetExtensionChecked(ExtensionClass, Extension);
 }
 
-UInventoryExtensionBase* UFaerieInventoryComponent::AddExtension(const TSubclassOf<UInventoryExtensionBase> ExtensionClass)
+UItemContainerExtensionBase* UFaerieInventoryComponent::AddExtension(const TSubclassOf<UItemContainerExtensionBase> ExtensionClass)
 {
 	if (!ensure(IsValid(ExtensionClass)))
 	{
 		return nullptr;
 	}
 
-	if (!ensure(ExtensionClass != UInventoryExtensionBase::StaticClass()))
+	if (!ensure(ExtensionClass != UItemContainerExtensionBase::StaticClass()))
 	{
 		return nullptr;
 	}
 
-	UInventoryExtensionBase* NewExtension = NewObject<UInventoryExtensionBase>(this, ExtensionClass);
+	UItemContainerExtensionBase* NewExtension = NewObject<UItemContainerExtensionBase>(this, ExtensionClass);
 	ItemStorage->AddExtension(NewExtension);
 	AddReplicatedSubObject(NewExtension);
 
