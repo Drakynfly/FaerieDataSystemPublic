@@ -33,7 +33,7 @@ public:
 	virtual EItemDataMutabilityStatus GetMutabilityStatus() const { return EItemDataMutabilityStatus::Unknown; }
 #endif
 
-	virtual bool ExecWithLog(const FFaerieItemStackView View, Faerie::ItemData::FFilterLogger* Logger) const
+	virtual bool ExecWithLog(const FFaerieItemStackView View, Faerie::ItemData::FFilterLogger& Logger) const
 	{
 		return Exec(View);
 	}

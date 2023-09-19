@@ -60,7 +60,7 @@ EItemDataMutabilityStatus UFilterRule_LogicalAnd::GetMutabilityStatus() const
 
 #endif
 
-bool UFilterRule_LogicalAnd::ExecWithLog(const FFaerieItemStackView View, Faerie::ItemData::FFilterLogger* Logger) const
+bool UFilterRule_LogicalAnd::ExecWithLog(const FFaerieItemStackView View, Faerie::ItemData::FFilterLogger& Logger) const
 {
 	for (auto&& Rule : Rules)
 	{

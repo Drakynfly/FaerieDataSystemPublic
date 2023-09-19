@@ -43,7 +43,7 @@ bool UFaerieItemTemplate::TryMatchWithDescriptions(const FFaerieItemStackView Vi
 	}
 
 	if (Faerie::ItemData::FFilterLogger Logger;
-		!Pattern->ExecWithLog(View, &Logger))
+		!Pattern->ExecWithLog(View, Logger))
 	{
 		if (Logger.Errors.IsEmpty())
 		{

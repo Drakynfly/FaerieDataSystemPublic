@@ -53,7 +53,7 @@ public:
 	virtual EItemDataMutabilityStatus GetMutabilityStatus() const override;
 #endif
 
-	virtual bool ExecWithLog(FFaerieItemStackView View, Faerie::ItemData::FFilterLogger* Logger) const override;
+	virtual bool ExecWithLog(FFaerieItemStackView View, Faerie::ItemData::FFilterLogger& Logger) const override;
 	virtual bool Exec(FFaerieItemStackView View) const override;
 
 protected:
