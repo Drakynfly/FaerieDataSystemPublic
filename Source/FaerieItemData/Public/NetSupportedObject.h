@@ -5,7 +5,6 @@
 #include "UObject/Object.h"
 #include "NetSupportedObject.generated.h"
 
-// @todo This is a weird place to store this class...
 
 /**
  * A simple replicated UObject.
@@ -25,7 +24,7 @@ public:
  * A simple replicated UObject. Must be owned by an actor, or it'll complain.
  */
 UCLASS(Abstract)
-class FAERIEITEMDATA_API UActorSubobjectBase : public UObject
+class FAERIEITEMDATA_API UActorSubobjectBase : public UNetSupportedObject
 {
 	GENERATED_BODY()
 
@@ -33,8 +32,6 @@ public:
 	//~ UObject
 	virtual UWorld* GetWorld() const override;
 
-	virtual bool IsSupportedForNetworking() const override;
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual int32 GetFunctionCallspace(UFunction* Function, FFrame* Stack) override;
 	virtual bool CallRemoteFunction(UFunction* Function, void* Parms, struct FOutParmRec* OutParms, FFrame* Stack) override;
 

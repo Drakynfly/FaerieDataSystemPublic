@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "NetSupportedObject.h"
 #include "FaerieItemToken.generated.h"
 
 class UFaerieItem;
@@ -12,16 +13,12 @@ DECLARE_DYNAMIC_DELEGATE_RetVal_OneParam(bool, FBlueprintTokenEdit, UFaerieItemT
  * A fragment of an inventory item, encapsulating a single feature of the item.
  */
 UCLASS(BlueprintType, DefaultToInstanced, EditInlineNew, Abstract, CollapseCategories, HideDropdown)
-class FAERIEITEMDATA_API UFaerieItemToken : public UObject
+class FAERIEITEMDATA_API UFaerieItemToken : public UNetSupportedObject
 {
 	GENERATED_BODY()
 
 public:
-	// Item tokens should replicate
-	virtual bool IsSupportedForNetworking() const override { return true; }
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-
-	// Can the data contained by this token be changed after initialization? This plays a major role in how items are
+	// Can the data contained be this token by changed after initialization. This plays a major role on how items are
 	// handled. An item with *any* mutable data cannot be stacked.
 	virtual bool IsMutable() const;
 

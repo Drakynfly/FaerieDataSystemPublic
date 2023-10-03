@@ -93,7 +93,7 @@ class UInventoryReplicatedDataExtensionBase;
 
 // A wrapper around a FRepDataFastArray allowing us to replicate it as a FastArray.
 UCLASS(Within = InventoryReplicatedDataExtensionBase)
-class URepDataArrayWrapper : public UObject
+class URepDataArrayWrapper : public UNetSupportedObject
 {
 	GENERATED_BODY()
 
@@ -103,7 +103,6 @@ class URepDataArrayWrapper : public UObject
 public:
 	virtual void PostInitProperties() override;
 
-	virtual bool IsSupportedForNetworking() const override { return true; }
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 private:

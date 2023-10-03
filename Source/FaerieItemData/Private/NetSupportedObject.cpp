@@ -28,22 +28,6 @@ UWorld* UActorSubobjectBase::GetWorld() const
 	return nullptr;
 }
 
-bool UActorSubobjectBase::IsSupportedForNetworking() const
-{
-	return IsValid(GetOwner());
-}
-
-void UActorSubobjectBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	// Add any Blueprint properties
-	if (const UBlueprintGeneratedClass* BPClass = Cast<UBlueprintGeneratedClass>(GetClass()))
-	{
-		BPClass->GetLifetimeBlueprintReplicationList(OutLifetimeProps);
-	}
-}
-
 int32 UActorSubobjectBase::GetFunctionCallspace(UFunction* Function, FFrame* Stack)
 {
 	check(GetOuter() != nullptr);

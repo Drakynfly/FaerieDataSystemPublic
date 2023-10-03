@@ -3,17 +3,6 @@
 #include "FaerieItemToken.h"
 #include "FaerieItem.h"
 
-void UFaerieItemToken::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	// Add any Blueprint properties
-	if (const UBlueprintGeneratedClass* BPClass = Cast<UBlueprintGeneratedClass>(GetClass()))
-	{
-		BPClass->GetLifetimeBlueprintReplicationList(OutLifetimeProps);
-	}
-}
-
 bool UFaerieItemToken::IsMutable() const
 {
 	return false;
