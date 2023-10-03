@@ -62,7 +62,7 @@ public:
 	FPendingItemGeneration Resolve() const;
 
 protected:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Table", meta = (ShowOnlyInnerProperties))
+	UPROPERTY(EditAnywhere, Category = "Table", meta = (ShowOnlyInnerProperties))
 	FFaerieWeightedDropPool DropPool;
 
 	UPROPERTY(EditAnywhere, NoClear, Category = "Generator", meta = (ExcludeBaseStruct, DisplayName = "Amount"))

@@ -9,12 +9,12 @@
 
 #include "ItemSourcePool.generated.h"
 
-USTRUCT(BlueprintType)
+USTRUCT()
 struct FFaerieWeightedDropPool
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Table")
+	UPROPERTY(EditAnywhere, Category = "Table")
 	TArray<FWeightedDrop> DropList;
 
 	// Generates a drop from this pool, using the provided random weight, which must be a value between 0 and 1.
@@ -67,7 +67,7 @@ protected:
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Table", meta = (Pr))
 	FFaerieAssetInfo TableInfo;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Table")
+	UPROPERTY(EditAnywhere, Category = "Table")
 	FFaerieWeightedDropPool DropPool;
 
 private:
