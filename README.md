@@ -52,7 +52,7 @@ FDS is primarily designed for:
 - Common shared editor utils. Nothing super important.
 
 ## General Notes
-- Compiles against UE 5.2.1. I will update to future versions as they release. 5.1 *should* work with minimal effect, but I will not backport further, as I use too many new feature to make it worthwile.
+- Main compiles against UE 5.3. I will update to future versions as they release. I don't typically support older versions, but previous commits will work on 5.2, and 5.1 with minimal effort.
 - This is essentially just the inventory system used by my game, Project Faerie, so there might be *some* lingering inexplicable quirks and oddities in some files. I try to remove these and make this plugin as generic and multi-purpose as a I can, but bare with me as I continue to develop the plugin :/
 - FDS is still extremely WIP. Use at your own risk. Nothing is guaranteed to function. Everything is subject to change. This plugin is essentially in Alpha, as it is still in active development.
   - This means two things:
