@@ -4,7 +4,7 @@
 
 #include "BinarySearchOptimizedArray.h"
 #include "FaerieItem.h"
-#include "FaerieItemStack.h"
+#include "FaerieItemStackView.h"
 #include "GameplayTagContainer.h"
 #include "TTypedTagStaticImpl2.h"
 #include "Net/Serialization/FastArraySerializer.h"

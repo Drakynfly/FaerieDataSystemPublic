@@ -261,7 +261,7 @@ EItemDataMutabilityStatus UFilterRule_StackLimit::GetMutabilityStatus() const
 
 bool UFilterRule_StackLimit::Exec(const FFaerieItemStackView View) const
 {
-	if (const int32 Limit = UFaerieStackLimiterToken::GetItemStackLimit(View.Item);
+	if (const int32 Limit = UFaerieStackLimiterToken::GetItemStackLimit(View.Item.Get());
 		Limit == Faerie::ItemData::UnlimitedStack)
 	{
 		switch (Operator) {

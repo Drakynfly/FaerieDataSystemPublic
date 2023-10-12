@@ -157,7 +157,7 @@ void UFaerieEquipmentSlot::BroadcastDataChange()
 
 bool UFaerieEquipmentSlot::CouldSetInSlot(const FFaerieItemStackView View) const
 {
-	if (!IsValid(View.Item)) return false;
+	if (!View.Item.IsValid()) return false;
 
 	if (SingleItemSlot)
 	{
@@ -181,7 +181,7 @@ bool UFaerieEquipmentSlot::CouldSetInSlot(const FFaerieItemStackView View) const
 
 bool UFaerieEquipmentSlot::CanSetInSlot(const FFaerieItemStackView View) const
 {
-	if (!IsValid(View.Item)) return false;
+	if (!View.Item.IsValid()) return false;
 
 	if (IsFilled())
 	{

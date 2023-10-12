@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "FaerieItemStack.h"
+#include "FaerieItemStackView.h"
 #include "UObject/Object.h"
 #include "FaerieItemStackHashInstruction.generated.h"
 

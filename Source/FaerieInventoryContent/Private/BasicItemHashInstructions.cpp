@@ -25,7 +25,7 @@ int32 UFISHI_Literial::Hash(const FFaerieItemStackView StackView) const
 
 int32 UFISHI_IsValid::Hash(const FFaerieItemStackView StackView) const
 {
-	if (IsValid(StackView.Item) &&
+	if (StackView.Item.IsValid() &&
 		Faerie::ItemData::IsValidStack(StackView.Copies))
 	{
 		return VALIDATED_TRUE;

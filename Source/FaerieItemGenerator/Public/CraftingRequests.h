@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "FaerieItemProxy.h"
 #include "GenerationAction.h"
 #include "ItemSlotHandle.h"
 

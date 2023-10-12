@@ -93,7 +93,7 @@ void UFaerieItemStorage::OnItemMutated(const UFaerieItem* Item, const UFaerieIte
 
 FFaerieItemStack UFaerieItemStorage::Release(const FFaerieItemStackView Stack)
 {
-	const FEntryKey Key = FindItem(Stack.Item);
+	const FEntryKey Key = FindItem(Stack.Item.Get());
 	if (FFaerieItemStack OutStack;
 		TakeEntry(Key, OutStack, FFaerieItemStorageEvents::Get().Removal_Moving, Stack.Copies))
 	{
@@ -657,7 +657,7 @@ void UFaerieItemStorage::QueryAll(const FFaerieItemStorageBlueprintQuery& Query,
 
 bool UFaerieItemStorage::CanAddStack(const FFaerieItemStackView Stack) const
 {
-	if (!IsValid(Stack.Item) ||
+	if (!Stack.Item.IsValid() ||
 		Stack.Copies < 1)
 	{
 		return false;

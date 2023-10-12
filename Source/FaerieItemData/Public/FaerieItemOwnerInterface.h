@@ -3,6 +3,7 @@
 #pragma once
 
 #include "FaerieItemStack.h"
+#include "FaerieItemStackView.h"
 #include "UObject/Interface.h"
 #include "FaerieItemOwnerInterface.generated.h"
 

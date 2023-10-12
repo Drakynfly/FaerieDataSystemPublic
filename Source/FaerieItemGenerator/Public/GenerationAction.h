@@ -2,12 +2,12 @@
 
 #pragma once
 
-#include "FaerieItemStack.h"
-#include "Engine/StreamableManager.h"
+#include "FaerieItemProxy.h"
 #include "ItemSlotHandle.h"
 
 #include "GenerationAction.generated.h"
 
+struct FFaerieItemStack;
 class IFaerieItemDataProxy;
 struct FFaerieItemSlotHandle;
 

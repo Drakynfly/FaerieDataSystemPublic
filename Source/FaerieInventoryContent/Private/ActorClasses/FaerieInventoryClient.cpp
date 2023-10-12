@@ -173,7 +173,7 @@ void UFaerieInventoryClient::RequestMoveEntryToEquipmentSlot_Implementation(cons
 	if (!CanAccessStorage(Storage)) return;
 	if (!IsValid(Slot)) return;
 	if (!CanAccessSlot(Slot)) return;
-	if (!Slot->CanSetInSlot({Storage->View(Handle.Key.EntryKey).Item, TempAmount})) return;
+	if (!Slot->CanSetInSlot(Storage->View(Handle.Key.EntryKey).Resize(TempAmount))) return;
 
 	FFaerieItemStack OutStack;
 	if (!Storage->TakeStack(Handle.Key, OutStack, FFaerieItemStorageEvents::Get().Removal_Moving, TempAmount))

@@ -79,7 +79,7 @@ EEventExtensionResponse UInventoryCapacityExtension::AllowsAddition(const UFaeri
 {
 	if (!CanContain(Stack))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("PreAddition: Cannot add Stack (Item: '%s' Copies: %i)"), *Stack.Item.GetName(), Stack.Copies);
+		UE_LOG(LogTemp, Warning, TEXT("PreAddition: Cannot add Stack (Item: '%s' Copies: %i)"), Stack.Item.IsValid() ? *Stack.Item->GetName() : TEXT("null"), Stack.Copies);
 		return EEventExtensionResponse::Disallowed;
 	}
 
@@ -109,7 +109,7 @@ FWeightAndVolume UInventoryCapacityExtension::GetEntryWeightAndVolume(const UFae
 	FWeightAndVolume Out;
 
 	const FFaerieItemStackView View = Container->View(Key);
-	if (!IsValid(View.Item))
+	if (!View.Item.IsValid())
 	{
 		return Out;
 	}
