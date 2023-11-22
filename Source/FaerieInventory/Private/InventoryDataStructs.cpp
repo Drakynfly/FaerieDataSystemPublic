@@ -210,7 +210,7 @@ void FKeyedInventoryEntry::PreReplicatedRemove(const FInventoryContent& InArrayS
 	InArraySerializer.PreEntryReplicatedRemove(*this);
 }
 
-void FKeyedInventoryEntry::PostReplicatedAdd(const FInventoryContent& InArraySerializer)
+void FKeyedInventoryEntry::PostReplicatedAdd(FInventoryContent& InArraySerializer)
 {
 	InArraySerializer.PostEntryReplicatedAdd(*this);
 }
@@ -294,12 +294,14 @@ void FInventoryContent::PreEntryReplicatedRemove(const FKeyedInventoryEntry& Ent
 	}
 }
 
-void FInventoryContent::PostEntryReplicatedAdd(const FKeyedInventoryEntry& Entry) const
+void FInventoryContent::PostEntryReplicatedAdd(const FKeyedInventoryEntry& Entry)
 {
 	if (ChangeListener.IsValid())
 	{
 		ChangeListener->PostContentAdded(Entry);
 	}
+
+	Sort();
 }
 
 void FInventoryContent::PostEntryReplicatedChange(const FKeyedInventoryEntry& Entry) const

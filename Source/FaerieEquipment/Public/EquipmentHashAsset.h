@@ -22,7 +22,7 @@ struct FFaerieEquipmentHashAssetConfig
 
 	// Should all slots be hashed together for this instruction, or only the first non-empty?
 	UPROPERTY(EditAnywhere, Category = "EquipmentHashInstruction")
-	EGameplayContainerMatchType MatchType;
+	EGameplayContainerMatchType MatchType = EGameplayContainerMatchType::All;
 
 	UPROPERTY(EditAnywhere, Instanced, Category = "EquipmentHashInstruction")
 	TObjectPtr<UFaerieItemStackHashInstruction> Instruction;

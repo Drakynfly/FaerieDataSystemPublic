@@ -82,8 +82,6 @@ public:
 	 */
 	void Sort()
 	{
-		// We don't bother to mark anything dirty right now. If clients become out-of-order, they can call this themselves.
-		// If this causes problems, oops.
 		Algo::SortBy(GetArray_Internal(), &TElementType::Key);
 	}
 

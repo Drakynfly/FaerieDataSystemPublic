@@ -5,6 +5,7 @@
 #include "ItemInstancingContext_Crafting.h"
 
 #include "Squirrel.h"
+#include "Algo/AnyOf.h"
 #include "UObject/ObjectSaveContext.h"
 
 #if WITH_EDITOR
@@ -70,21 +71,12 @@ void UItemSourcePool::PreSave(FObjectPreSaveContext SaveContext)
 #if WITH_EDITOR
 	DropPool.SortTable();
 
-	HasMutableDrops = false;
-
-	for (auto&& Drop : DropPool.DropList)
-	{
-		auto&& Source = Drop.Drop.Asset.Object.LoadSynchronous();
-
-		if (auto&& Interface = Cast<IFaerieItemSource>(Source))
+	HasMutableDrops = Algo::AnyOf(DropPool.DropList,
+		[](const FWeightedDrop& Drop)
 		{
-			if (Interface->CanBeMutable())
-			{
-				HasMutableDrops = true;
-				break;
-			}
-		}
-	}
+			auto&& Interface = Cast<IFaerieItemSource>(Drop.Drop.Asset.Object.LoadSynchronous());
+			return Interface && Interface->CanBeMutable();
+		});
 #endif
 }
 

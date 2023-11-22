@@ -72,5 +72,5 @@ protected:
 
 private:
 	UPROPERTY()
-	bool HasMutableDrops;
+	bool HasMutableDrops = false;
 };

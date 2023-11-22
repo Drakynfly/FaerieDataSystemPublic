@@ -274,7 +274,7 @@ struct FKeyedInventoryEntry : public FFastArraySerializerItem
 	FInventoryEntry Value;
 
 	void PreReplicatedRemove(const FInventoryContent& InArraySerializer);
-	void PostReplicatedAdd(const FInventoryContent& InArraySerializer);
+	void PostReplicatedAdd(FInventoryContent& InArraySerializer);
 	void PostReplicatedChange(const FInventoryContent& InArraySerializer);
 };
 
@@ -366,7 +366,7 @@ public:
 	*/
 
 	void PreEntryReplicatedRemove(const FKeyedInventoryEntry& Entry) const;
-	void PostEntryReplicatedAdd(const FKeyedInventoryEntry& Entry) const;
+	void PostEntryReplicatedAdd(const FKeyedInventoryEntry& Entry);
 	void PostEntryReplicatedChange(const FKeyedInventoryEntry& Entry) const;
 
 	// Only const iteration is allowed.
