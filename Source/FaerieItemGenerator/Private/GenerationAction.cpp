@@ -223,7 +223,7 @@ void UCraftingActionWithSlots::Configure(FActionArgs& Args)
 
 void UCraftingActionWithSlots::Run()
 {
-	for (auto Element : FilledSlots)
+	for (auto&& Element : FilledSlots)
 	{
 		if (!IsValid(Element.Value.GetObject()) ||
 			!IsValid(Element.Value->GetItemObject()) ||

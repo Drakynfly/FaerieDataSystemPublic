@@ -4,7 +4,7 @@
 
 AActor* URelevantActorsExtension::FindActor(const TSubclassOf<AActor> Class) const
 {
-	for (auto Actor : RelevantActors)
+	for (auto&& Actor : RelevantActors)
 	{
 		if (Actor.IsValid() && Actor->IsA(Class))
 		{

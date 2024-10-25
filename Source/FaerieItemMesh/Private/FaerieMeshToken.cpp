@@ -67,9 +67,9 @@ bool UFaerieMeshToken::GetSkeletalItemMesh(const FGameplayTagContainer& SearchPu
 
 EDataValidationResult UFaerieMeshToken_Dynamic::IsDataValid(FDataValidationContext& Context) const
 {
-	for (auto Element : DynamicMeshContainer.StaticMeshes)
+	for (auto&& Element : DynamicMeshContainer.StaticMeshes)
 	{
-		for (auto Fragment : Element.Fragments)
+		for (auto&& Fragment : Element.Fragments)
 		{
 			if (Fragment.StaticMesh.IsNull())
 			{
@@ -78,9 +78,9 @@ EDataValidationResult UFaerieMeshToken_Dynamic::IsDataValid(FDataValidationConte
 		}
 	}
 
-	for (auto Element : DynamicMeshContainer.SkeletalMeshes)
+	for (auto&& Element : DynamicMeshContainer.SkeletalMeshes)
 	{
-		for (auto Fragment : Element.Fragments)
+		for (auto&& Fragment : Element.Fragments)
 		{
 			if (Fragment.SkeletonAndAnimClass.Mesh.IsNull() ||
 				Fragment.SkeletonAndAnimClass.AnimClass.IsNull())

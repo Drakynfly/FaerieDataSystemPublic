@@ -54,7 +54,7 @@ EDataValidationResult UFaerieItemAsset::IsDataValid(FDataValidationContext& Cont
 		Context.AddWarning(LOCTEXT("InvalidTemplateObject", "Template is invalid! Unable to check Item for pattern-correctness."));
 	}
 
-	for (auto Token : Tokens)
+	for (auto&& Token : Tokens)
 	{
 		Result = CombineDataValidationResults(Result, Token->IsDataValid(Context));
 	}
