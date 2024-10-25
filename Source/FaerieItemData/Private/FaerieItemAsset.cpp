@@ -76,6 +76,8 @@ EDataValidationResult UFaerieItemAsset::IsDataValid(FDataValidationContext& Cont
 	return Result;
 }
 
+#undef LOCTEXT_NAMESPACE
+
 #endif
 
 FFaerieAssetInfo UFaerieItemAsset::GetSourceInfo() const
@@ -86,8 +88,6 @@ FFaerieAssetInfo UFaerieItemAsset::GetSourceInfo() const
 	}
 	return FFaerieAssetInfo();
 }
-
-#undef LOCTEXT_NAMESPACE
 
 UFaerieItem* UFaerieItemAsset::CreateItemInstance(UObject* Outer) const
 {
