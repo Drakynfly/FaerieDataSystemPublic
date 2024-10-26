@@ -42,7 +42,7 @@ public:
 	// Selectively equivalate two entries.
 	UFUNCTION(BlueprintPure, Category = "Faerie|Inventory|Utils", meta = (CompactNodeTitle = "=="))
 	static bool Equal_EntryEntry(const FInventoryEntry& A, const FInventoryEntry& B,
-		UPARAM(meta = (Bitmask, BitmaskEnum = "/Script/FaerieInventory.EEntryEquivelancyFlags")) int32 Checks);
+		UPARAM(meta = (Bitmask, BitmaskEnum = "/Script/FaerieInventory.EEntryEquivalencyFlags")) int32 Checks);
 
 	// Sort an array of inventory entries by date modified.
 	UFUNCTION(BlueprintCallable, Category = "Faerie|Inventory|Utils")

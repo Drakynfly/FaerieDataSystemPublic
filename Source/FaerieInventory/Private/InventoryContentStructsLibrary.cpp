@@ -16,7 +16,7 @@ bool UInventoryContentStructsLibrary::IsUnlimited(const int32 Stack)
 
 bool UInventoryContentStructsLibrary::Equal_EntryEntry(const FInventoryEntry& A, const FInventoryEntry& B, const int32 Checks)
 {
-	return FInventoryEntry::IsEqualTo(A, B, static_cast<EEntryEquivelancyFlags>(Checks));
+	return FInventoryEntry::IsEqualTo(A, B, static_cast<EEntryEquivalencyFlags>(Checks));
 }
 
 void UInventoryContentStructsLibrary::SortEntriesLastModified(TArray<FInventoryEntry>& Entries)

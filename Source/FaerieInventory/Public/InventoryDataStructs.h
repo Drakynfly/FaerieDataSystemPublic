@@ -14,7 +14,7 @@
  * This enum hold the flags to bitwise equivalate inventory entries.
  */
 UENUM(BlueprintType, Meta = (Bitflags, UseEnumValuesAsMaskValuesInEditor))
-enum class EEntryEquivelancyFlags : uint8
+enum class EEntryEquivalencyFlags : uint8
 {
 	None = 0 UMETA(Hidden),
 
@@ -30,7 +30,7 @@ enum class EEntryEquivelancyFlags : uint8
 	// When set, all other flags are considered set.
 	All = Test_ItemData | Test_StackSum | Test_Limit UMETA(Hidden),
 };
-ENUM_CLASS_FLAGS(EEntryEquivelancyFlags)
+ENUM_CLASS_FLAGS(EEntryEquivalencyFlags)
 
 DECLARE_LOG_CATEGORY_EXTERN(LogInventoryStructs, Log, All)
 
@@ -247,7 +247,7 @@ public:
 	// Gets a view of the item and stack
     FFaerieItemStackView ToItemStackView() const;
 
-    static bool IsEqualTo(const FInventoryEntry& A, const FInventoryEntry& B, EEntryEquivelancyFlags CheckFlags);
+    static bool IsEqualTo(const FInventoryEntry& A, const FInventoryEntry& B, EEntryEquivalencyFlags CheckFlags);
 };
 
 

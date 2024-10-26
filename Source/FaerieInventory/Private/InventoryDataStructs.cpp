@@ -189,10 +189,10 @@ FFaerieItemStackView FInventoryEntry::ToItemStackView() const
 	return Stack;
 }
 
-bool FInventoryEntry::IsEqualTo(const FInventoryEntry& A, const FInventoryEntry& B, const EEntryEquivelancyFlags CheckFlags)
+bool FInventoryEntry::IsEqualTo(const FInventoryEntry& A, const FInventoryEntry& B, const EEntryEquivalencyFlags CheckFlags)
 {
 #define TEST_FLAG(Flag, Test)\
-	if (EnumHasAnyFlags(CheckFlags, EEntryEquivelancyFlags::Test_##Flag)) if (!(Test)) return false;
+	if (EnumHasAnyFlags(CheckFlags, EEntryEquivalencyFlags::Test_##Flag)) if (!(Test)) return false;
 
 	TEST_FLAG(ItemData, UFaerieItemDataLibrary::Equal_ItemData(A.ItemObject, B.ItemObject));
 	TEST_FLAG(StackSum, A.StackSum() == B.StackSum());
