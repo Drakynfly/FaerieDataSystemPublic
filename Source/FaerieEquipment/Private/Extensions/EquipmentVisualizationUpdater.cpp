@@ -171,7 +171,7 @@ void UEquipmentVisualizationUpdater::CreateNewVisualImpl(const UFaerieItemContai
 		return;
 	}
 
-	NewVisual->SetSourceProxy(Proxy.GetInterface());
+	NewVisual->SetSourceProxy(Proxy);
 }
 
 void UEquipmentVisualizationUpdater::RemoveOldVisualImpl(UEquipmentVisualizer* Visualizer, const FFaerieItemProxy Proxy)

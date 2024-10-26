@@ -65,7 +65,7 @@ struct FAERIEITEMDATA_API FFaerieItemProxy
 
 private:
 	// @todo this *should* be a TWeakInterfacePtr<const IFaerieItemDataProxy>, but TWeakInterfacePtr doesn't wanna compile that
-	TWeakInterfacePtr<IFaerieItemDataProxy> Proxy;
+	TWeakInterfacePtr<IFaerieItemDataProxy> Proxy = nullptr;
 
 public:
 	bool IsValid() const
@@ -73,7 +73,7 @@ public:
 		return Proxy.IsValid();
 	}
 
-	TScriptInterface<IFaerieItemDataProxy> GetInterface() const
+	TScriptInterface<const IFaerieItemDataProxy> GetInterface() const
 	{
 		return Proxy.ToScriptInterface();
 	}
