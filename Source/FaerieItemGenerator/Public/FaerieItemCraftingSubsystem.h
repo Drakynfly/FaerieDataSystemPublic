@@ -34,10 +34,12 @@ private:
 	 * Enqueues an Action to be executed in a FIFO queue.
 	 * This is the no argument overload, only call this with classes that do not require configuration.
 	 */
-	template <typename TGenerationAction>
+	template <
+		typename TGenerationAction
+		UE_REQUIRES(TIsDerivedFrom<TGenerationAction, UCraftingActionBase>::Value)
+	>
 	TGenerationAction* EnqueueActionTyped()
 	{
-		static_assert(TIsDerivedFrom<TGenerationAction, UCraftingActionBase>::Value, TEXT("TGenerationAction must derive from UGenerationActionBase"));
 		static_assert(!sizeof(TGenerationAction::FActionArgs), TEXT("If this asserts EnqueueActionTyped must be passed an Arguments parameter"));
 		TGenerationAction* NewAction = NewObject<TGenerationAction>(this);
 		EnqueueAction_Internal(NewAction);
@@ -50,10 +52,12 @@ private:
 	 * Configuration may not be performed on the returned pointer safely, as this action might already be executing if
 	 * nothing else was queued.
 	 */
-	template <typename TGenerationAction>
+	template <
+		typename TGenerationAction
+		UE_REQUIRES(TIsDerivedFrom<TGenerationAction, UCraftingActionBase>::Value)
+	>
 	TGenerationAction* EnqueueActionTyped(typename TGenerationAction::FActionArgs& Arguments)
 	{
-		static_assert(TIsDerivedFrom<TGenerationAction, UCraftingActionBase>::Value, TEXT("TGenerationAction must derive from UGenerationActionBase"));
 		TGenerationAction* NewAction = NewObject<TGenerationAction>(this);
 		// This line will not compile if the action does not need to be configured.
 		NewAction->Configure(Arguments);

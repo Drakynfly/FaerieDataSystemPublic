@@ -49,14 +49,17 @@ public:
 	void ForEachTokenOfClass(const TFunction<bool(const UFaerieItemToken*)>& Iter, TSubclassOf<UFaerieItemToken> Class) const;
 
 	// Iterates over each contained token. Return true in the delegate to continue iterating.
-	template <typename TFaerieItemTokenClass>
-	void ForEachToken(const TFunction<bool(const TFaerieItemTokenClass*)>& Iter) const
+	template <
+		typename TFaerieItemToken
+		UE_REQUIRES(TIsDerivedFrom<TFaerieItemToken, UFaerieItemToken>::Value)
+	>
+	void ForEachToken(const TFunction<bool(const TFaerieItemToken*)>& Iter) const
 	{
 		for (auto&& Token : Tokens)
 		{
-			if (IsValid(Token) && Token->IsA<TFaerieItemTokenClass>())
+			if (IsValid(Token) && Token->IsA<TFaerieItemToken>())
 			{
-				if (!Iter(Cast<TFaerieItemTokenClass>(Token)))
+				if (!Iter(Cast<TFaerieItemToken>(Token)))
 				{
 					return;
 				}
@@ -77,17 +80,21 @@ public:
 
 	TConstArrayView<TObjectPtr<UFaerieItemToken>> GetTokens() const { return Tokens; }
 
-	template <typename TFaerieItemToken>
+	template <
+		typename TFaerieItemToken
+		UE_REQUIRES(TIsDerivedFrom<TFaerieItemToken, UFaerieItemToken>::Value)
+	>
 	const TFaerieItemToken* GetToken() const
 	{
-		static_assert(TIsDerivedFrom<TFaerieItemToken, UFaerieItemToken>::Value, TEXT("TFaerieItemToken must derived from UFaerieItemToken"));
 		return Cast<TFaerieItemToken>(GetTokenImpl(TFaerieItemToken::StaticClass()));
 	}
 
-	template <typename TFaerieItemToken>
+	template <
+		typename TFaerieItemToken
+		UE_REQUIRES(TIsDerivedFrom<TFaerieItemToken, UFaerieItemToken>::Value)
+	>
 	TFaerieItemToken* GetEditableToken()
 	{
-		static_assert(TIsDerivedFrom<TFaerieItemToken, UFaerieItemToken>::Value, TEXT("TFaerieItemToken must derived from UFaerieItemToken"));
 		return Cast<TFaerieItemToken>(GetTokenImpl(TFaerieItemToken::StaticClass()));
 	}
 

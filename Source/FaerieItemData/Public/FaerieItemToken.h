@@ -50,10 +50,12 @@ public:
 
 	void EditToken(const TFunction<bool(UFaerieItemToken*)>& EditFunc);
 
-	template <typename TFaerieItemToken>
+	template <
+		typename TFaerieItemToken
+		UE_REQUIRES(TIsDerivedFrom<TFaerieItemToken, UFaerieItemToken>::Value)
+	>
 	void EditToken(const TFunction<bool(TFaerieItemToken*)>& EditFunc)
 	{
-		static_assert(TIsDerivedFrom<TFaerieItemToken, UFaerieItemToken>::Value, TEXT("TFaerieItemToken must be derived from UFaerieItemToken"));
 		EditToken(EditFunc);
 	}
 
