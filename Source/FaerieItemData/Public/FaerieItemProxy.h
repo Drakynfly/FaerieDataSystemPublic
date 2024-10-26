@@ -47,7 +47,8 @@ public:
 
 // This struct contains a weak Interface pointer to an proxy for a FaerieItem somewhere. This struct should never be
 // serialized, and will not keep the proxy it points to alive.
-// @todo maybe this shouldn't be a Weak proxy? if this doesnt keep them alive, what does?
+// Access to the referenced item data is always const. Mutable access must be granted by the owner of the data.
+// @todo maybe this shouldn't be a Weak proxy? if this doesn't keep them alive, what does?
 USTRUCT(BlueprintType, meta = (HasNativeMake = "/Script/FaerieItemData.FaerieItemProxyUtils.ToWeakProxy"))
 struct FAERIEITEMDATA_API FFaerieItemProxy
 {
@@ -78,7 +79,7 @@ public:
 		return Proxy.ToScriptInterface();
 	}
 
-	UObject* GetObject() const
+	const UObject* GetObject() const
 	{
 		return Proxy.GetObject();
 	}

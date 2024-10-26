@@ -13,7 +13,7 @@ struct FFaerieVisualKey
 {
 	GENERATED_BODY()
 
-	TWeakInterfacePtr<IFaerieItemDataProxy> Proxy;
+	FFaerieItemProxy Proxy;
 
 	bool IsValid() const
 	{
@@ -25,7 +25,7 @@ struct FFaerieVisualKey
 
 	friend uint32 GetTypeHash(const FFaerieVisualKey& VisualKey)
 	{
-		return GetTypeHash(VisualKey.Proxy.ToScriptInterface());
+		return GetTypeHash(VisualKey.Proxy.GetInterface());
 	}
 };
 

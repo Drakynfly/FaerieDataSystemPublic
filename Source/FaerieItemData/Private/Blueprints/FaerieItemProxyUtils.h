@@ -19,6 +19,7 @@ class UFaerieItemProxyUtils : public UBlueprintFunctionLibrary
 
 public:
 	// SOMEWHAT TEMP FIX
+	// @todo why does this exist. please remove me
 	UFUNCTION(BlueprintCallable, Category = "Faerie|ItemProxyUtils", meta = (DeterminesOutputType = "Class", DynamicOutputParam = "ProxyObject", ExpandBoolAsExecs = "ReturnValue"))
 	static bool CastProxy(FFaerieItemProxy Proxy, UPARAM(meta = (MustImplement = "/Script/FaerieItemData.FaerieItemDataProxy")) UClass* Class, UObject*& ProxyObject);
 

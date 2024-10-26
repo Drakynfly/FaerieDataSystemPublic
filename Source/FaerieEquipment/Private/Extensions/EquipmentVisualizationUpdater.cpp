@@ -165,7 +165,7 @@ void UEquipmentVisualizationUpdater::CreateNewVisualImpl(const UFaerieItemContai
 	Attachment.Socket = SlotExtension->GetSocket();
 
 	AItemRepresentationActor* NewVisual = Visualizer->SpawnVisualActorNative<AItemRepresentationActor>(
-		{Proxy.GetObject()}, VisualClass, Attachment);
+		{ Proxy }, VisualClass, Attachment);
 	if (!IsValid(NewVisual))
 	{
 		return;
@@ -178,10 +178,10 @@ void UEquipmentVisualizationUpdater::RemoveOldVisualImpl(UEquipmentVisualizer* V
 {
 	check(Visualizer);
 
-	if (AItemRepresentationActor* Visual = Cast<AItemRepresentationActor>(Visualizer->GetSpawnedActorByKey({Proxy.GetObject()})))
+	if (AItemRepresentationActor* Visual = Cast<AItemRepresentationActor>(Visualizer->GetSpawnedActorByKey({ Proxy })))
 	{
 		Visual->ClearDataDisplay();
 	}
 
-	Visualizer->DestroyVisualActor({Proxy.GetObject()});
+	Visualizer->DestroyVisualActor({ Proxy });
 }

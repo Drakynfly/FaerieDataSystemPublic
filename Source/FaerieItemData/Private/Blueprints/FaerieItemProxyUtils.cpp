@@ -4,7 +4,8 @@
 
 bool UFaerieItemProxyUtils::CastProxy(const FFaerieItemProxy Proxy, UClass* Class, UObject*& ProxyObject)
 {
-	ProxyObject = Proxy.GetObject();
+	// @Todo the const-safety here! ProxyObject escapes into blueprint as non-const (BP doesn't understand const objects)
+	ProxyObject = const_cast<UObject*>(Proxy.GetObject());
 	return ProxyObject->IsA(Class);
 }
 
