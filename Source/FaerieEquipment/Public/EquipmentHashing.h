@@ -7,8 +7,10 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "EquipmentHashing.generated.h"
 
-class UFaerieEquipmentSlot;
 struct FFaerieItemStackView;
+class UFaerieEquipmentSlot;
+class UFaerieEquipmentHashAsset;
+
 class UFaerieItem;
 using FEquipmentHashFunction = TFunctionRef<int32(const UFaerieItem*)>;
 DECLARE_DYNAMIC_DELEGATE_RetVal_OneParam(int32, FBlueprintEquipmentHash, const UFaerieItem*, Item);
@@ -32,12 +34,12 @@ class UFaerieEquipmentManager;
 
 namespace Faerie::Hash
 {
-	// Get a hash of the value of a FProperty on a specific object
-	int32 HashFProperty(const void* Ptr, const FProperty* Property);
-	int32 HashFProperty(const UObject* Obj, const FProperty* Property);
+	// Get the hash of a FProperty's value on a specific object
+	FAERIEEQUIPMENT_API int32 HashFProperty(const void* Ptr, const FProperty* Property);
+	FAERIEEQUIPMENT_API int32 HashFProperty(const UObject* Obj, const FProperty* Property);
 
-	int32 HashStructByProps(const void* Ptr, const UScriptStruct* Struct);
-	int32 HashItemByProps(const UObject* Obj);
+	FAERIEEQUIPMENT_API int32 HashStructByProps(const void* Ptr, const UScriptStruct* Struct, bool IncludeSuper);
+	FAERIEEQUIPMENT_API int32 HashObjectByProps(const UObject* Obj, bool IncludeSuper);
 }
 
 /**
@@ -58,6 +60,10 @@ public:
 	// Generate a hash from a set of slots. Typically used for checksum'ing.
 	UFUNCTION(BlueprintCallable, Category = "Faerie|EquipmentHashing")
 	static FFaerieEquipmentHash HashEquipment(const UFaerieEquipmentManager* Manager, const FFaerieEquipmentHashConfig& Config);
+
+	// Generate a hash from a set of slots, using a predefined asset.
+	UFUNCTION(BlueprintCallable, Category = "Faerie|EquipmentHashing")
+	static bool ExecuteHashInstructions(const UFaerieEquipmentManager* Manager, const UFaerieEquipmentHashAsset* Asset);
 
 	UFUNCTION(BlueprintPure, Category = "Faerie|EquipmentHashing")
 	static FBlueprintEquipmentHash GetEquipmentHash_ByName();

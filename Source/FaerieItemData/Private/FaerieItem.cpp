@@ -44,7 +44,7 @@ void UFaerieItem::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifet
 	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, MutabilityFlags, SharedParams);
 }
 
-void UFaerieItem::ForEachToken(const TFunction<bool(const UFaerieItemToken*)>& Iter) const
+void UFaerieItem::ForEachToken(const TFunctionRef<bool(const UFaerieItemToken*)>& Iter) const
 {
 	for (auto&& Token : Tokens)
 	{
@@ -58,7 +58,7 @@ void UFaerieItem::ForEachToken(const TFunction<bool(const UFaerieItemToken*)>& I
 	}
 }
 
-void UFaerieItem::ForEachTokenOfClass(const TFunction<bool(const UFaerieItemToken*)>& Iter, const TSubclassOf<UFaerieItemToken> Class) const
+void UFaerieItem::ForEachTokenOfClass(const TFunctionRef<bool(const UFaerieItemToken*)>& Iter, const TSubclassOf<UFaerieItemToken> Class) const
 {
 	for (auto&& Token : Tokens)
 	{
@@ -90,36 +90,7 @@ UFaerieItem* UFaerieItem::CreateDuplicate() const
 	return Duplicate;
 }
 
-UFaerieItemToken* UFaerieItem::GetTokenImpl(const TSubclassOf<UFaerieItemToken> Class)
-{
-	if (!ensure(IsValid(Class)))
-	{
-		return nullptr;
-	}
-
-	if (!ensure(Class != UFaerieItemToken::StaticClass()))
-	{
-		return nullptr;
-	}
-
-	// If we are not DataMutable, don't allow non-const access to tokens.
-	if (!IsDataMutable())
-	{
-		return nullptr;
-	}
-
-	for (auto&& Token : Tokens)
-	{
-		if (IsValid(Token) && Token.IsA(Class))
-		{
-			return Token;
-		}
-	}
-
-	return nullptr;
-}
-
-const UFaerieItemToken* UFaerieItem::GetTokenImpl(const TSubclassOf<UFaerieItemToken> Class) const
+const UFaerieItemToken* UFaerieItem::GetToken(const TSubclassOf<UFaerieItemToken> Class) const
 {
 	if (!ensure(IsValid(Class)))
 	{
@@ -142,16 +113,36 @@ const UFaerieItemToken* UFaerieItem::GetTokenImpl(const TSubclassOf<UFaerieItemT
 	return nullptr;
 }
 
-UFaerieItemToken* UFaerieItem::GetToken(const TSubclassOf<UFaerieItemToken> Class) const
+TArray<const UFaerieItemToken*> UFaerieItem::GetTokens(const TSubclassOf<UFaerieItemToken> Class) const
 {
 	if (!ensure(IsValid(Class)))
 	{
-		return nullptr;
+		return {};
 	}
 
 	if (!ensure(Class != UFaerieItemToken::StaticClass()))
 	{
-		return nullptr;
+		return {};
+	}
+
+	TArray<const UFaerieItemToken*> OutTokens;
+
+	Algo::CopyIf(Tokens, OutTokens,
+		[Class](const UFaerieItemToken* Token)
+		{
+			return IsValid(Token) && Token->IsA(Class);
+		});
+
+	return OutTokens;
+}
+
+UFaerieItemToken* UFaerieItem::GetMutableToken(const TSubclassOf<UFaerieItemToken> Class)
+{
+	if (!ensure(IsValid(Class)) ||
+		!ensure(Class != UFaerieItemToken::StaticClass()) ||
+		!IsDataMutable())
+	{
+		return {};
 	}
 
 	for (auto&& Token : Tokens)
@@ -163,6 +154,26 @@ UFaerieItemToken* UFaerieItem::GetToken(const TSubclassOf<UFaerieItemToken> Clas
 	}
 
 	return nullptr;
+}
+
+TArray<UFaerieItemToken*> UFaerieItem::GetMutableTokens(const TSubclassOf<UFaerieItemToken> Class)
+{
+	if (!ensure(IsValid(Class)) ||
+		!ensure(Class != UFaerieItemToken::StaticClass()) ||
+		!IsDataMutable())
+	{
+		return {};
+	}
+
+	TArray<UFaerieItemToken*> OutTokens;
+
+	Algo::CopyIf(Tokens, OutTokens,
+		[Class](const UFaerieItemToken* Token)
+		{
+			return IsValid(Token) && Token->IsA(Class);
+		});
+
+	return OutTokens;
 }
 
 bool UFaerieItem::FindToken(const TSubclassOf<UFaerieItemToken> Class, UFaerieItemToken*& FoundToken) const
@@ -171,29 +182,18 @@ bool UFaerieItem::FindToken(const TSubclassOf<UFaerieItemToken> Class, UFaerieIt
 	{
 		return false;
 	}
-	FoundToken = GetToken(Class);
+	FoundToken = const_cast<UFaerieItemToken*>(GetToken(Class));
 	return FoundToken != nullptr;
 }
 
 void UFaerieItem::FindTokens(const TSubclassOf<UFaerieItemToken> Class, TArray<UFaerieItemToken*>& FoundTokens) const
 {
-	if (!ensure(IsValid(Class)))
+	if (!IsValid(Class))
 	{
 		return;
 	}
 
-	if (!ensure(Class != UFaerieItemToken::StaticClass()))
-	{
-		return;
-	}
-
-	FoundTokens.Empty();
-
-	Algo::CopyIf(Tokens, FoundTokens,
-		[Class](const UFaerieItemToken* Token)
-		{
-			return IsValid(Token) && Token->IsA(Class);
-		});
+	FoundTokens = Type::Cast<TArray<UFaerieItemToken*>>(GetTokens(Class));
 }
 
 void UFaerieItem::AddToken(UFaerieItemToken* Token)

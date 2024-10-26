@@ -13,7 +13,8 @@ public class FaerieItemData : ModuleRules
             {
                 "Core",
                 "GameplayTags",
-                "StructUtils"
+                "StructUtils",
+                "FaerieDataUtils"
             }
         );
 
@@ -22,9 +23,7 @@ public class FaerieItemData : ModuleRules
             {
                 "CoreUObject",
                 "Engine",
-                "NetCore",
-                "Slate",
-                "SlateCore"
+                "NetCore"
             }
         );
     }

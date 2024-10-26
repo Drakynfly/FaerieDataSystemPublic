@@ -56,9 +56,10 @@ void UFaerieEquipmentManager::ReadyForReplication()
 	}
 }
 
-void UFaerieEquipmentManager::OnSlotItemChanged(UFaerieEquipmentSlot* FaerieEquipmentSlot)
+void UFaerieEquipmentManager::OnSlotItemChanged(UFaerieEquipmentSlot* Slot)
 {
 	RecalcLocalChecksum();
+	OnEquipmentChangedEvent.Broadcast(Slot);
 }
 
 void UFaerieEquipmentManager::RecalcLocalChecksum()
@@ -120,6 +121,7 @@ UFaerieEquipmentSlot* UFaerieEquipmentManager::AddSlot(const FFaerieSlotTag Slot
 		AddReplicatedSubObject(NewSlot);
 
 		NewSlot->OnItemChangedNative.AddUObject(this, &ThisClass::OnSlotItemChanged);
+		NewSlot->OnItemDataChangedNative.AddUObject(this, &ThisClass::OnSlotItemChanged);
 
 		NewSlot->AddExtension(ExtensionGroup);
 
@@ -144,6 +146,7 @@ bool UFaerieEquipmentManager::RemoveSlot(UFaerieEquipmentSlot* Slot)
 		RemoveReplicatedSubObject(Slot);
 
 		Slot->OnItemChangedNative.RemoveAll(this);
+		Slot->OnItemDataChangedNative.RemoveAll(this);
 
 		RecalcLocalChecksum();
 
@@ -153,7 +156,7 @@ bool UFaerieEquipmentManager::RemoveSlot(UFaerieEquipmentSlot* Slot)
 	return false;
 }
 
-UFaerieEquipmentSlot* UFaerieEquipmentManager::FindSlot(const FFaerieSlotTag SlotID) const
+UFaerieEquipmentSlot* UFaerieEquipmentManager::FindSlot(const FFaerieSlotTag SlotID, const bool Recursive) const
 {
 	for (auto&& Slot : Slots)
 	{
@@ -161,6 +164,18 @@ UFaerieEquipmentSlot* UFaerieEquipmentManager::FindSlot(const FFaerieSlotTag Slo
 		if (Slot->SlotID == SlotID)
 		{
 			return Slot;
+		}
+	}
+
+	if (Recursive)
+	{
+		for (auto&& Slot : Slots)
+		{
+			if (!IsValid(Slot)) continue;
+			if (auto&& ChildSlot = Slot->FindSlot(SlotID, true))
+			{
+				return ChildSlot;
+			}
 		}
 	}
 
@@ -228,7 +243,7 @@ UItemContainerExtensionBase* UFaerieEquipmentManager::AddExtensionToSlot(const F
 		return nullptr;
 	}
 
-	auto&& Slot = FindSlot(SlotID);
+	auto&& Slot = FindSlot(SlotID, true);
 	if (!IsValid(Slot))
 	{
 		return nullptr;
@@ -251,7 +266,7 @@ bool UFaerieEquipmentManager::RemoveExtensionFromSlot(const FFaerieSlotTag SlotI
 		return false;
 	}
 
-	auto&& Slot = FindSlot(SlotID);
+	auto&& Slot = FindSlot(SlotID, true);
 	if (!IsValid(Slot))
 	{
 		return false;

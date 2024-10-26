@@ -17,5 +17,5 @@ class FAERIEITEMGENERATOR_API UCraftingLibrary final : public UBlueprintFunction
 
 public:
 	UFUNCTION(BlueprintCallable, Category = "Faerie|Crafting")
-	static UItemGenerationConfig* CreateGenerationDriver(const FFaerieWeightedDropPool& Pool, const FGeneratorAmountBase& Amount);
+	static UItemGenerationConfig* CreateGenerationDriver(const TArray<FWeightedDrop>& DropList, const FGeneratorAmountBase& Amount);
 };

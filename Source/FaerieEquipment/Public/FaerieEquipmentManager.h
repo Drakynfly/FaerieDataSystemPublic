@@ -3,8 +3,8 @@
 #pragma once
 
 #include "EquipmentHashTypes.h"
-#include "Components/ActorComponent.h"
 #include "FaerieSlotTag.h"
+#include "Components/ActorComponent.h"
 
 #include "FaerieEquipmentManager.generated.h"
 
@@ -22,6 +22,7 @@ enum class EFaerieEquipmentClientChecksumState : uint8
 	Synchronized
 };
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FEquipmentChangedEvent, UFaerieEquipmentSlot*, Slot);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FEquipmentClientChecksumEvent, EFaerieEquipmentClientChecksumState, State);
 
 UCLASS(ClassGroup = ("Faerie"), meta = (BlueprintSpawnableComponent),
@@ -44,7 +45,7 @@ public:
 	//~ UActorComponent
 
 protected:
-	void OnSlotItemChanged(UFaerieEquipmentSlot* FaerieEquipmentSlot);
+	void OnSlotItemChanged(UFaerieEquipmentSlot* Slot);
 
 	void RecalcLocalChecksum();
 
@@ -67,8 +68,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Faerie|EquipmentManager")
 	TArray<UFaerieEquipmentSlot*> GetSlots() const { return Slots; }
 
+	/**
+	 * Find a slot contained in this manager. Enable recursive to check slots contained in other slots.
+	 */
 	UFUNCTION(BlueprintCallable, Category = "Faerie|EquipmentManager")
-	UFaerieEquipmentSlot* FindSlot(FFaerieSlotTag SlotID) const;
+	UFaerieEquipmentSlot* FindSlot(FFaerieSlotTag SlotID, bool Recursive = false) const;
 
 
 	/**------------------------------*/
@@ -121,6 +125,10 @@ public:
 public:
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FEquipmentClientChecksumEvent OnClientChecksumEvent;
+
+	// A generic event when any slot is changed, either by adding or removing the item, or the item itself is changed.
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FEquipmentChangedEvent OnEquipmentChangedEvent;
 
 protected:
 	// Predefined extensions added to all slots in this manager.

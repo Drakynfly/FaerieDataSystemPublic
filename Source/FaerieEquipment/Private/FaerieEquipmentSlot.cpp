@@ -64,7 +64,7 @@ void UFaerieEquipmentSlot::OnItemMutated(const UFaerieItem* InItem, const UFaeri
 	// shouldn't happen) or that a slot is wrongly holding onto something it shouldn't.
 	ensure(Token->IsA<UFaerieItemContainerToken>());
 
-	OnItemDataChanged.Broadcast(this);
+	BroadcastDataChange();
 }
 
 FFaerieItemStackView UFaerieEquipmentSlot::View(FEntryKey Key) const
@@ -147,6 +147,12 @@ void UFaerieEquipmentSlot::BroadcastChange()
 {
 	OnItemChangedNative.Broadcast(this);
 	OnItemChanged.Broadcast(this);
+}
+
+void UFaerieEquipmentSlot::BroadcastDataChange()
+{
+	OnItemDataChangedNative.Broadcast(this);
+	OnItemDataChanged.Broadcast(this);
 }
 
 bool UFaerieEquipmentSlot::CouldSetInSlot(const FFaerieItemStackView View) const
@@ -337,6 +343,34 @@ FFaerieAssetInfo UFaerieEquipmentSlot::GetSlotInfo() const
 bool UFaerieEquipmentSlot::IsFilled() const
 {
 	return IsValid(ItemStack.Item) && ItemStack.Copies > 0;
+}
+
+UFaerieEquipmentSlot* UFaerieEquipmentSlot::FindSlot(const FFaerieSlotTag SlotTag, const bool bRecursive) const
+{
+	if (IsFilled())
+	{
+		const TSet<UFaerieEquipmentSlot*> Children = UFaerieItemContainerToken::GetContainersInItem<UFaerieEquipmentSlot>(ItemStack.Item);
+
+		for (auto&& Child : Children)
+		{
+			if (Child->SlotID == SlotTag)
+			{
+				return Child;
+			}
+		}
+
+		if (bRecursive)
+		{
+			for (auto&& Child : Children)
+			{
+				if (auto&& ChildSlot = Child->FindSlot(SlotID, true))
+				{
+					return ChildSlot;
+				}
+			}
+		}
+	}
+	return nullptr;
 }
 
 void UFaerieEquipmentSlot::OnRep_Item()

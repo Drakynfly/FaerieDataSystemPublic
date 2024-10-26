@@ -91,6 +91,7 @@ public:
 
 protected:
 	virtual void BroadcastChange();
+	virtual void BroadcastDataChange();
 
 public:
 	FFaerieSlotTag GetSlotID() const { return SlotID; }
@@ -122,12 +123,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Faerie|EquipmentSlot")
 	bool IsFilled() const;
 
+	UFaerieEquipmentSlot* FindSlot(FFaerieSlotTag SlotTag, bool bRecursive) const;
+
 protected:
 	UFUNCTION()
 	void OnRep_Item();
 
 protected:
 	FEquipmentSlotEventNative OnItemChangedNative;
+	FEquipmentSlotEventNative OnItemDataChangedNative;
 
 public:
 	// Broadcast when the item filling this slot is removed, or a new item is set.

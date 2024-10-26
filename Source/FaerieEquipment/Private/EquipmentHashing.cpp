@@ -5,6 +5,8 @@
 #include "FaerieEquipmentSlot.h"
 #include "Squirrel.h"
 #include "DelegateCommon.h"
+#include "EquipmentHashAsset.h"
+#include "FaerieItemStackHashInstruction.h"
 #include "Tokens/FaerieInfoToken.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(EquipmentHashing)
@@ -14,7 +16,7 @@
 
 namespace Faerie::Hash
 {
-	FORCEINLINE int32 Combine(const int32 A, const int32 B)
+	FORCEINLINE [[nodiscard]] int32 Combine(const int32 A, const int32 B)
 	{
 		return Squirrel::HashCombine(A, B);
 	}
@@ -59,7 +61,7 @@ namespace Faerie::Hash
 		}
 		if (const FStructProperty* AsStruct = CastField<FStructProperty>(Property))
 		{
-			return HashStructByProps(AsStruct->ContainerPtrToValuePtr<void>(Ptr), AsStruct->Struct);
+			return HashStructByProps(AsStruct->ContainerPtrToValuePtr<void>(Ptr), AsStruct->Struct, true);
 		}
 		return 0;
 	}
@@ -74,11 +76,11 @@ namespace Faerie::Hash
 	}
 
 	template <typename T>
-	int32 HashContainerProps(const T* Container, const UStruct* Struct)
+	int32 HashContainerProps(const T* Container, const UStruct* Struct, const bool IncludeSuper)
 	{
 		int32 Hash = 0;
 
-		for (TFieldIterator<FProperty> PropIt(Struct, EFieldIteratorFlags::IncludeSuper); PropIt; ++PropIt)
+		for (TFieldIterator<FProperty> PropIt(Struct, IncludeSuper ? EFieldIterationFlags::IncludeSuper : EFieldIterationFlags::None); PropIt; ++PropIt)
 		{
 			if (const FProperty* Property = *PropIt)
 			{
@@ -89,17 +91,17 @@ namespace Faerie::Hash
 		return Hash;
 	}
 
-	int32 HashStructByProps(const void* Ptr, const UScriptStruct* Struct)
+	int32 HashStructByProps(const void* Ptr, const UScriptStruct* Struct, const bool IncludeSuper)
 	{
 		check(Ptr);
 		check(Struct);
-		return HashContainerProps(Ptr, Struct);
+		return HashContainerProps(Ptr, Struct, IncludeSuper);
 	}
 
-	int32 HashItemByProps(const UObject* Obj)
+	int32 HashObjectByProps(const UObject* Obj, const bool IncludeSuper)
 	{
 		check(Obj);
-		return HashContainerProps(Obj, Obj->GetClass());
+		return HashContainerProps(Obj, Obj->GetClass(), IncludeSuper);
 	}
 }
 
@@ -144,7 +146,7 @@ FFaerieEquipmentHash UFaerieEquipmentHashing::HashEquipment(const UFaerieEquipme
 
 	for (const FFaerieSlotTag SlotTag : Slots)
 	{
-		if (const UFaerieEquipmentSlot* Slot = Manager->FindSlot(SlotTag))
+		if (const UFaerieEquipmentSlot* Slot = Manager->FindSlot(SlotTag, true))
 		{
 			if (Slot->IsFilled())
 			{
@@ -171,6 +173,39 @@ FFaerieEquipmentHash UFaerieEquipmentHashing::HashEquipment(const UFaerieEquipme
 		});
 }
 
+bool UFaerieEquipmentHashing::ExecuteHashInstructions(const UFaerieEquipmentManager* Manager, const UFaerieEquipmentHashAsset* Asset)
+{
+	int32 FinalHash = 0;
+
+	for (auto&& Config : Asset->Configs)
+	{
+		for (const FGameplayTag Tag : Config.Slots)
+		{
+			const FFaerieSlotTag SlotTag = FFaerieSlotTag::ConvertChecked(Tag);
+
+			int32 TagHash = 0;
+
+			if (auto&& Slot = Manager->FindSlot(SlotTag, true))
+			{
+				if (Slot->IsFilled())
+				{
+					TagHash = Config.Instruction->Hash(Slot->View());
+
+					if (Config.MatchType == EGameplayContainerMatchType::Any)
+					{
+						FinalHash = Faerie::Hash::Combine(FinalHash, TagHash);
+						break;
+					}
+				}
+			}
+
+			FinalHash = Faerie::Hash::Combine(FinalHash, TagHash);
+		}
+	}
+
+	return FinalHash == Asset->CheckHash;
+}
+
 FBlueprintEquipmentHash UFaerieEquipmentHashing::GetEquipmentHash_ByName()
 {
 	return AUTO_DELEGATE_STATIC(FBlueprintEquipmentHash, ThisClass, ExecHashEquipmentByName);
@@ -192,7 +227,7 @@ bool UFaerieEquipmentQueryLibrary::RunEquipmentQuery(const UFaerieEquipmentManag
 {
 	for (auto&& QueryTag : SetQuery.TagSet.Tags)
 	{
-		if (auto&& Slot = Manager->FindSlot(QueryTag))
+		if (auto&& Slot = Manager->FindSlot(QueryTag, true))
 		{
 			if (Slot->IsFilled())
 			{

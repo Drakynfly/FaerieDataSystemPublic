@@ -30,6 +30,12 @@ public:
 	virtual UFaerieItem* CreateItemInstance(UObject* Outer) const override;
 	//~ IFaerieItemSource
 
+#if WITH_EDITOR
+	// Gets a const ptr to the archetype item this asset generates.
+	// ONLY AVAILABLE IN EDITOR!
+	const UFaerieItem* GetEditorItemView() const { return Item; }
+#endif
+
 protected:
 	UPROPERTY(VisibleAnywhere, DuplicateTransient, Category = "ItemAsset")
 	TObjectPtr<UFaerieItem> Item;

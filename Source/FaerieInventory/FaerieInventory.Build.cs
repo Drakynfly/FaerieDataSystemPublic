@@ -28,6 +28,7 @@ public class FaerieInventory : ModuleRules
         PublicDependencyModuleNames.AddRange(
             new []
             {
+                "FaerieDataUtils",
                 "FaerieItemData"
             });
     }

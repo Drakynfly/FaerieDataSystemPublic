@@ -37,6 +37,26 @@ TSet<UFaerieItemContainerBase*> UFaerieItemContainerToken::GetAllContainersInIte
 	return Containers;
 }
 
+TSet<UFaerieItemContainerBase*> UFaerieItemContainerToken::GetContainersInItemOfClass(const UFaerieItem* Item,
+	TSubclassOf<UFaerieItemContainerBase> Class)
+{
+	if (!ensure(IsValid(Item))) return {};
+
+	TSet<UFaerieItemContainerBase*> Containers;
+
+	Item->ForEachToken<UFaerieItemContainerToken>(
+		[&Containers, Class](const UFaerieItemContainerToken* Token)
+		{
+			if (Token->ItemContainer->IsA(Class))
+			{
+				Containers.Add(Token->ItemContainer);
+			}
+			return true;
+		});
+
+	return Containers;
+}
+
 UFaerieItemStorageToken::UFaerieItemStorageToken()
 {
 	ItemContainer = CreateDefaultSubobject<UFaerieItemStorage>(FName{TEXTVIEW("ItemContainer")});

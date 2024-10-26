@@ -3,6 +3,7 @@
 #pragma once
 
 #include "FaerieItemToken.h"
+#include "TypeCastingUtils.h"
 #include "FaerieItemStorageToken.generated.h"
 
 class UFaerieItemContainerBase;
@@ -23,6 +24,15 @@ public:
 	// Get all container objects from ContainerTokens.
 	UFUNCTION(BlueprintCallable, Category = "Faerie|ItemContainerToken")
 	static TSet<UFaerieItemContainerBase*> GetAllContainersInItem(const UFaerieItem* Item);
+
+	UFUNCTION(BlueprintCallable, Category = "Faerie|ItemContainerToken", meta = (DeterminesOutputType = Class))
+	static TSet<UFaerieItemContainerBase*> GetContainersInItemOfClass(const UFaerieItem* Item, TSubclassOf<UFaerieItemContainerBase> Class);
+
+	template <typename TContainerType>
+	static TSet<TContainerType*> GetContainersInItem(const UFaerieItem* Item)
+	{
+		return Type::Cast<TSet<TContainerType*>>(GetContainersInItemOfClass(Item, TContainerType::StaticClass()));
+	}
 
 	UFaerieItemContainerBase* GetItemContainer() { return ItemContainer; }
 	const UFaerieItemContainerBase* GetItemContainer() const { return ItemContainer; }

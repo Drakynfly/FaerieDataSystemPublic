@@ -3,6 +3,7 @@
 #pragma once
 
 #include "FaerieItemToken.h"
+#include "TypeCastingUtils.h"
 
 #include "FaerieItem.generated.h"
 
@@ -43,10 +44,10 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	// Iterates over each contained token. Return true in the delegate to continue iterating.
-	void ForEachToken(const TFunction<bool(const UFaerieItemToken*)>& Iter) const;
+	void ForEachToken(const TFunctionRef<bool(const UFaerieItemToken*)>& Iter) const;
 
 	// Iterates over each contained token. Return true in the delegate to continue iterating.
-	void ForEachTokenOfClass(const TFunction<bool(const UFaerieItemToken*)>& Iter, TSubclassOf<UFaerieItemToken> Class) const;
+	void ForEachTokenOfClass(const TFunctionRef<bool(const UFaerieItemToken*)>& Iter, TSubclassOf<UFaerieItemToken> Class) const;
 
 	// Iterates over each contained token. Return true in the delegate to continue iterating.
 	template <
@@ -67,11 +68,6 @@ public:
 		}
 	}
 
-protected:
-		  UFaerieItemToken* GetTokenImpl(TSubclassOf<UFaerieItemToken> Class);
-	const UFaerieItemToken* GetTokenImpl(TSubclassOf<UFaerieItemToken> Class) const;
-
-public:
 	// Creates a new faerie item object. These are instance-mutable by default.
 	static UFaerieItem* CreateInstance();
 
@@ -80,13 +76,27 @@ public:
 
 	TConstArrayView<TObjectPtr<UFaerieItemToken>> GetTokens() const { return Tokens; }
 
+	const UFaerieItemToken* GetToken(TSubclassOf<UFaerieItemToken> Class) const;
+	TArray<const UFaerieItemToken*> GetTokens(TSubclassOf<UFaerieItemToken> Class) const;
+	UFaerieItemToken* GetMutableToken(TSubclassOf<UFaerieItemToken> Class);
+	TArray<UFaerieItemToken*> GetMutableTokens(TSubclassOf<UFaerieItemToken> Class);
+
 	template <
 		typename TFaerieItemToken
 		UE_REQUIRES(TIsDerivedFrom<TFaerieItemToken, UFaerieItemToken>::Value)
 	>
 	const TFaerieItemToken* GetToken() const
 	{
-		return Cast<TFaerieItemToken>(GetTokenImpl(TFaerieItemToken::StaticClass()));
+		return Cast<TFaerieItemToken>(GetToken(TFaerieItemToken::StaticClass()));
+	}
+
+	template <
+		typename TFaerieItemToken
+		UE_REQUIRES(TIsDerivedFrom<TFaerieItemToken, UFaerieItemToken>::Value)
+	>
+	TArray<const TFaerieItemToken*> GetTokens() const
+	{
+		return Type::Cast<TArray<const TFaerieItemToken*>>(GetTokens(TFaerieItemToken::StaticClass()));
 	}
 
 	template <
@@ -95,20 +105,28 @@ public:
 	>
 	TFaerieItemToken* GetEditableToken()
 	{
-		return Cast<TFaerieItemToken>(GetTokenImpl(TFaerieItemToken::StaticClass()));
+		return Cast<TFaerieItemToken>(GetMutableToken(TFaerieItemToken::StaticClass()));
 	}
 
-	// @todo this isn't const safe
-	UFUNCTION(BlueprintCallable, Category = "FaerieItem", meta = (DeterminesOutputType = Class))
-	UFaerieItemToken* GetToken(TSubclassOf<UFaerieItemToken> Class) const;
+	template <
+		typename TFaerieItemToken
+		UE_REQUIRES(TIsDerivedFrom<TFaerieItemToken, UFaerieItemToken>::Value)
+	>
+	TArray<TFaerieItemToken*> GetEditableTokens()
+	{
+		return Type::Cast<TArray<TFaerieItemToken*>>(GetMutableTokens(TFaerieItemToken::StaticClass()));
+	}
 
+protected:
 	// @todo this isn't const safe
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "FaerieItem", meta = (DeterminesOutputType = Class, DynamicOutputParam = FoundToken, ExpandBoolAsExecs = ReturnValue))
 	bool FindToken(TSubclassOf<UFaerieItemToken> Class, UFaerieItemToken*& FoundToken) const;
 
+	// @todo this isn't const safe
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "FaerieItem", meta = (DeterminesOutputType = Class, DynamicOutputParam = FoundTokens))
 	void FindTokens(TSubclassOf<UFaerieItemToken> Class, TArray<UFaerieItemToken*>& FoundTokens) const;
 
+public:
 	UFUNCTION(BlueprintCallable, Category = "FaerieItem")
 	void AddToken(UFaerieItemToken* Token);
 

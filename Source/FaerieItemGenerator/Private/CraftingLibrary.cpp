@@ -5,10 +5,10 @@
 
 DEFINE_LOG_CATEGORY(LogCraftingLibrary);
 
-UItemGenerationConfig* UCraftingLibrary::CreateGenerationDriver(const FFaerieWeightedDropPool& Pool, const FGeneratorAmountBase& Amount)
+UItemGenerationConfig* UCraftingLibrary::CreateGenerationDriver(const TArray<FWeightedDrop>& DropList, const FGeneratorAmountBase& Amount)
 {
     UItemGenerationConfig* NewDriver = NewObject<UItemGenerationConfig>();
-    NewDriver->DropPool = Pool;
+    NewDriver->DropPool.DropList = DropList;
     NewDriver->AmountResolver = TInstancedStruct<FGeneratorAmountBase>::Make(Amount);
     return NewDriver;
 }
