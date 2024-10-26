@@ -2,6 +2,8 @@
 
 #include "Extensions/RelevantActorsExtension.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(RelevantActorsExtension)
+
 AActor* URelevantActorsExtension::FindActor(const TSubclassOf<AActor> Class) const
 {
 	for (auto&& Actor : RelevantActors)

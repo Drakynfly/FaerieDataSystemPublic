@@ -4,7 +4,7 @@
 
 #include "Internationalization/Text.h"
 
-#include "FaerieInfoObject.generated.h"
+#include "FaerieAssetInfo.generated.h"
 
 class UTexture2D;
 

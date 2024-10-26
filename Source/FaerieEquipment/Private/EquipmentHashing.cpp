@@ -7,6 +7,8 @@
 #include "DelegateCommon.h"
 #include "Tokens/FaerieInfoToken.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(EquipmentHashing)
+
 // WARNING: Changing this will invalidate all existing hashes generated with MakeEquipmentHash.
 #define EQUIPMENT_HASHING_SEED 561333781
 

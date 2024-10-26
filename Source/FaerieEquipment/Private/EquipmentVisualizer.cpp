@@ -2,6 +2,8 @@
 
 #include "EquipmentVisualizer.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(EquipmentVisualizer)
+
 UEquipmentVisualizer::UEquipmentVisualizer()
 {
 	PrimaryComponentTick.bCanEverTick = false;

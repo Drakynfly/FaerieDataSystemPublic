@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "FaerieInfoObject.h"
+#include "FaerieAssetInfo.h"
 #include "FaerieItemToken.h"
 
 #include "FaerieInfoToken.generated.h"

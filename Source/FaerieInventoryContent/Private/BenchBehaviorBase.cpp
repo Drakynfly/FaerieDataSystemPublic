@@ -2,6 +2,8 @@
 
 #include "BenchBehaviorBase.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(BenchBehaviorBase)
+
 bool UBenchBehaviorBase::CanPlayerInteract() const
 {
 	if (ExternalInteractionTest.IsBound())

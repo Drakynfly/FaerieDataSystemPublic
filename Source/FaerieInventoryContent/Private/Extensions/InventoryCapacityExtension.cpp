@@ -207,7 +207,8 @@ bool UInventoryCapacityExtension::CanContainToken(const UFaerieCapacityToken* To
 	// Fudged slightly to account for "cramming"
 	if (Config.HasCheck(ECapacityChecks::Bounds))
 	{
-		const FIntVector TestBounds = Config.Bounds * Config.BoundsFudgeFactor;
+		// Convert Bounds to a FVector so we can multiply by a float, then convert back
+		const FIntVector TestBounds = FIntVector(FVector(Config.Bounds) * Config.BoundsFudgeFactor);
 		const FIntVector BoundsDiff = Token->GetCapacity().Bounds - TestBounds;
 
 		// If the largest bound exceeds the limits, forbid containment.
@@ -232,7 +233,7 @@ bool UInventoryCapacityExtension::CanContainToken(const UFaerieCapacityToken* To
 	// Determine if the entry would put the container over max volume.
 	if (Config.HasCheck(ECapacityChecks::Volume))
 	{
-		const int32 TestVolume = State.CurrentVolume + Token->GetVolumeOfStack(Stack);
+		const int64 TestVolume = State.CurrentVolume + Token->GetVolumeOfStack(Stack);
 		const bool WouldExceedVolume = TestVolume > Config.MaxVolume;
 
 		if (WouldExceedVolume)

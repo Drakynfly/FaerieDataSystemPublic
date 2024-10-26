@@ -4,6 +4,8 @@
 #include "Extensions/InventoryCapacityExtension.h"
 #include "Net/UnrealNetwork.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(FaerieCapacityToken)
+
 void UFaerieCapacityToken::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -20,8 +22,8 @@ int32 UFaerieCapacityToken::GetWeightOfStack(const int32 Stack) const
 
 int32 UFaerieCapacityToken::GetVolumeOfStack(const int32 Stack) const
 {
-	const int32 Volume = Capacity.GetVolume();
-	return Volume + (Volume * (Stack - 1) * Capacity.Efficiency);
+	const int64 Volume = Capacity.GetVolume();
+	return static_cast<int32>(Volume + (Volume * (Stack - 1) * Capacity.Efficiency)); // @todo maybe return int64 here?
 }
 
 FWeightAndVolume UFaerieCapacityToken::GetWeightAndVolumeOfStack(const int32 Stack) const
@@ -44,7 +46,7 @@ FWeightAndVolume UFaerieCapacityToken::GetWeightAndVolumeOfStackForRemoval(const
 	else
 	{
 		Out.GramWeight = Capacity.Weight * Removal;
-		Out.Volume = Capacity.GetVolume() * Removal * Capacity.Efficiency;
+		Out.Volume = static_cast<int64>(Capacity.GetVolume() * Removal * Capacity.Efficiency);
 	}
 
 	return Out;

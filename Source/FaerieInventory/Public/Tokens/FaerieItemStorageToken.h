@@ -27,6 +27,7 @@ public:
 	UFaerieItemContainerBase* GetItemContainer() { return ItemContainer; }
 	const UFaerieItemContainerBase* GetItemContainer() const { return ItemContainer; }
 
+protected:
 	UPROPERTY(Replicated)
 	TObjectPtr<UFaerieItemContainerBase> ItemContainer;
 };

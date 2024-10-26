@@ -11,6 +11,8 @@
 #include "GameFramework/Character.h"
 #include "Tokens/FaerieVisualEquipment.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(EquipmentVisualizationUpdater)
+
 void UEquipmentVisualizationUpdater::InitializeExtension(const UFaerieItemContainerBase* Container)
 {
 	auto&& Visualizer = GetVisualizer(Container);

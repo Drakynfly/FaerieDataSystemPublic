@@ -4,7 +4,7 @@
 #include "FaerieSlotTag.h"
 #include "GameplayTagsEditorModule.h"
 
-#define LOCTEXT_NAMESPACE "FFaerieEquipmentEditorModule"
+#define LOCTEXT_NAMESPACE "FaerieEquipmentEditorModule"
 
 void FFaerieEquipmentEditorModule::StartupModule()
 {

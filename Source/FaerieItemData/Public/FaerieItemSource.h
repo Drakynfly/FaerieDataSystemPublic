@@ -2,7 +2,8 @@
 
 #pragma once
 
-#include "FaerieInfoObject.h"
+#include "UObject/Object.h"
+#include "FaerieAssetInfo.h"
 
 #include "FaerieItemSource.generated.h"
 
@@ -34,7 +35,7 @@ class FAERIEITEMDATA_API IFaerieItemSource
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
-	// Can this source create mutable items.
+	// Can this source create mutable items?
 	virtual bool CanBeMutable() const { return false; }
 
 	// Allows sources to give info about generation results

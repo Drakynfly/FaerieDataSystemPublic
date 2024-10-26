@@ -7,6 +7,8 @@
 #include "Net/UnrealNetwork.h"
 #include "Tokens/FaerieItemStorageToken.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(FaerieItemContainerBase)
+
 UFaerieItemContainerBase::UFaerieItemContainerBase()
 {
 	Extensions = CreateDefaultSubobject<UItemContainerExtensionGroup>(FName{TEXTVIEW("Extensions")});

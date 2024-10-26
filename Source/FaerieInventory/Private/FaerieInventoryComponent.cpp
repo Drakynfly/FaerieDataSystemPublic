@@ -5,6 +5,8 @@
 #include "ItemContainerExtensionBase.h"
 #include "Net/UnrealNetwork.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(FaerieInventoryComponent)
+
 DEFINE_LOG_CATEGORY(LogFaerieInventoryComponent);
 
 UFaerieInventoryComponent::UFaerieInventoryComponent()

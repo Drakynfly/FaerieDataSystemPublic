@@ -25,6 +25,7 @@ UFaerieItem* FTableDrop::Resolve(const UItemInstancingContext_Crafting* Context)
 	{
 		const FTableDrop& ChildDrop = StaticResourceSlot.Value.Drop.Get<FTableDrop>();
 
+		// @todo
 		// For Subgraph instances, automatically set the stack to the required amount for the filter.
 		//UFaerieItemTemplate* Slot;
 		//if (UFaerieItemSlotLibrary::FindSlot(DropObject, StaticResourceSlot.Key, Slot))
@@ -59,11 +60,11 @@ int32 FGeneratorAmount_Curve::Resolve(USquirrel* Squirrel) const
 	float Max;
 	AmountCurve.GetRichCurveConst()->GetTimeRange(Min, Max);
 
-	const float RawCurveFloat = AmountCurve.GetRichCurveConst()->Eval(Squirrel->NextRealInRange(Min, Max));
+	const float RawCurveFloat = AmountCurve.GetRichCurveConst()->Eval(static_cast<float>(Squirrel->NextRealInRange(Min, Max)));
 
 	// The following math rounds the RawCurveFloat either up or down based on the remainder. A low remainder is a high
 	// chance to round down, while a high remainder is likely to round up.
-	int32 const Whole = FMath::Floor(RawCurveFloat);
+	int32 const Whole = static_cast<int32>(FMath::Floor(RawCurveFloat));
 	float const Remainder = RawCurveFloat - Whole;
 	return Whole + (Remainder >= Squirrel->NextReal());
 }

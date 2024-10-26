@@ -6,7 +6,7 @@ public class FaerieItemCard : ModuleRules
 {
     public FaerieItemCard(ReadOnlyTargetRules Target) : base(Target)
     {
-        PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+        FaerieDataUtils.ApplySharedModuleSetup(this, Target);
 
         PublicDependencyModuleNames.AddRange(
             new []

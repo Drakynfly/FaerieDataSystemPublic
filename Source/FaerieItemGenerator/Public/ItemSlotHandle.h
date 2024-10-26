@@ -12,7 +12,7 @@ struct FAERIEITEMGENERATOR_API FFaerieItemSlotHandle
 
 	FFaerieItemSlotHandle() {}
 
-	FFaerieItemSlotHandle(const FName& Name)
+	FFaerieItemSlotHandle(const FName Name)
 	  : InternalHandle(Name) {}
 
 private:

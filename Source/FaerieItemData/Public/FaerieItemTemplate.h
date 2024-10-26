@@ -2,7 +2,8 @@
 
 #pragma once
 
-#include "FaerieInfoObject.h"
+#include "UObject/Object.h"
+#include "FaerieAssetInfo.h"
 #include "FaerieItemDataProxy.h"
 
 #include "FaerieItemTemplate.generated.h"

@@ -34,14 +34,14 @@ struct FCapacityExtensionConfig
     float BoundsFudgeFactor = 1.1f;
 
     UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Capacity Config")
-    FWeightEditor MaxWeight = 0.f;
+    FWeightEditor MaxWeight = 0;
 
     /** If enabled, MaxVolume will be set to Bounds.X*Bounds.Y*Bounds.Z. Disable to manually edit MaxVolume */
     UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Capacity Config")
     bool DeriveVolumeFromBounds = true;
 
     UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Capacity Config", meta = (EditCondition = "!DeriveVolumeFromBounds"))
-    int64 MaxVolume = 0.f;
+    int64 MaxVolume = 0;
 
     UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Capacity Config")
     bool AllowEntriesWithNoCapacityToken = false;
@@ -61,10 +61,10 @@ struct FCapacityExtensionState
     GENERATED_BODY()
 
     UPROPERTY(BlueprintReadOnly, VisibleInstanceOnly, Category = "Weight", meta = (Units = g))
-    int32 CurrentWeight = 0.f;
+    int32 CurrentWeight = 0;
 
     UPROPERTY(BlueprintReadOnly, VisibleInstanceOnly, Category = "Volume")
-    int64 CurrentVolume = 0.f;
+    int64 CurrentVolume = 0;
 
     UPROPERTY(BlueprintReadOnly, VisibleInstanceOnly, Category = "Over Max Status", meta = (AllowPrivateAccess = true))
     bool OverMaxWeight = false;

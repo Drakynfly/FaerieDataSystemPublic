@@ -8,6 +8,8 @@
 #endif
 #include "Net/UnrealNetwork.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(ItemContainerExtensionBase)
+
 #define LOCTEXT_NAMESPACE "ItemContainerExtensionGroup"
 
 void UItemContainerExtensionGroup::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

@@ -3,8 +3,8 @@
 #include "KeyedInventoryEntryCustomization.h"
 #include "InventoryDataStructs.h"
 
+#include "IDetailChildrenBuilder.h"
 #include "PropertyCustomizationHelpers.h"
-#include "PropertyEditing.h"
 
 #define LOCTEXT_NAMESPACE "InventoryContentCustomization"
 

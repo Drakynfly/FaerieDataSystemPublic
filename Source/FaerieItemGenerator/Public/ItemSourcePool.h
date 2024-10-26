@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "FaerieInfoObject.h"
+#include "FaerieAssetInfo.h"
 #include "UObject/Object.h"
 #include "FaerieItemSource.h"
 #include "GenerationStructsLibrary.h"

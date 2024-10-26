@@ -3,7 +3,7 @@
 #include "FaerieEquipmentSlot.h"
 
 #include "FaerieEquipmentSlotDescription.h"
-#include "FaerieInfoObject.h"
+#include "FaerieAssetInfo.h"
 #include "FaerieItem.h"
 #include "FaerieItemTemplate.h"
 #include "ItemContainerEvent.h"
@@ -11,6 +11,8 @@
 #include "Net/UnrealNetwork.h"
 #include "Net/Core/PushModel/PushModel.h"
 #include "Tokens/FaerieChildSlotToken.h"
+
+#include UE_INLINE_GENERATED_CPP_BY_NAME(FaerieEquipmentSlot)
 
 FFaerieEquipmentSlotEvents FFaerieEquipmentSlotEvents::FaerieEquipmentSlotEvents;
 

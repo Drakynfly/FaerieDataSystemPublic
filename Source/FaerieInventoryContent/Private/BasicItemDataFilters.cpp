@@ -4,6 +4,8 @@
 #include "Tokens/FaerieStackLimiterToken.h"
 #include "Tokens/FaerieTagToken.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(BasicItemDataFilters)
+
 #if WITH_EDITOR
 EItemDataMutabilityStatus UFilterRule_LogicalOr::GetMutabilityStatus() const
 {

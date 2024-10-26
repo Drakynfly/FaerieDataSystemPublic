@@ -9,6 +9,8 @@
 #include "FaerieEquipmentSlotDescription.h"
 #endif
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(FaerieChildSlotToken)
+
 UFaerieChildSlotToken::UFaerieChildSlotToken()
 {
 	ItemContainer = CreateDefaultSubobject<UFaerieEquipmentSlot>(FName{TEXTVIEW("ItemContainer")});

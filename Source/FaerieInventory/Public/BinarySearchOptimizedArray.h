@@ -12,7 +12,7 @@
  * This is to somewhat alleviate performance concerns when using TArrays for things that should be TMaps in networked
  * situations that forbid the latter.
  * See FInventoryContent for an example of this implemented.
- * TArrayType must implement a function named GetArray of the signature TArray<TElementType>&(), and TElementType must have two
+ * TArrayType must implement a function with the signature `TArray<TElementType>& GetArray()`, and TElementType must have two
  * members Key, and Value. The Key type must have operator< implemented.
  */
 template <typename TArrayType, typename TElementType>

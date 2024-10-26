@@ -2,6 +2,8 @@
 
 #include "Tokens/FaerieStackLimiterToken.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(FaerieStackLimiterToken)
+
 /* static */ int32 UFaerieStackLimiterToken::GetItemStackLimit(const UFaerieItem* Item)
 {
 	if (!ensure(IsValid(Item)))

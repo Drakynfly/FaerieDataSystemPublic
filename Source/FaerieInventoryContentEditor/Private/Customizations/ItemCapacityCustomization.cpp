@@ -2,9 +2,12 @@
 
 #include "ItemCapacityCustomization.h"
 #include "FaerieEquipmentEditorSettings.h"
-#include "PropertyEditing.h"
-#include "Math/UnitConversion.h"
 #include "Tokens/FaerieCapacityToken.h"
+
+#include "Math/UnitConversion.h"
+#include "IDetailChildrenBuilder.h"
+#include "IDetailGroup.h"
+#include "DetailWidgetRow.h"
 
 #define LOCTEXT_NAMESPACE "InventoryWeightCustomization"
 
@@ -132,13 +135,13 @@ void FItemCapacityCustomization::UpdateInfo()
         BoundsHandle->GetValueData(reinterpret_cast<void*&>(BoundsValue));
         EfficiencyHandle->GetValue(EfficiencyValue);
 
-        const float CubicSpace = BoundsValue->X * BoundsValue->Y * BoundsValue->Z;
-        const float WeightPerCentimeter = WeightValue / CubicSpace;
+        const int32 CubicSpace = BoundsValue->X * BoundsValue->Y * BoundsValue->Z;
+        const int32 WeightPerCentimeter = WeightValue / CubicSpace;
         const float SuccessiveWeightPerCentimeter = WeightPerCentimeter * EfficiencyValue;
 
-        FString InfoString = FString::Printf(TEXT("Weight/cm3: %.2f (%.2f)"), WeightPerCentimeter, SuccessiveWeightPerCentimeter);
+        FString InfoString = FString::Printf(TEXT("Weight/cm3: %i (%.2f)"), WeightPerCentimeter, SuccessiveWeightPerCentimeter);
 
-        auto&& CompareStrings = GetDefault<UFaerieEquipmentEditorSettings>()->GetDebugInfoForCCM(CubicSpace);
+        auto&& CompareStrings = GetDefault<UFaerieEquipmentEditorSettings>()->GetDebugInfoForCCM(static_cast<float>(CubicSpace));
 
         for (const FString& Str : CompareStrings)
         {

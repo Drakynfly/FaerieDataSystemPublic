@@ -10,6 +10,8 @@
 #include "Tokens/FaerieItemStorageToken.h"
 #include "Tokens/FaerieStackLimiterToken.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(FaerieItemStorage)
+
 DECLARE_STATS_GROUP(TEXT("FaerieItemStorage"), STATGROUP_FaerieItemStorage, STATCAT_Advanced);
 DECLARE_CYCLE_STAT(TEXT("Query (First)"), STAT_Storage_QueryFirst, STATGROUP_FaerieItemStorage);
 DECLARE_CYCLE_STAT(TEXT("Query (All)"), STAT_Storage_QueryAll, STATGROUP_FaerieItemStorage);

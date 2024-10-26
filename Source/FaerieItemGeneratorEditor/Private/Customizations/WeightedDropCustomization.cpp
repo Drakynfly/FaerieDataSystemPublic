@@ -1,9 +1,10 @@
 ﻿// Copyright Guy (Drakynfly) Lundvall. All Rights Reserved.
 
 #include "WeightedDropCustomization.h"
-
 #include "GenerationStructsLibrary.h"
-#include "PropertyEditing.h"
+
+#include "DetailWidgetRow.h"
+#include "IDetailChildrenBuilder.h"
 
 #define LOCTEXT_NAMESPACE "WeightedDropCustomization"
 
@@ -61,11 +62,11 @@ void FWeightedDropCustomization::CustomizeHeader(const TSharedRef<IPropertyHandl
                             // Split percentage into whole value and fractional
                             float Whole;
                             float Decimal = FMath::Modf(Percentage, &Whole);
-                            const int32 IntWhole = Whole;
+                            const int32 IntWhole = static_cast<int32>(Whole);
 
-                            // "Bit-shift" fraction part into whole number, to cut off all but two places.
+                            // "Bit-shift" fraction part into a whole number, to cut off all but two places.
                             Decimal *= 100;
-                            const int32 RemainderInt = Decimal;
+                            const int32 RemainderInt = static_cast<int32>(Decimal);
 
                             const FString WholeStr = FString::FromInt(IntWhole);
                             FString RemainderString = FString::FromInt(RemainderInt);

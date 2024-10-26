@@ -4,7 +4,7 @@ public class FaerieInventoryEditor : ModuleRules
 {
     public FaerieInventoryEditor(ReadOnlyTargetRules Target) : base(Target)
     {
-        PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+        FaerieDataUtils.ApplySharedModuleSetup(this, Target);
 
         PublicDependencyModuleNames.AddRange(
             new []

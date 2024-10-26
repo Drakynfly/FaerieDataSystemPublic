@@ -2,6 +2,8 @@
 
 #include "InventoryContentStructsLibrary.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(InventoryContentStructsLibrary)
+
 DEFINE_LOG_CATEGORY(LogInventoryLibrary);
 
 int32 UInventoryContentStructsLibrary::UnlimitedStack()

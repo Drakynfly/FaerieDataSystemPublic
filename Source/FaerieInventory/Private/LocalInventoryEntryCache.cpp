@@ -5,6 +5,8 @@
 #include "FaerieItemStorage.h"
 #include "Logging.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(LocalInventoryEntryCache)
+
 TArray<FKeyedStack> UInventoryEntryProxyBase::GetAllStacks() const
 {
 	if (auto&& Entry = GetInventoryEntry();

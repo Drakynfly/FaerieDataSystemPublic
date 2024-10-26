@@ -7,6 +7,8 @@
 #include "FaerieItemStorage.h"
 #include "HAL/LowLevelMemStats.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(InventoryDataStructs)
+
 DEFINE_LOG_CATEGORY(LogInventoryStructs)
 
 DECLARE_LLM_MEMORY_STAT(TEXT("ItemStorage"), STAT_StorageLLM, STATGROUP_LLMFULL);

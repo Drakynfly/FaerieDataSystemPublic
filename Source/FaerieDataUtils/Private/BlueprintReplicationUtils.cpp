@@ -2,6 +2,8 @@
 
 #include "BlueprintReplicationUtils.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(BlueprintReplicationUtils)
+
 bool UBlueprintReplicationUtils::AddReplicatedSubObject(AActor* Actor, UObject* Object)
 {
 	if (Object && Actor)

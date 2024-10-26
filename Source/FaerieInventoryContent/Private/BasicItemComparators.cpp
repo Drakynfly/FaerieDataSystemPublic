@@ -4,6 +4,8 @@
 #include "FaerieItem.h"
 #include "Tokens/FaerieInfoToken.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(BasicItemComparators)
+
 bool UFaerieLexicographicNameComparator::Exec(const FFaerieItemProxy A, const FFaerieItemProxy B) const
 {
 	const UFaerieInfoToken* InfoA = A->GetItemObject()->GetToken<UFaerieInfoToken>();

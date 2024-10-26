@@ -2,11 +2,13 @@
 
 #include "CapacityStructs.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(CapacityStructs)
+
 FItemCapacity UCapacityStructsUtilities::WeightOfScaledComparison(const FItemCapacity& Original,
                                                                const FItemCapacity& Comparison)
 {
 	FItemCapacity Out = Original;
-	Out.Weight = Original.GetEfficientVolume() * Comparison.WeightOfSquareCentimeter();
+	Out.Weight = static_cast<int32>(Original.GetEfficientVolume() * Comparison.WeightOfSquareCentimeter());
 	return Out;
 }
 

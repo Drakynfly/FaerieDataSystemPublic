@@ -1,7 +1,6 @@
 ﻿// Copyright Guy (Drakynfly) Lundvall. All Rights Reserved.
 
 #include "Tokens/FaerieInfoToken.h"
-#include "FaerieInfoObject.h"
 #include "Net/UnrealNetwork.h"
 
 #define LOCTEXT_NAMESPACE "FaerieInfoToken"

@@ -1,7 +1,7 @@
 ﻿// Copyright Guy (Drakynfly) Lundvall. All Rights Reserved.
 
 #include "ItemSourcePool.h"
-#include "FaerieInfoObject.h"
+#include "FaerieAssetInfo.h"
 #include "ItemInstancingContext_Crafting.h"
 
 #include "Squirrel.h"

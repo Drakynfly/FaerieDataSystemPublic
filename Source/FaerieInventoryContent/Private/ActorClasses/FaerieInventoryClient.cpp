@@ -1,11 +1,12 @@
 ﻿// Copyright Guy (Drakynfly) Lundvall. All Rights Reserved.
 
 #include "ActorClasses/FaerieInventoryClient.h"
-#include "FaerieEquipmentManager.h"
 #include "FaerieEquipmentSlot.h"
 #include "FaerieItemStorage.h"
 #include "Extensions/InventoryEjectionHandlerExtension.h"
 #include "Extensions/InventoryUserdataExtension.h"
+
+#include UE_INLINE_GENERATED_CPP_BY_NAME(FaerieInventoryClient)
 
 UFaerieInventoryClient::UFaerieInventoryClient()
 {
