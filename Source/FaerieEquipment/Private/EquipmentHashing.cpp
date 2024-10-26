@@ -175,6 +175,11 @@ FFaerieEquipmentHash UFaerieEquipmentHashing::HashEquipment(const UFaerieEquipme
 
 bool UFaerieEquipmentHashing::ExecuteHashInstructions(const UFaerieEquipmentManager* Manager, const UFaerieEquipmentHashAsset* Asset)
 {
+	if (!IsValid(Manager) || !IsValid(Asset))
+	{
+		return false;
+	}
+
 	int32 FinalHash = 0;
 
 	for (auto&& Config : Asset->Configs)

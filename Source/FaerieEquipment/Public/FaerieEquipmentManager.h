@@ -25,7 +25,7 @@ enum class EFaerieEquipmentClientChecksumState : uint8
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FEquipmentChangedEvent, UFaerieEquipmentSlot*, Slot);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FEquipmentClientChecksumEvent, EFaerieEquipmentClientChecksumState, State);
 
-UCLASS(ClassGroup = ("Faerie"), meta = (BlueprintSpawnableComponent),
+UCLASS(Blueprintable, ClassGroup = ("Faerie"), meta = (BlueprintSpawnableComponent),
 	HideCategories = (Collision, ComponentTick, Replication, ComponentReplication, Activation, Sockets, Navigation))
 class FAERIEEQUIPMENT_API UFaerieEquipmentManager : public UActorComponent
 {
@@ -41,10 +41,14 @@ public:
 	//~ UObject
 
 	//~ UActorComponent
+	virtual void InitializeComponent() override;
+	virtual void OnComponentCreated() override;
 	virtual void ReadyForReplication() override;
 	//~ UActorComponent
 
 protected:
+	void AddDefaultSlots();
+
 	void OnSlotItemChanged(UFaerieEquipmentSlot* Slot);
 
 	void RecalcLocalChecksum();
@@ -131,6 +135,9 @@ public:
 	FEquipmentChangedEvent OnEquipmentChangedEvent;
 
 protected:
+	UPROPERTY(EditAnywhere, Category = "Equipment")
+	TMap<FFaerieSlotTag, TObjectPtr<UFaerieEquipmentSlotDescription>> DefaultSlots;
+
 	// Predefined extensions added to all slots in this manager.
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Instanced, NoClear, Category = "Extensions")
 	TObjectPtr<UItemContainerExtensionGroup> ExtensionGroup;

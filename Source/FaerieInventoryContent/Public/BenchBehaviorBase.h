@@ -6,8 +6,6 @@
 
 #include "BenchBehaviorBase.generated.h"
 
-class UBenchInteractionWidgetBase;
-
 DECLARE_DYNAMIC_DELEGATE_RetVal(bool, FBenchInteractionTest);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FBenchInteractionEvent);
 
@@ -39,7 +37,7 @@ protected:
 
 public:
 	UFUNCTION(BlueprintCallable, Category = "Bench|Player Interaction")
-	TSubclassOf<UBenchInteractionWidgetBase> GetInteractionWidget() const { return InteractionWidget; }
+	TSubclassOf<UUserWidget> GetInteractionWidget() const { return InteractionWidget; }
 
 	UFUNCTION(BlueprintCallable, Category = "Bench|Player Interaction")
 	bool CanPlayerInteract() const;
@@ -70,5 +68,5 @@ protected:
 	FBenchInteractionTest ExternalInteractionTest;
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Player Interaction")
-	TSubclassOf<UBenchInteractionWidgetBase> InteractionWidget;
+	TSubclassOf<UUserWidget> InteractionWidget;
 };

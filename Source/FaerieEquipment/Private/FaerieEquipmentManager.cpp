@@ -30,6 +30,20 @@ void UFaerieEquipmentManager::GetLifetimeReplicatedProps(TArray<FLifetimePropert
 	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, ServerChecksum, Params);
 }
 
+void UFaerieEquipmentManager::InitializeComponent()
+{
+	Super::InitializeComponent();
+
+	AddDefaultSlots();
+}
+
+void UFaerieEquipmentManager::OnComponentCreated()
+{
+	Super::OnComponentCreated();
+
+	AddDefaultSlots();
+}
+
 void UFaerieEquipmentManager::ReadyForReplication()
 {
 	Super::ReadyForReplication();
@@ -53,6 +67,14 @@ void UFaerieEquipmentManager::ReadyForReplication()
 				AddReplicatedSubObject(Slot);
 			}
 		}
+	}
+}
+
+void UFaerieEquipmentManager::AddDefaultSlots()
+{
+	for (auto&& Element : DefaultSlots)
+	{
+		AddSlot(Element.Key, Element.Value);
 	}
 }
 
