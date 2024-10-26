@@ -26,7 +26,7 @@ ENUM_CLASS_FLAGS(EFaerieItemMutabilityFlags)
 using FNotifyOwnerOfSelfMutation = TDelegate<void(const class UFaerieItem*, const class UFaerieItemToken*)>;
 
 /**
- * An runtime instance of an item.
+ * A runtime instance of an item.
  */
 UCLASS(DefaultToInstanced, EditInlineNew, BlueprintType)
 class FAERIEITEMDATA_API UFaerieItem : public UObject
@@ -72,10 +72,10 @@ protected:
 	const UFaerieItemToken* GetTokenImpl(TSubclassOf<UFaerieItemToken> Class) const;
 
 public:
-	// Creates a new faerie item object. These are instance mutable by default.
+	// Creates a new faerie item object. These are instance-mutable by default.
 	static UFaerieItem* CreateInstance();
 
-	// Creates a new faerie item object using this instance as a template. Duplicates are instance mutable by default.
+	// Creates a new faerie item object using this instance as a template. Duplicates are instance-mutable by default.
 	UFaerieItem* CreateDuplicate() const;
 
 	TConstArrayView<TObjectPtr<UFaerieItemToken>> GetTokens() const { return Tokens; }
@@ -121,7 +121,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "FaerieItem")
 	FDateTime GetLastModified() const { return LastModified; }
 
-	// Can this item object be changed whatsoever at runtime. This is not available for static or precached items.
+	// Can this item object be changed whatsoever at runtime? This is not available for static or precached items.
 	UFUNCTION(BlueprintCallable, Category = "FaerieItem")
 	bool IsInstanceMutable() const;
 
@@ -150,6 +150,6 @@ protected:
 	UPROPERTY(Replicated, VisibleInstanceOnly, Category = "FaerieItem")
 	EFaerieItemMutabilityFlags MutabilityFlags;
 
-	// Delegate for owners to bind to, for detecting when tokens are mutated outside of their knowledge
+	// Delegate for owners to bind to, for detecting when tokens are mutated outside their knowledge
 	FNotifyOwnerOfSelfMutation NotifyOwnerOfSelfMutation;
 };

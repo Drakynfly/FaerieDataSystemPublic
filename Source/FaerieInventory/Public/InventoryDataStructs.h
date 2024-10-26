@@ -253,7 +253,7 @@ public:
 
 struct FInventoryContent;
 
-// A minimal struct to replicate a Key and Value pair as a emulation of a TMap
+// A minimal struct to replicate a Key and Value pair as an emulation of a TMap
 USTRUCT()
 struct FKeyedInventoryEntry : public FFastArraySerializerItem
 {

@@ -21,7 +21,7 @@ public:
 	virtual bool IsSupportedForNetworking() const override { return true; }
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-	// Can the data contained by this token by changed after initialization. This plays a major role on how items are
+	// Can the data contained by this token be changed after initialization? This plays a major role in how items are
 	// handled. An item with *any* mutable data cannot be stacked.
 	virtual bool IsMutable() const;
 
@@ -31,13 +31,13 @@ protected:
 	 * used to determine if two items are identical, data-wise, but since only *one* token on an item needs to differ for
 	 * the item to be considered distinct, not every token needs to implement this.
 	 * Tokens that *should* implement this are ones that are primarily used to identify items, like Name or Info tokens,
-	 * or any token that explicitily is used to differentiate items when their primary identifiers match.
+	 * or any token that explicitly is used to differentiate items when their primary identifiers match.
 	 * Further note that any token that is mutable is automatically dissimilar even if it is data-wise identical, so it
-	 * is meaningless to implement this it that case.
+	 * is meaningless to implement this in that case.
 	 */
 	virtual bool CompareWithImpl(const UFaerieItemToken* FaerieItemToken) const;
 
-	// Are we in an item that is mutable
+	// Are we in an item that is mutable?
 	bool IsOuterItemMutable() const;
 
 	void NotifyOuterOfChange();

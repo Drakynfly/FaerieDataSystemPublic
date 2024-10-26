@@ -9,7 +9,7 @@
 
 /**
  * A simple implementation of ItemDataProxy that *does* own its item, denoted by the 'Literal' suffix.
- * It therefor implements IFaerieItemOwnerInterface as well, to allow usage of Release/Possess.
+ * It therefore implements IFaerieItemOwnerInterface as well, to allow usage of Release/Possess.
  */
 UCLASS(meta = (DontUseGenericSpawnObject = "true"))
 class FAERIEITEMDATA_API UFaerieItemDataStackLiteral : public UObject, public IFaerieItemDataProxy, public IFaerieItemOwnerInterface
