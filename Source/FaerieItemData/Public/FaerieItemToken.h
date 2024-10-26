@@ -57,7 +57,7 @@ public:
 		EditToken(EditFunc);
 	}
 
-
+protected:
 	/**		BLUEPRINT API		*/
 
 	/** Get the item this token is part of */
