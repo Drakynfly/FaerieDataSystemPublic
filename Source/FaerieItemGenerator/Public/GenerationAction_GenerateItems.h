@@ -3,9 +3,9 @@
 #pragma once
 
 #include "GenerationAction.h"
+#include "ItemGeneratorConfig.h"
 #include "GenerationAction_GenerateItems.generated.h"
 
-struct FPendingItemGeneration;
 class UItemGenerationConfig;
 
 /**

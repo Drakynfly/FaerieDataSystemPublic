@@ -4,6 +4,7 @@
 
 #include "FaerieItem.h"
 #include "FaerieItemDataProxy.h"
+#include "ItemGeneratorConfig.h"
 #include "ItemInstancingContext_Crafting.h"
 
 #define LOCTEXT_NAMESPACE "GenerationAction_GenerateItems"
