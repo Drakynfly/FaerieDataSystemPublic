@@ -5,6 +5,7 @@
 #include "GameplayTagContainer.h"
 #include "ItemContainerExtensionBase.h"
 #include "InventoryReplicatedDataExtensionBase.h"
+#include "ActorClasses/FaerieInventoryClient.h"
 #include "InventoryUserdataExtension.generated.h"
 
 /**
@@ -82,4 +83,32 @@ public:
 	bool MarkStackWithTag(UFaerieItemContainerBase* Container, FEntryKey Key, FFaerieInventoryUserTag Tag);
 
 	bool ClearTagFromStack(UFaerieItemContainerBase* Container, FEntryKey Key, FFaerieInventoryUserTag Tag);
+};
+
+USTRUCT(BlueprintType)
+struct FFaerieClientAction_RequestMarkStackWithTag : public FFaerieClientActionBase
+{
+	GENERATED_BODY()
+
+	virtual void Server_Execute(const UFaerieInventoryClient* Client) const override;
+
+	UPROPERTY(BlueprintReadWrite, Category = "FaerieClientAction_RequestMarkStackWithTag")
+	FInventoryKeyHandle Handle;
+
+	UPROPERTY(BlueprintReadWrite, Category = "FaerieClientAction_RequestMarkStackWithTag")
+	FFaerieInventoryUserTag Tag;
+};
+
+USTRUCT(BlueprintType)
+struct FFaerieClientAction_RequestClearTagFromStack : public FFaerieClientActionBase
+{
+	GENERATED_BODY()
+
+	virtual void Server_Execute(const UFaerieInventoryClient* Client) const override;
+
+	UPROPERTY(BlueprintReadWrite, Category = "FaerieClientAction_RequestClearTagFromStack")
+	FInventoryKeyHandle Handle;
+
+	UPROPERTY(BlueprintReadWrite, Category = "FaerieClientAction_RequestClearTagFromStack")
+	FFaerieInventoryUserTag Tag;
 };

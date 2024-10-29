@@ -3,7 +3,6 @@
 #pragma once
 
 #include "BinarySearchOptimizedArray.h"
-#include "FaerieItem.h"
 #include "FaerieItemStackView.h"
 #include "GameplayTagContainer.h"
 #include "TTypedTagStaticImpl2.h"

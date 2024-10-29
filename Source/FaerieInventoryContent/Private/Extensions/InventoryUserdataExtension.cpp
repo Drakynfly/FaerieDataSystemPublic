@@ -70,3 +70,27 @@ bool UInventoryUserdataExtension::ClearTagFromStack(UFaerieItemContainerBase* Co
 			Data.GetMutable<FInventoryEntryUserdata>().Tags.RemoveTag(Tag);
 		});
 }
+
+void FFaerieClientAction_RequestMarkStackWithTag::Server_Execute(const UFaerieInventoryClient* Client) const
+{
+	auto&& Storage = Handle.ItemStorage.Get();
+	if (!IsValid(Storage)) return;
+	if (!Client->CanAccessStorage(Storage)) return;
+
+	if (auto&& Userdata = Storage->GetExtension<UInventoryUserdataExtension>())
+	{
+		Userdata->MarkStackWithTag(Handle.ItemStorage.Get(), Handle.Key.EntryKey, Tag);
+	}
+}
+
+void FFaerieClientAction_RequestClearTagFromStack::Server_Execute(const UFaerieInventoryClient* Client) const
+{
+	auto&& Storage = Handle.ItemStorage.Get();
+	if (!IsValid(Storage)) return;
+	if (!Client->CanAccessStorage(Storage)) return;
+
+	if (auto&& Userdata = Storage->GetExtension<UInventoryUserdataExtension>())
+	{
+		Userdata->ClearTagFromStack(Handle.ItemStorage.Get(), Handle.Key.EntryKey, Tag);
+	}
+}

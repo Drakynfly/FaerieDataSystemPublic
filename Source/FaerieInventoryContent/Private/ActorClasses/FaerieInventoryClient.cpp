@@ -4,7 +4,6 @@
 #include "FaerieEquipmentSlot.h"
 #include "FaerieItemStorage.h"
 #include "Extensions/InventoryEjectionHandlerExtension.h"
-#include "Extensions/InventoryUserdataExtension.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FaerieInventoryClient)
 
@@ -13,7 +12,7 @@ UFaerieInventoryClient::UFaerieInventoryClient()
 	PrimaryComponentTick.bCanEverTick = false;
 }
 
-bool UFaerieInventoryClient::CanAccessContainer(UFaerieItemContainerBase* Container) const
+bool UFaerieInventoryClient::CanAccessContainer(const UFaerieItemContainerBase* Container) const
 {
 	// @todo implement
 	/*
@@ -28,82 +27,64 @@ bool UFaerieInventoryClient::CanAccessContainer(UFaerieItemContainerBase* Contai
 	return true;
 }
 
-bool UFaerieInventoryClient::CanAccessStorage(UFaerieItemStorage* Storage) const
+bool UFaerieInventoryClient::CanAccessStorage(const UFaerieItemStorage* Storage) const
 {
 	return CanAccessContainer(Storage);
 }
 
-bool UFaerieInventoryClient::CanAccessEquipment(UFaerieEquipmentManager* Equipment) const
+bool UFaerieInventoryClient::CanAccessEquipment(const UFaerieEquipmentManager* Equipment) const
 {
 	// @todo implement
 	return true;
 }
 
-bool UFaerieInventoryClient::CanAccessSlot(UFaerieEquipmentSlot* Slot) const
+bool UFaerieInventoryClient::CanAccessSlot(const UFaerieEquipmentSlot* Slot) const
 {
 	return CanAccessContainer(Slot) /** && CanAccessEquipment(Slot->GetOuterManager())*/;
 }
 
-void UFaerieInventoryClient::RequestDeleteEntry_Implementation(const FInventoryKeyHandle Handle, const int32 Amount)
+void UFaerieInventoryClient::RequestExecuteAction_Implementation(const TInstancedStruct<FFaerieClientActionBase>& Args)
+{
+	if (Args.IsValid())
+	{
+		Args.Get().Server_Execute(this);
+	}
+}
+
+void FFaerieClientAction_RequestDeleteEntry::Server_Execute(const UFaerieInventoryClient* Client) const
 {
 	auto&& Storage = Handle.ItemStorage.Get();
 	if (!IsValid(Storage)) return;
-	if (!CanAccessStorage(Storage)) return;
+	if (!Client->CanAccessStorage(Storage)) return;
 
 	Storage->RemoveStack(Handle.Key, FFaerieItemStorageEvents::Get().Removal_Deletion, Amount);
 }
 
-void UFaerieInventoryClient::RequestEjectEntry_Implementation(const FInventoryKeyHandle Handle, const int32 Amount)
+void FFaerieClientAction_RequestEjectEntry::Server_Execute(const UFaerieInventoryClient* Client) const
 {
 	auto&& Storage = Handle.ItemStorage.Get();
 	if (!IsValid(Storage)) return;
-	if (!CanAccessStorage(Storage)) return;
+	if (!Client->CanAccessStorage(Storage)) return;
 
 	Storage->RemoveStack(Handle.Key, FFaerieEjectionEvent::Get().Removal_Ejection, Amount);
 }
 
-void UFaerieInventoryClient::RequestMoveEntry_Implementation(const FInventoryKeyHandle Handle, const int32 Amount,
-															 UFaerieItemStorage* ToStorage)
+void FFaerieClientAction_RequestMoveEntry::Server_Execute(const UFaerieInventoryClient* Client) const
 {
 	auto&& Storage = Handle.ItemStorage.Get();
 	if (!IsValid(Storage)) return;
 	if (!IsValid(ToStorage)) return;
-	if (!CanAccessStorage(Storage)) return;
+	if (!Client->CanAccessStorage(Storage)) return;
 	if (Storage == ToStorage) return;
 
 	Storage->MoveStack(ToStorage, Handle.Key, Amount);
 }
 
-void UFaerieInventoryClient::RequestMarkStackWithTag_Implementation(const FInventoryKeyHandle Handle,
-                                                                    const FFaerieInventoryUserTag Tag)
-{
-	auto&& Storage = Handle.ItemStorage.Get();
-	if (!IsValid(Storage)) return;
-	if (!CanAccessStorage(Storage)) return;
 
-	if (auto&& Userdata = Storage->GetExtension<UInventoryUserdataExtension>())
-	{
-		Userdata->MarkStackWithTag(Handle.ItemStorage.Get(), Handle.Key.EntryKey, Tag);
-	}
-}
-
-void UFaerieInventoryClient::RequestClearTagFromStack_Implementation(const FInventoryKeyHandle Handle,
-                                                                     const FFaerieInventoryUserTag Tag)
-{
-	auto&& Storage = Handle.ItemStorage.Get();
-	if (!IsValid(Storage)) return;
-	if (!CanAccessStorage(Storage)) return;
-
-	if (auto&& Userdata = Storage->GetExtension<UInventoryUserdataExtension>())
-	{
-		Userdata->ClearTagFromStack(Handle.ItemStorage.Get(), Handle.Key.EntryKey, Tag);
-	}
-}
-
-void UFaerieInventoryClient::RequestSetItemInSlot_Implementation(UFaerieEquipmentSlot* Slot, const FFaerieItemStack Stack)
+void FFaerieClientAction_RequestSetItemInSlot::Server_Execute(const UFaerieInventoryClient* Client) const
 {
 	if (!IsValid(Slot)) return;
-	if (!CanAccessSlot(Slot)) return;
+	if (!Client->CanAccessSlot(Slot)) return;
 	if (!Slot->CanSetInSlot(Stack)) return;
 	if (!IsValid(Stack.Item)) return;
 
@@ -113,15 +94,13 @@ void UFaerieInventoryClient::RequestSetItemInSlot_Implementation(UFaerieEquipmen
 	}
 }
 
-void UFaerieInventoryClient::RequestMoveItemBetweenSlots_Implementation(UFaerieEquipmentSlot* FromSlot,
-                                                                        UFaerieEquipmentSlot* ToSlot,
-                                                                        const bool CanSwapSlots)
+void FFaerieClientAction_RequestMoveItemBetweenSlots::Server_Execute(const UFaerieInventoryClient* Client) const
 {
 	// Instant failure states
 	if (!IsValid(FromSlot) ||
 		!IsValid(ToSlot) ||
-		!CanAccessSlot(FromSlot) ||
-		!CanAccessSlot(ToSlot)) return;
+		!Client->CanAccessSlot(FromSlot) ||
+		!Client->CanAccessSlot(ToSlot)) return;
 
 	// If we are not in Swap mode, return if either FromSlot is *not* filled or ToSlot *is* filled.
 	if (!CanSwapSlots &&
@@ -162,17 +141,16 @@ void UFaerieInventoryClient::RequestMoveItemBetweenSlots_Implementation(UFaerieE
 }
 
 
-void UFaerieInventoryClient::RequestMoveEntryToEquipmentSlot_Implementation(const FInventoryKeyHandle Handle,
-																			UFaerieEquipmentSlot* Slot)
+void FFaerieClientAction_RequestMoveEntryToEquipmentSlot::Server_Execute(const UFaerieInventoryClient* Client) const
 {
 	// @todo expose amount as a parameter
 	int32 TempAmount = 1;
 
 	auto&& Storage = Handle.ItemStorage.Get();
 	if (!IsValid(Storage)) return;
-	if (!CanAccessStorage(Storage)) return;
+	if (!Client->CanAccessStorage(Storage)) return;
 	if (!IsValid(Slot)) return;
-	if (!CanAccessSlot(Slot)) return;
+	if (!Client->CanAccessSlot(Slot)) return;
 	if (!Slot->CanSetInSlot(Storage->View(Handle.Key.EntryKey).Resize(TempAmount))) return;
 
 	FFaerieItemStack OutStack;
@@ -187,25 +165,29 @@ void UFaerieInventoryClient::RequestMoveEntryToEquipmentSlot_Implementation(cons
 	}
 }
 
-void UFaerieInventoryClient::RequestMoveEquipmentSlotToInventory_Implementation(UFaerieEquipmentSlot* Slot,
-																				UFaerieItemStorage* ToStorage,
-																				int32 Amount)
+void FFaerieClientAction_RequestMoveEquipmentSlotToInventory::Server_Execute(const UFaerieInventoryClient* Client) const
 {
 	if (!IsValid(Slot)) return;
 	if (!Slot->IsFilled()) return;
-	if (!CanAccessSlot(Slot)) return;
+	if (!Client->CanAccessSlot(Slot)) return;
 	if (!IsValid(ToStorage)) return;
-	if (!CanAccessStorage(ToStorage)) return;
+	if (!Client->CanAccessStorage(ToStorage)) return;
 
-	// We should verify that we can perform this move here first, before we call AddItemStack (event tho it does it too),
+	int32 StackAmount = Amount;
+
+	// We should verify that we can perform this move here first, before we call AddItemStack (even tho it does it too),
 	// Otherwise we would have to remove the Item from the slot, and then add it back again if the Add failed :/
-	if (Amount == Faerie::ItemData::UnlimitedStack)
+	if (StackAmount == Faerie::ItemData::UnlimitedStack)
 	{
-		Amount = Slot->GetCopies();
+		StackAmount = Slot->GetCopies();
 	}
-	if (!ToStorage->CanAddStack({Slot->GetItemObject(), Amount})) return;
 
-	if (const FFaerieItemStack Stack = Slot->TakeItemFromSlot(Amount);
+	if (!ToStorage->CanAddStack({Slot->GetItemObject(), StackAmount}))
+	{
+		return;
+	}
+
+	if (const FFaerieItemStack Stack = Slot->TakeItemFromSlot(StackAmount);
 		IsValid(Stack.Item))
 	{
 		ToStorage->AddItemStack(Stack);

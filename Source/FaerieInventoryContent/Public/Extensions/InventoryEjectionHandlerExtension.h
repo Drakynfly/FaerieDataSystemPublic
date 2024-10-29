@@ -4,7 +4,6 @@
 
 #include "ItemContainerExtensionBase.h"
 #include "FaerieItemStack.h"
-#include "Engine/StreamableManager.h"
 
 #include "InventoryEjectionHandlerExtension.generated.h"
 

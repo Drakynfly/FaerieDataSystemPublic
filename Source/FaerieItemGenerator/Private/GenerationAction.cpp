@@ -59,7 +59,8 @@ void UCraftingActionBase::Finish(const EGenerationActionResult Result)
 	const FDateTime TimeFinished = FDateTime::UtcNow();
 	const FTimespan TimePassed = TimeFinished - TimeStarted;
 
-	switch (Result) {
+	switch (Result)
+	{
 	case EGenerationActionResult::Failed:
 		UE_LOG(LogGenerationAction, Error, TEXT("+==+ Generation Action \"%s\" failed at: %s. Time passed: %s"), *GetName(), *TimeFinished.ToString(), *TimePassed.ToString());
 		break;
@@ -69,7 +70,8 @@ void UCraftingActionBase::Finish(const EGenerationActionResult Result)
 	case EGenerationActionResult::Succeeded:
 		UE_LOG(LogGenerationAction, Log, TEXT("+==+ Generation Action \"%s\" succeeded at: %s. Time passed: %s"), *GetName(), *TimeFinished.ToString(), *TimePassed.ToString());
 		break;
-	default: ; }
+	default: ;
+	}
 #endif
 
 	GetTimerManager().ClearTimer(TimerHandle);
