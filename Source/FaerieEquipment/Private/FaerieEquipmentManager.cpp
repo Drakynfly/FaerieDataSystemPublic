@@ -89,8 +89,8 @@ void UFaerieEquipmentManager::RecalcLocalChecksum()
 	TSet<FFaerieSlotTag> Tags;
 
 	Algo::TransformIf(Slots, Tags,
-		[](const TObjectPtr<UFaerieEquipmentSlot> Slot){ return IsValid(Slot); },
-		[](const TObjectPtr<UFaerieEquipmentSlot> Slot) { return Slot->SlotID; });
+		[](const TObjectPtr<UFaerieEquipmentSlot>& Slot){ return IsValid(Slot); },
+		[](const TObjectPtr<UFaerieEquipmentSlot>& Slot) { return Slot->SlotID; });
 
 	LocalChecksum = UFaerieEquipmentHashing::HashEquipment(this, Tags, &UFaerieEquipmentHashing::ExecHashEquipmentByName);
 

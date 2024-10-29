@@ -54,7 +54,7 @@ public:
 		typename TFaerieItemToken
 		UE_REQUIRES(TIsDerivedFrom<TFaerieItemToken, UFaerieItemToken>::Value)
 	>
-	void ForEachToken(const TFunction<bool(const TFaerieItemToken*)>& Iter) const
+	void ForEachToken(const TFunctionRef<bool(const TFaerieItemToken*)>& Iter) const
 	{
 		for (auto&& Token : Tokens)
 		{
@@ -148,7 +148,7 @@ public:
 	bool IsDataMutable() const;
 
 protected:
-	void OnTokenEdited(UFaerieItemToken* Token);
+	void OnTokenEdited(const UFaerieItemToken* Token);
 
 	void CacheTokenMutability();
 

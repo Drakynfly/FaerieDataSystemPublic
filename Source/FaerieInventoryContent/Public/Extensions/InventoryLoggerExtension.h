@@ -87,7 +87,7 @@ public:
 	FInventoryEventLogged OnInventoryEventLogged;
 
 protected:
-	UFUNCTION()
+	UFUNCTION(/* Replication */)
 	virtual void OnRep_EventLog();
 
 

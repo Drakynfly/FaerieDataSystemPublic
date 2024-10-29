@@ -5,7 +5,7 @@
 
 AItemRepresentationActor::AItemRepresentationActor()
 {
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 	bReplicates = true;
 }
 

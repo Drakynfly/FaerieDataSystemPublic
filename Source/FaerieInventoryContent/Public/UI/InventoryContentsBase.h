@@ -32,10 +32,7 @@ private:
 
 	void CreateActions();
 
-	UFUNCTION()
 	bool ExecFilter(const FFaerieItemProxy& Entry);
-
-	UFUNCTION()
 	bool ExecSort(const FFaerieItemProxy& A, const FFaerieItemProxy& B);
 
 protected:

@@ -10,9 +10,18 @@ UENUM(BlueprintType, Meta = (Bitflags, UseEnumValuesAsMaskValuesInEditor = "true
 enum class ECapacityChecks : uint8
 {
     None    = 0 UMETA(Hidden),
+
+    // Check that the item does not exceed physical dimensions
     Bounds  = 1 << 0,
+
+    // Check that the item does not exceed a maximum weight
     Weight  = 1 << 1,
+
+    // Check that the item does not exceed a maximum volume
     Volume  = 1 << 2,
+
+    // Require items to have a CapacityToken
+    Token   = 1 << 3
 };
 ENUM_CLASS_FLAGS(ECapacityChecks)
 
@@ -42,9 +51,6 @@ struct FCapacityExtensionConfig
 
     UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Capacity Config", meta = (EditCondition = "!DeriveVolumeFromBounds"))
     int64 MaxVolume = 0;
-
-    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Capacity Config")
-    bool AllowEntriesWithNoCapacityToken = false;
 
     bool HasCheck(const ECapacityChecks Check) const
     {
@@ -161,10 +167,10 @@ public:
     FInventoryCapacityEvent OnConfigurationChanged;
 
 protected:
-    UFUNCTION()
+    UFUNCTION(/* Replication */)
     virtual void OnRep_Config();
 
-    UFUNCTION()
+    UFUNCTION(/* Replication */)
     virtual void OnRep_State();
 
 protected:

@@ -55,7 +55,7 @@ protected:
 
 	void CheckLocalChecksum();
 
-	UFUNCTION()
+	UFUNCTION(/* Replication */)
 	void OnRep_ServerChecksum();
 
 public:

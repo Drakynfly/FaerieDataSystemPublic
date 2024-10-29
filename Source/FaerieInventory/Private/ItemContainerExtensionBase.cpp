@@ -184,7 +184,7 @@ void UItemContainerExtensionGroup::PostEntryChanged(const UFaerieItemContainerBa
 		});
 }
 
-void UItemContainerExtensionGroup::ForEachExtension(const TFunction<void(UItemContainerExtensionBase*)>& Func)
+void UItemContainerExtensionGroup::ForEachExtension(const TFunctionRef<void(UItemContainerExtensionBase*)>& Func)
 {
 	for (auto&& Extension : Extensions)
 	{

@@ -112,7 +112,7 @@ public:
 	static FFaerieVisualKey MakeVisualKeyFromProxy(TScriptInterface<IFaerieItemDataProxy> Proxy);
 
 protected:
-	UFUNCTION()
+	UFUNCTION(/* Dynamic Callback */)
 	void OnVisualActorDestroyed(AActor* DestroyedActor);
 
 public:

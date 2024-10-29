@@ -97,6 +97,7 @@ public:
 	FFaerieSlotTag GetSlotID() const { return SlotID; }
 
 	FEquipmentSlotEventNative& GetOnItemChangedNative() { return OnItemChangedNative; }
+	FEquipmentSlotEventNative& GetOnItemDataChangedNative() { return OnItemDataChangedNative; }
 
 	// This checks if the stack could ever be contained by this slot, ignoring its current state.
 	UFUNCTION(BlueprintCallable, Category = "Faerie|EquipmentSlot")
@@ -120,20 +121,16 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Faerie|EquipmentSlot")
 	FFaerieAssetInfo GetSlotInfo() const;
 
+	// Is there currently an item in this slot?
 	UFUNCTION(BlueprintCallable, Category = "Faerie|EquipmentSlot")
 	bool IsFilled() const;
 
 	UFaerieEquipmentSlot* FindSlot(FFaerieSlotTag SlotTag, bool bRecursive) const;
 
 protected:
-	UFUNCTION()
+	UFUNCTION(/* Replication */)
 	void OnRep_Item();
 
-protected:
-	FEquipmentSlotEventNative OnItemChangedNative;
-	FEquipmentSlotEventNative OnItemDataChangedNative;
-
-public:
 	// Broadcast when the item filling this slot is removed, or a new item is set.
 	UPROPERTY(BlueprintAssignable, Category = "Faerie|EquipmentSlot|Events")
 	FEquipmentSlotEvent OnItemChanged;
@@ -142,7 +139,6 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Faerie|EquipmentSlot|Events")
 	FEquipmentSlotEvent OnItemDataChanged;
 
-protected:
 	// Unique ID for this slot.
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Replicated, Category = "Config")
 	FFaerieSlotTag SlotID;
@@ -162,4 +158,7 @@ private:
 	// Incremented each time a new item is stored in this stack. Not changed when stack Copies is edited.
 	UPROPERTY(Replicated)
 	FEntryKey StoredKey;
+
+	FEquipmentSlotEventNative OnItemChangedNative;
+	FEquipmentSlotEventNative OnItemDataChangedNative;
 };

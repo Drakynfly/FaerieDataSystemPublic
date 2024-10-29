@@ -68,7 +68,6 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Faerie|EquipmentHashing")
 	static FBlueprintEquipmentHash GetEquipmentHash_ByName();
 
-	UFUNCTION()
 	static int32 ExecHashEquipmentByName(const UFaerieItem* Item);
 };
 

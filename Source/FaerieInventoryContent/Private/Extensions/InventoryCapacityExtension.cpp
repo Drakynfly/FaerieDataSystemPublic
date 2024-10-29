@@ -264,9 +264,10 @@ bool UInventoryCapacityExtension::CanContain(const FFaerieItemStackView Stack) c
 {
 	auto&& CapacityToken = Stack.Item->GetToken<UFaerieCapacityToken>();
 
-	if (!IsValid(CapacityToken))
+	if (!IsValid(CapacityToken) &&
+		Config.HasCheck(ECapacityChecks::Token))
 	{
-		return Config.AllowEntriesWithNoCapacityToken;
+		return false;
 	}
 
 	return CanContainToken(CapacityToken, Stack.Copies);
@@ -288,9 +289,10 @@ bool UInventoryCapacityExtension::CanContainProxy(const FFaerieItemProxy Proxy) 
 
 	auto&& CapacityToken = ItemObject->GetToken<UFaerieCapacityToken>();
 
-	if (!IsValid(CapacityToken))
+	if (!IsValid(CapacityToken) &&
+		Config.HasCheck(ECapacityChecks::Token))
 	{
-		return Config.AllowEntriesWithNoCapacityToken;
+		return false;
 	}
 
 	const int32 Stack = Proxy->GetCopies();

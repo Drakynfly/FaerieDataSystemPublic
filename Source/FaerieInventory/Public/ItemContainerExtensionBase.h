@@ -93,7 +93,7 @@ public:
 	//~ UItemContainerExtensionBase
 
 private:
-	void ForEachExtension(const TFunction<void(UItemContainerExtensionBase*)>& Func);
+	void ForEachExtension(const TFunctionRef<void(UItemContainerExtensionBase*)>& Func);
 
 public:
 	// Try to add an extension to this storage. This will only fail if the extension pointer is invalid or the extension

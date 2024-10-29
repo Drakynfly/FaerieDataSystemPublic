@@ -249,10 +249,11 @@ Faerie::Inventory::FEventLog UFaerieItemStorage::AddEntryImpl(const FInventoryEn
 	// uniquely mutate from others.
 	if (!InEntry.ItemObject->IsDataMutable())
 	{
-		Event.EntryTouched = QueryFirst(FNativeStorageFilter::CreateLambda([InEntry](const FFaerieItemProxy& Other)
+		Event.EntryTouched = QueryFirst(
+			[InEntry](const FFaerieItemProxy& Other)
 			{
 				return UFaerieItemDataLibrary::Equal_ItemData(InEntry.ItemObject, Other.GetItemObject());
-			})).Key;
+			}).Key;
 	}
 
 	// Execute PreAddition on all extensions
@@ -288,7 +289,7 @@ Faerie::Inventory::FEventLog UFaerieItemStorage::AddEntryImpl(const FInventoryEn
 	return Event;
 }
 
-Faerie::Inventory::FEventLog UFaerieItemStorage::AddEntryFromStackImpl(const FFaerieItemStack InStack)
+Faerie::Inventory::FEventLog UFaerieItemStorage::AddEntryFromStackImpl(const FFaerieItemStack& InStack)
 {
 	FInventoryEntry Entry;
 	Entry.ItemObject = InStack.Item;
@@ -473,11 +474,11 @@ bool UFaerieItemStorage::ContainsItem(const UFaerieItem* Item) const
 
 FEntryKey UFaerieItemStorage::FindItem(const UFaerieItem* Item) const
 {
-	return QueryFirst(FNativeStorageFilter::CreateLambda(
+	return QueryFirst(
 		[Item](const FFaerieItemProxy& Proxy)
 		{
 			return Proxy.GetItemObject() == Item;
-		})).Key;
+		}).Key;
 }
 
 FInventoryKey UFaerieItemStorage::GetFirstKey() const
@@ -545,18 +546,15 @@ void UFaerieItemStorage::GetEntryArray(const TArray<FEntryKey>& Keys, TArray<FIn
 	}
 }
 
-FKeyedInventoryEntry UFaerieItemStorage::QueryFirst(const FNativeStorageFilter& Filter) const
+FKeyedInventoryEntry UFaerieItemStorage::QueryFirst(const FStorateFilterFunc& Filter) const
 {
 	SCOPE_CYCLE_COUNTER(STAT_Storage_QueryFirst);
 
-	if (Filter.IsBound())
+	for (const FKeyedInventoryEntry& Item : EntryMap)
 	{
-		for (const FKeyedInventoryEntry& Item : EntryMap)
+		if (Filter(Proxy(Item.Key)))
 		{
-			if (Filter.Execute(Proxy(Item.Key)))
-			{
-				return Item;
-			}
+			return Item;
 		}
 	}
 
@@ -619,11 +617,11 @@ FEntryKey UFaerieItemStorage::QueryFirst(const FBlueprintStorageFilter& Filter) 
 {
 	if (!Filter.IsBound()) return FEntryKey();
 
-	return QueryFirst(FNativeStorageFilter::CreateLambda(
+	return QueryFirst(
 		[Filter](const FFaerieItemProxy& Proxy)
 		{
 			return Filter.Execute(Proxy);
-		})).Key;
+		}).Key;
 }
 
 void UFaerieItemStorage::QueryAll(const FFaerieItemStorageBlueprintQuery& Query, TArray<FEntryKey>& OutKeys) const

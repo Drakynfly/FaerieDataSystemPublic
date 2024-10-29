@@ -34,6 +34,7 @@ void UFaerieCardTokenBase::OnCardRefreshed()
 		return;
 	}
 
+	PRAGMA_DISABLE_DEPRECATION_WARNINGS
 	ItemToken = nullptr;
 
 	if (auto&& OuterCard = GetTypedOuter<UFaerieCardBase>())
@@ -47,6 +48,12 @@ void UFaerieCardTokenBase::OnCardRefreshed()
 			}
 		}
 	}
+	PRAGMA_ENABLE_DEPRECATION_WARNINGS
 
 	BP_Refresh();
+}
+
+UFaerieCardBase* UFaerieCardTokenBase::GetOwningCard() const
+{
+	return GetTypedOuter<UFaerieCardBase>();
 }

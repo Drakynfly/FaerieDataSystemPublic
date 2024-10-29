@@ -67,7 +67,7 @@ void UFaerieEquipmentSlot::OnItemMutated(const UFaerieItem* InItem, const UFaeri
 	BroadcastDataChange();
 }
 
-FFaerieItemStackView UFaerieEquipmentSlot::View(FEntryKey Key) const
+FFaerieItemStackView UFaerieEquipmentSlot::View(FEntryKey) const
 {
 	return ItemStack;
 }
@@ -77,7 +77,7 @@ FFaerieItemStackView UFaerieEquipmentSlot::View() const
 	return ItemStack;
 }
 
-FFaerieItemProxy UFaerieEquipmentSlot::Proxy(FEntryKey Key) const
+FFaerieItemProxy UFaerieEquipmentSlot::Proxy(FEntryKey) const
 {
 	return this;
 }
@@ -87,7 +87,7 @@ FFaerieItemProxy UFaerieEquipmentSlot::Proxy() const
 	return this;
 }
 
-int32 UFaerieEquipmentSlot::GetStack(const FEntryKey Key) const
+int32 UFaerieEquipmentSlot::GetStack(const FEntryKey) const
 {
 	return ItemStack.Copies;
 }
@@ -159,12 +159,9 @@ bool UFaerieEquipmentSlot::CouldSetInSlot(const FFaerieItemStackView View) const
 {
 	if (!View.Item.IsValid()) return false;
 
-	if (SingleItemSlot)
+	if (SingleItemSlot && View.Copies > 1)
 	{
-		if (IsValid(ItemStack.Item))
-		{
-			return false;
-		}
+		return false;
 	}
 
 	if (Extensions->AllowsAddition(this, View) == EEventExtensionResponse::Disallowed)
@@ -176,6 +173,7 @@ bool UFaerieEquipmentSlot::CouldSetInSlot(const FFaerieItemStackView View) const
 	{
 		return SlotDescription->Template->TryMatch(View);
 	}
+
 	return false;
 }
 
@@ -193,10 +191,7 @@ bool UFaerieEquipmentSlot::CanSetInSlot(const FFaerieItemStackView View) const
 
 		if (SingleItemSlot)
 		{
-			if (IsValid(ItemStack.Item))
-			{
-				return false;
-			}
+			return false;
 		}
 	}
 
@@ -209,6 +204,7 @@ bool UFaerieEquipmentSlot::CanSetInSlot(const FFaerieItemStackView View) const
 	{
 		return SlotDescription->Template->TryMatch(View);
 	}
+
 	return false;
 }
 
@@ -242,7 +238,7 @@ void UFaerieEquipmentSlot::SetItemInSlot(const FFaerieItemStack Stack)
 
 	// If the above check passes, then either the Stack's item is the same as our's, or we are currently empty!
 
-	Extensions->PreAddition(this, {ItemStack.Item, 1});
+	Extensions->PreAddition(this, Stack);
 
 	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, ItemStack, this);
 	// Increment key when stored item changes. This is only going to happen if ItemStack.Item is currently nullptr.

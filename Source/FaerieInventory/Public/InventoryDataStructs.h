@@ -195,7 +195,7 @@ struct FInventoryKey
 USTRUCT(BlueprintType, meta = (Categories = "Fae.Inventory"))
 struct FFaerieInventoryTag : public FGameplayTag
 {
-	GENERATED_BODY(FFaerieInventoryTag)
+	GENERATED_BODY()
 	END_TAG_DECL2(FFaerieInventoryTag, TEXT("Fae.Inventory"))
 };
 

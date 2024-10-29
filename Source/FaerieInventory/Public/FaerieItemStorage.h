@@ -15,6 +15,7 @@ DECLARE_LOG_CATEGORY_EXTERN(LogFaerieItemStorage, Log, All);
 using FEntryKeyEventNative = TMulticastDelegate<void(UFaerieItemStorage*, FEntryKey)>;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FEntryKeyEvent, UFaerieItemStorage*, Storage, FEntryKey, Key);
 
+using FStorateFilterFunc = TFunctionRef<bool(const FFaerieItemProxy&)>;
 using FNativeStorageFilter = TDelegate<bool(const FFaerieItemProxy&)>;
 DECLARE_DYNAMIC_DELEGATE_RetVal_OneParam(bool, FBlueprintStorageFilter, const FFaerieItemProxy&, Proxy);
 
@@ -97,7 +98,7 @@ private:
 
 	// Internal implementations for adding items, in various forms.
 	Faerie::Inventory::FEventLog AddEntryImpl(const FInventoryEntry& InEntry);
-	Faerie::Inventory::FEventLog AddEntryFromStackImpl(FFaerieItemStack InStack);
+	Faerie::Inventory::FEventLog AddEntryFromStackImpl(const FFaerieItemStack& InStack);
 
 	// Internal implementations for removing items, specifying an amount.
 	Faerie::Inventory::FEventLog RemoveFromEntryImpl(FEntryKey Key, int32 Amount, FFaerieInventoryTag Reason);
@@ -173,7 +174,7 @@ public:
 	void GetEntryArray(const TArray<FEntryKey>& Keys, TArray<FInventoryEntry>& Entries) const;
 
 	// Query function to filter for the first matching entry.
-	FKeyedInventoryEntry QueryFirst(const FNativeStorageFilter& Filter) const;
+	FKeyedInventoryEntry QueryFirst(const FStorateFilterFunc& Filter) const;
 
 	// Query function to filter and sort for a subsection of contained entries.
 	void QueryAll(const FFaerieItemStorageNativeQuery& Query, TArray<FKeyedInventoryEntry>& OutKeys) const;

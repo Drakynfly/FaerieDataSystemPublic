@@ -45,13 +45,13 @@ public:
 	// Compare the data of this token to another
 	bool CompareWith(const UFaerieItemToken* FaerieItemToken) const;
 
-	void EditToken(const TFunction<bool(UFaerieItemToken*)>& EditFunc);
+	void EditToken(const TFunctionRef<bool(UFaerieItemToken*)>& EditFunc);
 
 	template <
 		typename TFaerieItemToken
 		UE_REQUIRES(TIsDerivedFrom<TFaerieItemToken, UFaerieItemToken>::Value)
 	>
-	void EditToken(const TFunction<bool(TFaerieItemToken*)>& EditFunc)
+	void EditToken(const TFunctionRef<bool(TFaerieItemToken*)>& EditFunc)
 	{
 		EditToken(EditFunc);
 	}

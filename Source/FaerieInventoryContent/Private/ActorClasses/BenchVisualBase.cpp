@@ -9,7 +9,7 @@
 
 ABenchVisualBase::ABenchVisualBase()
 {
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
 	bReplicates = true;
 	bReplicateUsingRegisteredSubObjectList = true;

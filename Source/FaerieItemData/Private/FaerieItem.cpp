@@ -182,6 +182,8 @@ bool UFaerieItem::FindToken(const TSubclassOf<UFaerieItemToken> Class, UFaerieIt
 	{
 		return false;
 	}
+
+	// @todo This function is breaking const safety ...
 	FoundToken = const_cast<UFaerieItemToken*>(GetToken(Class));
 	return FoundToken != nullptr;
 }
@@ -193,6 +195,8 @@ void UFaerieItem::FindTokens(const TSubclassOf<UFaerieItemToken> Class, TArray<U
 		return;
 	}
 
+	// Can't use GetMutableTokens here because it'd fail to return anything if *this* is not data mutable as a precaution.
+	// @todo This function is breaking const safety anyways...
 	FoundTokens = Type::Cast<TArray<UFaerieItemToken*>>(GetTokens(Class));
 }
 
@@ -260,7 +264,7 @@ int32 UFaerieItem::RemoveTokensByClass(const TSubclassOf<UFaerieItemToken> Class
 
 	if (!ensure(IsInstanceMutable()))
 	{
-		return false;
+		return 0;
 	}
 
 	if (const int32 Removed = Tokens.RemoveAll(
@@ -290,7 +294,7 @@ bool UFaerieItem::IsDataMutable() const
 	return EnumHasAllFlags(MutabilityFlags, EFaerieItemMutabilityFlags::TokenMutability);
 }
 
-void UFaerieItem::OnTokenEdited(UFaerieItemToken* Token)
+void UFaerieItem::OnTokenEdited(const UFaerieItemToken* Token)
 {
 	check(IsDataMutable())
 	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, LastModified, this);
@@ -300,16 +304,24 @@ void UFaerieItem::OnTokenEdited(UFaerieItemToken* Token)
 
 void UFaerieItem::CacheTokenMutability()
 {
-	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, MutabilityFlags, this);
-
+	// If any token has mutable data, mark this item with the TokenMutability flag.
 	for (auto&& Token : Tokens)
 	{
-		if (Token && Token->IsMutable())
+		if (IsValid(Token) && Token->IsMutable())
 		{
-			EnumAddFlags(MutabilityFlags, EFaerieItemMutabilityFlags::TokenMutability);
+			if (!EnumHasAnyFlags(MutabilityFlags, EFaerieItemMutabilityFlags::TokenMutability))
+			{
+				MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, MutabilityFlags, this);
+				EnumAddFlags(MutabilityFlags, EFaerieItemMutabilityFlags::TokenMutability);
+			}
 			return;
 		}
 	}
 
-	EnumRemoveFlags(MutabilityFlags, EFaerieItemMutabilityFlags::TokenMutability);
+	// Otherwise, make sure we *don't* have that flag.
+	if (EnumHasAnyFlags(MutabilityFlags, EFaerieItemMutabilityFlags::TokenMutability))
+	{
+		MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, MutabilityFlags, this);
+		EnumRemoveFlags(MutabilityFlags, EFaerieItemMutabilityFlags::TokenMutability);
+	}
 }

@@ -47,7 +47,7 @@ bool UFaerieItemToken::CompareWith(const UFaerieItemToken* FaerieItemToken) cons
 	return CompareWithImpl(FaerieItemToken);
 }
 
-void UFaerieItemToken::EditToken(const TFunction<bool(UFaerieItemToken*)>& EditFunc)
+void UFaerieItemToken::EditToken(const TFunctionRef<bool(UFaerieItemToken*)>& EditFunc)
 {
 	if (EditFunc(this))
 	{
