@@ -18,3 +18,9 @@ struct TAutoDelegate
 
 // Convert a Blueprint delegate to a TScriptDelegate
 #define DYNAMIC_TO_SCRIPT(Callback) TAutoDelegate<TScriptDelegate<>>(const_cast<UObject*>(Callback.GetUObject()), Callback.GetFunctionName()).Delegate
+
+// Convert a Blueprint delegate to a native delegate
+#define DYNAMIC_TO_NATIVE(Function) [Dynamic_Delegate = Function](auto... Args)\
+	{\
+	return Dynamic_Delegate.Execute(Args...);\
+	}

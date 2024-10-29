@@ -19,13 +19,3 @@ struct FFaerieEquipmentHash
 
 	friend bool operator!=(const FFaerieEquipmentHash& Lhs, const FFaerieEquipmentHash& Rhs) { return !(Lhs == Rhs); }
 };
-
-UCLASS()
-class UFaerieEquipmentHashLibrary : public UBlueprintFunctionLibrary
-{
-	GENERATED_BODY()
-
-public:
-	UFUNCTION(BlueprintPure, Category = "Faerie|EquipmentHash")
-	static int64 BreakEquipmentHash(const FFaerieEquipmentHash Hash) { return Hash.Hash; }
-};

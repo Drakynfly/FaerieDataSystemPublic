@@ -1,7 +1,7 @@
 ﻿// Copyright Guy (Drakynfly) Lundvall. All Rights Reserved.
 
 #include "EquipmentHashAsset.h"
-#include "EquipmentHashing.h"
+#include "EquipmentHashStatics.h"
 #include "UObject/ObjectSaveContext.h"
 #include "Squirrel.h"
 

@@ -1,7 +1,7 @@
 ﻿// Copyright Guy (Drakynfly) Lundvall. All Rights Reserved.
 
 #include "FaerieEquipmentManager.h"
-#include "EquipmentHashing.h"
+#include "EquipmentHashStatics.h"
 #include "FaerieEquipmentSlot.h"
 #include "FaerieItemStorage.h"
 #include "ItemContainerExtensionBase.h"
@@ -92,7 +92,7 @@ void UFaerieEquipmentManager::RecalcLocalChecksum()
 		[](const TObjectPtr<UFaerieEquipmentSlot>& Slot){ return IsValid(Slot); },
 		[](const TObjectPtr<UFaerieEquipmentSlot>& Slot) { return Slot->SlotID; });
 
-	LocalChecksum = UFaerieEquipmentHashing::HashEquipment(this, Tags, &UFaerieEquipmentHashing::ExecHashEquipmentByName);
+	LocalChecksum = Faerie::Hash::HashEquipment(this, Tags, &Faerie::Hash::HashItemByName);
 
 	UE_LOG(LogEquipmentManager, Log, TEXT("New LocalChecksum: [%i]"), LocalChecksum.Hash);
 
