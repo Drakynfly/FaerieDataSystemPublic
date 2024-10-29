@@ -33,9 +33,9 @@ public:
 	virtual void ReadyForReplication() override;
 	//~ UActorComponent
 
-	void PostEntryAdded(UFaerieItemStorage* Storage, FEntryKey Key);
-	void PostEntryChanged(UFaerieItemStorage* Storage, FEntryKey Key);
-	void PreEntryRemoved(UFaerieItemStorage* Storage, FEntryKey Key);
+	virtual void PostEntryAdded(UFaerieItemStorage* Storage, FEntryKey Key);
+	virtual void PostEntryChanged(UFaerieItemStorage* Storage, FEntryKey Key);
+	virtual void PreEntryRemoved(UFaerieItemStorage* Storage, FEntryKey Key);
 
 
 	/**------------------------------*/

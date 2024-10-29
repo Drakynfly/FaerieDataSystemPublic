@@ -157,7 +157,7 @@ void UFaerieItemStorage::PostContentChanged(const FKeyedInventoryEntry& Entry)
 	}
 	else
 	{
-		// Do nothing, PreContentRemoved should handle this . . .
+		// Do nothing, PreContentRemoved should handle this ...
 	}
 }
 
@@ -261,7 +261,7 @@ Faerie::Inventory::FEventLog UFaerieItemStorage::AddEntryImpl(const FInventoryEn
 
 	TArray<FStackKey> StacksTouched;
 
-	// Try to fill up the stacks of an existing entry first, before creating a new entry.
+	// Try to fill up the stacks of existing entries first, before creating a new entry.
 	if (Event.EntryTouched.IsValid())
 	{
 		const FInventoryContent::FScopedItemHandle& Entry = EntryMap.GetHandle(Event.EntryTouched);
@@ -547,7 +547,7 @@ void UFaerieItemStorage::GetEntryArray(const TArray<FEntryKey>& Keys, TArray<FIn
 	}
 }
 
-FKeyedInventoryEntry UFaerieItemStorage::QueryFirst(const FStorateFilterFunc& Filter) const
+FKeyedInventoryEntry UFaerieItemStorage::QueryFirst(const FStorageFilterFunc& Filter) const
 {
 	SCOPE_CYCLE_COUNTER(STAT_Storage_QueryFirst);
 
@@ -674,7 +674,8 @@ bool UFaerieItemStorage::CanAddStack(const FFaerieItemStackView Stack) const
 		}
 	}
 
-	switch (Extensions->AllowsAddition(this, Stack)) {
+	switch (Extensions->AllowsAddition(this, Stack))
+	{
 	case EEventExtensionResponse::NoExplicitResponse:
 	case EEventExtensionResponse::Allowed:				return true;
 	case EEventExtensionResponse::Disallowed:			return false;
@@ -693,7 +694,8 @@ bool UFaerieItemStorage::CanRemoveEntry(const FEntryKey Key, const FFaerieInvent
 	// By default, some removal reasons are allowed, unless an extension explicitly disallows it.
 	const bool DefaultAllowed = FFaerieItemStorageEvents::Get().RemovalTagsAllowedByDefault.Contains(Reason);
 
-	switch (Extensions->AllowsRemoval(this, Key, Reason)) {
+	switch (Extensions->AllowsRemoval(this, Key, Reason))
+	{
 	case EEventExtensionResponse::NoExplicitResponse:	return DefaultAllowed;
 	case EEventExtensionResponse::Allowed:				return true;
 	case EEventExtensionResponse::Disallowed:			return false;

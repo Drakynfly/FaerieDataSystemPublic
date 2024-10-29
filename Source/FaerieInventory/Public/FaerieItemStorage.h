@@ -15,7 +15,7 @@ DECLARE_LOG_CATEGORY_EXTERN(LogFaerieItemStorage, Log, All);
 using FEntryKeyEventNative = TMulticastDelegate<void(UFaerieItemStorage*, FEntryKey)>;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FEntryKeyEvent, UFaerieItemStorage*, Storage, FEntryKey, Key);
 
-using FStorateFilterFunc = TFunctionRef<bool(const FFaerieItemProxy&)>;
+using FStorageFilterFunc = TFunctionRef<bool(const FFaerieItemProxy&)>;
 using FNativeStorageFilter = TDelegate<bool(const FFaerieItemProxy&)>;
 DECLARE_DYNAMIC_DELEGATE_RetVal_OneParam(bool, FBlueprintStorageFilter, const FFaerieItemProxy&, Proxy);
 
@@ -104,7 +104,7 @@ private:
 	Faerie::Inventory::FEventLog RemoveFromEntryImpl(FEntryKey Key, int32 Amount, FFaerieInventoryTag Reason);
 	Faerie::Inventory::FEventLog RemoveFromStackImpl(FInventoryKey Key, int32 Amount, FFaerieInventoryTag Reason);
 
-	// FastArray API; used to replicate array changes to client
+	// FastArray API; used to replicate array changes clientside
 	void PostContentAdded(const FKeyedInventoryEntry& Entry);
 	void PostContentChanged(const FKeyedInventoryEntry& Entry);
 	void PreContentRemoved(const FKeyedInventoryEntry& Entry);
@@ -120,7 +120,7 @@ public:
 
 	FConstStructView GetEntryView(FEntryKey Key) const;
 
-	// Convert a entry key into an array of Inventory Keys.
+	// Convert an entry key into an array of Inventory Keys.
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Storage|Key")
 	TArray<FInventoryKey> GetInvKeysForEntry(FEntryKey Key) const;
 
@@ -128,7 +128,7 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Storage|Key")
 	void GetAllKeys(TArray<FEntryKey>& Keys) const;
 
-	// Retrieve number of entries in storage.
+	// Retrieve the number of entries in storage.
 	UFUNCTION(BlueprintCallable, Category = "Storage|Key")
     int32 GetStackCount() const;
 
@@ -144,7 +144,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Storage|Key")
 	FEntryKey FindItem(const UFaerieItem* Item) const;
 
-	// Utility function mainly used with inventories that are expected to only contain a single entry, e.g, pickups.
+	// Utility function mainly used with inventories that are expected to only contain a single entry, e.g., pickups.
 	UFUNCTION(BlueprintCallable, Category = "Storage|Key")
 	FInventoryKey GetFirstKey() const;
 
@@ -174,7 +174,7 @@ public:
 	void GetEntryArray(const TArray<FEntryKey>& Keys, TArray<FInventoryEntry>& Entries) const;
 
 	// Query function to filter for the first matching entry.
-	FKeyedInventoryEntry QueryFirst(const FStorateFilterFunc& Filter) const;
+	FKeyedInventoryEntry QueryFirst(const FStorageFilterFunc& Filter) const;
 
 	// Query function to filter and sort for a subsection of contained entries.
 	void QueryAll(const FFaerieItemStorageNativeQuery& Query, TArray<FKeyedInventoryEntry>& OutKeys) const;
@@ -213,7 +213,7 @@ public:
 	bool AddItemStack(FFaerieItemStack ItemStack);
 
 	/**
-	 * Removes the entry with this key, if it exists.
+	 * Removes the entry with this key if it exists.
 	 * An amount of -1 will remove the entire stack.
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Storage", BlueprintAuthorityOnly)
@@ -221,7 +221,7 @@ public:
 		UPARAM(meta = (Categories = "Fae.Inventory.Removal")) FGameplayTag RemovalTag, const int32 Amount = -1);
 
 	/**
-	 * Removes the entry with this key, if it exists.
+	 * Removes the entry with this key if it exists.
 	 * An amount of -1 will remove the entire stack.
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Storage", BlueprintAuthorityOnly)
@@ -229,7 +229,7 @@ public:
 		UPARAM(meta = (Categories = "Fae.Inventory.Removal")) FGameplayTag RemovalTag, const int32 Amount = -1);
 
 	/**
-	 * Removes and returns the entry with this key, if it exists.
+	 * Removes and returns the entry with this key if it exists.
 	 * An amount of -1 will remove the entire stack.
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Storage", BlueprintAuthorityOnly)
@@ -237,7 +237,7 @@ public:
 		UPARAM(meta = (Categories = "Fae.Inventory.Removal")) FGameplayTag RemovalTag, const int32 Amount = -1);
 
 	/**
-	 * Removes and returns the entry with this key, if it exists.
+	 * Removes and returns the entry with this key if it exists.
 	 * An amount of -1 will remove the entire stack.
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Storage", BlueprintAuthorityOnly)
@@ -297,7 +297,7 @@ private:
 	// These properties are transient, mainly so that editor code that calls accesses them don't need to worry about Caches
 	// being left around. Using weak pointers here is intentional. We don't want this storage to keep these alive. They
 	// should be stored in a strong pointer by whatever requested them, and once nothing needs the proxies, they will die.
-	// #todo how will these maps get cleaned up, to they don't acrue hundred of stale ptrs?
+	// #todo how will these maps get cleaned up, to they don't accrue hundred of stale ptrs?
 
 	// Locally stored proxies per individual stack.
 	UPROPERTY(Transient)
