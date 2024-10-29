@@ -16,7 +16,7 @@
  * members Key, and Value. The Key type must have operator< implemented.
  */
 template <typename TArrayType, typename TElementType>
-struct FAERIEINVENTORY_API TBinarySearchOptimizedArray
+struct TBinarySearchOptimizedArray
 {
 	using BSOA = TBinarySearchOptimizedArray;
 	using KeyType = decltype(TElementType::Key);
@@ -30,7 +30,7 @@ public:
 	int32 IndexOf(const KeyType Key) const
 	{
 		// Search for Key in the Items. Since those do not share Type, a projection is provided, in the form of the address
-		// of the appropriate member to compare against. Finally the custom Predicate is provided.
+		// of the appropriate member to compare against. Finally, the custom Predicate is provided.
 		return Algo::BinarySearchBy(GetArray_Internal(), Key, &TElementType::Key);
 	}
 
@@ -89,7 +89,7 @@ public:
 	 * Performs a binary search to find where to insert this new key. Needed when Key is not guaranteed to be sequential,
 	 * otherwise, a simple Add would suffice.
 	 * In performance-critical code it would be slower to use Insert when adding multiple items in one scope, better would
-	 * be to simple Add/Emplace, and call Sort once aafterwards.
+	 * be to simply Add/Emplace, and call Sort once afterwards.
 	 */
 	TElementType& Insert(const TElementType& Element)
 	{
@@ -107,7 +107,7 @@ public:
 			}
 		}
 
-		// Otherwise, we were given a key not present and we should insert the Entry at the Index.
+		// Otherwise, we were given a key not present, and we should insert the Entry at the Index.
 		return GetArray_Internal().Insert_GetRef(Element, NextIndex);
 	}
 
