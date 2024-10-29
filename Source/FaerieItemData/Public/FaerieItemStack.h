@@ -5,7 +5,6 @@
 #include "FaerieItemStack.generated.h"
 
 class UFaerieItem;
-class IFaerieItemOwnerInterface;
 
 namespace Faerie::ItemData
 {
