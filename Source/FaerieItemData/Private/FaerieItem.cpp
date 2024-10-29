@@ -176,6 +176,65 @@ TArray<UFaerieItemToken*> UFaerieItem::GetMutableTokens(const TSubclassOf<UFaeri
 	return OutTokens;
 }
 
+bool UFaerieItem::CompareWith(const UFaerieItem* Other) const
+{
+	// If we are the same object, then we already know we're identical
+	if (this == Other)
+	{
+		return true;
+	}
+
+	// If either is mutable then they are considered "unequivocable" and therefor, mutually exclusive.
+	if (IsDataMutable() || Other->IsDataMutable())
+	{
+		return false;
+	}
+
+	// Resort to comparing tokens ...
+	const TConstArrayView<TObjectPtr<UFaerieItemToken>> TokensA = GetTokens();
+	const TConstArrayView<TObjectPtr<UFaerieItemToken>> TokensB = Other->GetTokens();
+
+	// This already indicates they are not equal.
+	if (TokensA.Num() != TokensB.Num())
+	{
+		return false;
+	}
+
+	TMap<UClass*, TObjectPtr<UFaerieItemToken>> TokenMapA;
+
+	// Get the classes of tokens in A
+	for (auto&& Token : TokensA)
+	{
+		TokenMapA.Add(Token.GetClass(), Token);
+	}
+
+	TArray<TPair<TObjectPtr<UFaerieItemToken>, TObjectPtr<UFaerieItemToken>>> TokenPairs;
+
+	// Check that for every token in A, there is one that matches class in B
+	for (auto&& TokenB : TokensB)
+	{
+		auto&& TokenA = TokenMapA.Find(TokenB.GetClass());
+
+		if (TokenA == nullptr)
+		{
+			return false;
+		}
+
+		TokenPairs.Add({*TokenA, TokenB});
+	}
+
+	for (auto&& [AToken, BToken] : TokenPairs)
+	{
+		if (!AToken->CompareWith(BToken))
+		{
+			return false;
+		}
+	}
+
+	// They are equal then :)
+	return true;
+}
+
 bool UFaerieItem::FindToken(const TSubclassOf<UFaerieItemToken> Class, UFaerieItemToken*& FoundToken) const
 {
 	if (!IsValid(Class))

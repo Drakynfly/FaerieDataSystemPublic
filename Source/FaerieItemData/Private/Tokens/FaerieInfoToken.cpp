@@ -12,11 +12,11 @@ void UFaerieInfoToken::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME_CONDITION(ThisClass, Info, COND_InitialOnly);
 }
 
-bool UFaerieInfoToken::CompareWithImpl(const UFaerieItemToken* FaerieItemToken) const
+bool UFaerieInfoToken::CompareWithImpl(const UFaerieItemToken* Other) const
 {
-	if (auto&& Other = Cast<UFaerieInfoToken>(FaerieItemToken))
+	if (auto&& AsInfo = CastChecked<UFaerieInfoToken>(Other))
 	{
-		if (!Info.ObjectName.IdenticalTo(Other->Info.ObjectName))
+		if (!Info.ObjectName.IdenticalTo(AsInfo->Info.ObjectName))
 		{
 			return false;
 		}

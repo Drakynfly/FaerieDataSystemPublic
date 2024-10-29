@@ -3,7 +3,6 @@
 #include "FaerieItemStorage.h"
 
 #include "FaerieItem.h"
-#include "FaerieItemDataLibrary.h"
 #include "InventoryStorageProxy.h"
 #include "ItemContainerExtensionBase.h"
 #include "Net/UnrealNetwork.h"
@@ -252,7 +251,7 @@ Faerie::Inventory::FEventLog UFaerieItemStorage::AddEntryImpl(const FInventoryEn
 		Event.EntryTouched = QueryFirst(
 			[InEntry](const FFaerieItemProxy& Other)
 			{
-				return UFaerieItemDataLibrary::Equal_ItemData(InEntry.ItemObject, Other.GetItemObject());
+				return InEntry.ItemObject->CompareWith(Other.GetItemObject());
 			}).Key;
 	}
 

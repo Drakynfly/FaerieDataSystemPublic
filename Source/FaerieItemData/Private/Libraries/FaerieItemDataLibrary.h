@@ -12,7 +12,7 @@ class UFaerieItemToken;
  *
  */
 UCLASS()
-class FAERIEITEMDATA_API UFaerieItemDataLibrary : public UBlueprintFunctionLibrary
+class UFaerieItemDataLibrary : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 

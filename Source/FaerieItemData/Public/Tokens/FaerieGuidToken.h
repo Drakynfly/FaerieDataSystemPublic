@@ -16,9 +16,9 @@ class FAERIEITEMDATA_API UFaerieGuidToken : public UFaerieItemToken
 	GENERATED_BODY()
 
 protected:
-	virtual bool CompareWithImpl(const UFaerieItemToken* FaerieItemToken) const override
+	virtual bool CompareWithImpl(const UFaerieItemToken* Other) const override
 	{
-		return Cast<ThisClass>(FaerieItemToken)->Guid == Guid;
+		return CastChecked<ThisClass>(Other)->Guid == Guid;
 	}
 
 public:

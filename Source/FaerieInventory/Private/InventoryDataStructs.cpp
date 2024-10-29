@@ -2,8 +2,6 @@
 
 // ReSharper disable CppMemberFunctionMayBeConst
 #include "InventoryDataStructs.h"
-
-#include "FaerieItemDataLibrary.h"
 #include "FaerieItemStorage.h"
 #include "HAL/LowLevelMemStats.h"
 
@@ -196,9 +194,9 @@ bool FInventoryEntry::IsEqualTo(const FInventoryEntry& A, const FInventoryEntry&
 #define TEST_FLAG(Flag, Test)\
 	if (EnumHasAnyFlags(CheckFlags, EEntryEquivalencyFlags::Test_##Flag)) if (!(Test)) return false;
 
-	TEST_FLAG(ItemData, UFaerieItemDataLibrary::Equal_ItemData(A.ItemObject, B.ItemObject));
-	TEST_FLAG(StackSum, A.StackSum() == B.StackSum());
 	TEST_FLAG(Limit, A.Limit == B.Limit);
+	TEST_FLAG(StackSum, A.StackSum() == B.StackSum());
+	TEST_FLAG(ItemData, A.ItemObject->CompareWith(B.ItemObject));
 
 #undef TEST_FLAG
 

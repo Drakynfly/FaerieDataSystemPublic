@@ -117,6 +117,8 @@ public:
 		return Type::Cast<TArray<TFaerieItemToken*>>(GetMutableTokens(TFaerieItemToken::StaticClass()));
 	}
 
+	bool CompareWith(const UFaerieItem* Other) const;
+
 protected:
 	// @todo this isn't const safe
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "FaerieItem", meta = (DeterminesOutputType = Class, DynamicOutputParam = FoundToken, ExpandBoolAsExecs = ReturnValue))

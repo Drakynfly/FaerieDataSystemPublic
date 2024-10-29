@@ -18,12 +18,12 @@ class FAERIEITEMDATA_API UFaerieTagToken : public UFaerieItemToken
 protected:
 	/**
 	 * As noted in the parent class, this function rarely needs to be implemented. In this case, gameplay tags might
-	 * be being used to distinguish otherwise identical items stacks, even for items with the same name, e.g, giving one
-	 * item a "quest"-type tag, should make it stack seperately from others like it.
+	 * be being used to distinguish otherwise identical items stacks, even for items with the same name, e.g., giving one
+	 * item a "quest"-type tag, should make it stack separately from others like it.
 	 */
-	virtual bool CompareWithImpl(const UFaerieItemToken* FaerieItemToken) const override
+	virtual bool CompareWithImpl(const UFaerieItemToken* Other) const override
 	{
-		return Cast<ThisClass>(FaerieItemToken)->Tags == Tags;
+		return CastChecked<ThisClass>(Other)->Tags == Tags;
 	}
 
 public:

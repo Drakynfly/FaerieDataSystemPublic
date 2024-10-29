@@ -8,7 +8,7 @@ bool UFaerieItemToken::IsMutable() const
 	return false;
 }
 
-bool UFaerieItemToken::CompareWithImpl(const UFaerieItemToken* FaerieItemToken) const
+bool UFaerieItemToken::CompareWithImpl(const UFaerieItemToken* Other) const
 {
 	return true;
 }
@@ -35,16 +35,16 @@ UFaerieItem* UFaerieItemToken::GetOuterItem() const
 	return GetTypedOuter<UFaerieItem>();
 }
 
-bool UFaerieItemToken::CompareWith(const UFaerieItemToken* FaerieItemToken) const
+bool UFaerieItemToken::CompareWith(const UFaerieItemToken* Other) const
 {
 	// Auto-success if we are the same pointer
-	if (this == FaerieItemToken) return true;
+	if (this == Other) return true;
 
 	// Auto-failure for not matching classes
-	if (!IsValid(FaerieItemToken) || !FaerieItemToken->IsA(GetClass())) return false;
+	if (!IsValid(Other) || !Other->IsA(GetClass())) return false;
 
 	// Run child-implemented data comparison
-	return CompareWithImpl(FaerieItemToken);
+	return CompareWithImpl(Other);
 }
 
 void UFaerieItemToken::EditToken(const TFunctionRef<bool(UFaerieItemToken*)>& EditFunc)

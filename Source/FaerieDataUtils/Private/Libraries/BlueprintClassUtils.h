@@ -9,7 +9,7 @@
  *
  */
 UCLASS()
-class FAERIEDATAUTILS_API UBlueprintClassUtils : public UBlueprintFunctionLibrary
+class UBlueprintClassUtils : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 

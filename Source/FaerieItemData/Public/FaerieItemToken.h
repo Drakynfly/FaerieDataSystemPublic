@@ -32,7 +32,7 @@ protected:
 	 * Further note that any token that is mutable is automatically dissimilar even if it is data-wise identical, so it
 	 * is meaningless to implement this in that case.
 	 */
-	virtual bool CompareWithImpl(const UFaerieItemToken* FaerieItemToken) const;
+	virtual bool CompareWithImpl(const UFaerieItemToken* Other) const;
 
 	// Are we in an item that is mutable?
 	bool IsOuterItemMutable() const;
@@ -43,7 +43,7 @@ public:
 	UFaerieItem* GetOuterItem() const;
 
 	// Compare the data of this token to another
-	bool CompareWith(const UFaerieItemToken* FaerieItemToken) const;
+	bool CompareWith(const UFaerieItemToken* Other) const;
 
 	void EditToken(const TFunctionRef<bool(UFaerieItemToken*)>& EditFunc);
 
