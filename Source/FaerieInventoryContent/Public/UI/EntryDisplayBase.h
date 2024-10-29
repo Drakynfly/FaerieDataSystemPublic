@@ -3,10 +3,11 @@
 #pragma once
 
 #include "InventoryUIAction.h"
-#include "LocalInventoryEntryCache.h"
 #include "Blueprint/IUserObjectListEntry.h"
 #include "Blueprint/UserWidget.h"
 #include "EntryDisplayBase.generated.h"
+
+class UInventoryStackProxy;
 
 /**
  * Responsible for displaying a single inventory entry in an entry list widget.

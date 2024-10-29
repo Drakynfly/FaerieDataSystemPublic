@@ -4,8 +4,8 @@
 
 #include "FaerieItem.h"
 #include "FaerieItemDataLibrary.h"
+#include "InventoryStorageProxy.h"
 #include "ItemContainerExtensionBase.h"
-#include "LocalInventoryEntryCache.h"
 #include "Net/UnrealNetwork.h"
 #include "Tokens/FaerieItemStorageToken.h"
 #include "Tokens/FaerieStackLimiterToken.h"
@@ -520,7 +520,8 @@ bool UFaerieItemStorage::GetProxyForEntry(const FInventoryKey Key, UInventorySta
 	Entry = NewObject<UInventoryStackProxy>(this, UInventoryStackProxy::StaticClass(), ProxyName);
 	check(IsValid(Entry));
 
-	Entry->Handle = FInventoryKeyHandle{this, Key};
+	Entry->ItemStorage = this;
+	Entry->Key = Key;
 	Entry->NotifyCreation();
 
 	LocalCachedEntries.Add(Key, Entry);

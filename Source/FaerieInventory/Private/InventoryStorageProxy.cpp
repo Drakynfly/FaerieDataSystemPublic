@@ -1,11 +1,11 @@
 // Copyright Guy (Drakynfly) Lundvall. All Rights Reserved.
 
-#include "LocalInventoryEntryCache.h"
+#include "InventoryStorageProxy.h"
 #include "FaerieItem.h"
 #include "FaerieItemStorage.h"
 #include "Logging.h"
 
-#include UE_INLINE_GENERATED_CPP_BY_NAME(LocalInventoryEntryCache)
+#include UE_INLINE_GENERATED_CPP_BY_NAME(InventoryStorageProxy)
 
 TArray<FKeyedStack> UInventoryEntryProxyBase::GetAllStacks() const
 {
@@ -94,12 +94,14 @@ void UInventoryEntryStorageProxy::NotifyCreation()
 void UInventoryEntryStorageProxy::NotifyUpdate()
 {
 	LocalItemVersion++;
+	OnCacheUpdatedNative.Broadcast(this);
 	OnCacheUpdated.Broadcast(this);
 }
 
 void UInventoryEntryStorageProxy::NotifyRemoval()
 {
 	LocalItemVersion = -1;
+	OnCacheRemovedNative.Broadcast(this);
 	OnCacheRemoved.Broadcast(this);
 }
 
@@ -121,11 +123,6 @@ bool UInventoryEntryStorageProxy::VerifyStatus() const
 	return true;
 }
 
-UFaerieItemStorage* UInventoryEntryProxy::GetStorage() const
-{
-	return ItemStorage.Get();
-}
-
 FEntryKey UInventoryEntryProxy::GetKey() const
 {
 	return Key;
@@ -138,21 +135,21 @@ int32 UInventoryStackProxy::GetCopies() const
 		return 0;
 	}
 
-	const FConstStructView EntryView = Handle.ItemStorage->GetEntryView(Handle.Key.EntryKey);
+	const FConstStructView EntryView = ItemStorage->GetEntryView(Key.EntryKey);
 	if (!ensure(EntryView.IsValid()))
 	{
 		return 0;
 	}
 
-	return EntryView.Get<const FInventoryEntry>().GetStack(Handle.Key.StackKey);
-}
-
-UFaerieItemStorage* UInventoryStackProxy::GetStorage() const
-{
-	return Handle.ItemStorage.Get();
+	return EntryView.Get<const FInventoryEntry>().GetStack(Key.StackKey);
 }
 
 FEntryKey UInventoryStackProxy::GetKey() const
 {
-	return Handle.Key.EntryKey;
+	return Key.EntryKey;
+}
+
+FInventoryKeyHandle UInventoryStackProxy::GetHandle() const
+{
+	return { ItemStorage, Key };
 }
