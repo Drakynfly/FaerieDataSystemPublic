@@ -12,7 +12,7 @@ struct FFaerieItemMaterial;
  *
  */
 UCLASS()
-class FAERIEITEMMESH_API UFaerieMeshStructsLibrary : public UBlueprintFunctionLibrary
+class UFaerieMeshStructsLibrary : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 

@@ -2,9 +2,9 @@
 
 #include "Components/FaerieItemMeshComponent.h"
 #include "FaerieMeshStructs.h"
-#include "FaerieMeshStructsLibrary.h"
 #include "Components/DynamicMeshComponent.h"
 #include "GeometryScript/MeshQueryFunctions.h"
+#include "Libraries/FaerieMeshStructsLibrary.h"
 
 UFaerieItemMeshComponent::UFaerieItemMeshComponent()
 {
