@@ -114,7 +114,7 @@ void UFaerieItemCraftingSubsystem::SubmitUpgradeRequest(const FUpgradeRequest& R
 	Args.UpgradeConfig = Request.Config;
 	Args.ItemBeingUpgraded = Request.ItemProxy;
 
-	const FConstStructView SlotsView = UFaerieItemSlotLibrary::GetCraftingSlotsFromInterface(Request.Config);
+	const FFaerieCraftingSlotsView SlotsView = Faerie::Crafting::GetCraftingSlots(Request.Config);
 	const FFaerieItemCraftingSlots& SlotsPtr = SlotsView.Get<const FFaerieItemCraftingSlots>();
 
 	for (auto&& RequiredSlot : SlotsPtr.RequiredSlots)
@@ -206,7 +206,7 @@ void UFaerieItemCraftingSubsystem::SubmitCraftingRequest_Impl(const FCraftingReq
 	Args.CraftConfig = Request.Config;
 	Args.RunConsumeStep = !Preview;
 
-	if (const FConstStructView SlotsView = UFaerieItemSlotLibrary::GetCraftingSlotsFromInterface(Request.Config);
+	if (const FFaerieCraftingSlotsView SlotsView = Faerie::Crafting::GetCraftingSlots(Request.Config);
 		SlotsView.IsValid())
 	{
 		const FFaerieItemCraftingSlots& Slots = SlotsView.Get<const FFaerieItemCraftingSlots>();

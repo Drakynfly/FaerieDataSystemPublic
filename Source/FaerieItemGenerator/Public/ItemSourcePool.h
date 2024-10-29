@@ -5,7 +5,7 @@
 #include "FaerieAssetInfo.h"
 #include "UObject/Object.h"
 #include "FaerieItemSource.h"
-#include "GenerationStructsLibrary.h"
+#include "GenerationStructs.h"
 
 #include "ItemSourcePool.generated.h"
 

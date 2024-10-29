@@ -6,7 +6,7 @@
 #include "InstancedStruct.h"
 #include "ItemSlotHandle.h"
 
-#include "GenerationStructsLibrary.generated.h"
+#include "GenerationStructs.generated.h"
 
 USTRUCT(BlueprintType)
 struct FRecursiveTableDrop

@@ -2,8 +2,8 @@
 
 #pragma once
 
-#include "FaerieItemSlotUtils.h"
 #include "CraftingActionConfig.h"
+#include "FaerieItemSlotInterface.h"
 #include "ItemCraftingConfig.generated.h"
 
 class UFaerieItemRecipe;
@@ -25,7 +25,7 @@ class FAERIEITEMGENERATOR_API UItemCraftingConfig : public UCraftingActionConfig
 #endif
 
 public:
-	virtual FConstStructView GetCraftingSlots() const override;
+	virtual FFaerieCraftingSlotsView GetCraftingSlots() const override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Crafting Config")
 	TObjectPtr<UFaerieItemRecipe> Recipe;

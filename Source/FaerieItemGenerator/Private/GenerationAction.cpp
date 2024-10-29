@@ -5,10 +5,11 @@
 #include "FaerieItem.h"
 #include "FaerieItemDataProxy.h"
 #include "FaerieItemCraftingSubsystem.h"
-#include "FaerieItemSlotUtils.h"
 #include "Algo/ForEach.h"
 #include "Engine/AssetManager.h"
 #include "DelegateCommon.h"
+#include "FaerieItemSlotInterface.h"
+#include "FaerieItemTemplate.h"
 #include "Tokens/FaerieItemUsesToken.h"
 
 DEFINE_LOG_CATEGORY(LogGenerationAction)
@@ -209,7 +210,7 @@ void UCraftingActionWithSlots::ConsumeSlotCosts(const IFaerieItemSlotInterface* 
 			}
 		};
 
-	const FConstStructView SlotsView = UFaerieItemSlotLibrary::GetCraftingSlotsFromInterface(Interface);
+	const FFaerieCraftingSlotsView SlotsView = Faerie::Crafting::GetCraftingSlots(Interface);
 	const FFaerieItemCraftingSlots& SlotsPtr = SlotsView.Get<const FFaerieItemCraftingSlots>();
 
 	Algo::ForEachIf(SlotsPtr.RequiredSlots, CanEat, EatUse);

@@ -3,8 +3,8 @@
 #include "TableDropCustomization.h"
 
 #include "DetailWidgetRow.h"
-#include "FaerieItemSlotUtils.h"
-#include "GenerationStructsLibrary.h"
+#include "FaerieItemSlotInterface.h"
+#include "GenerationStructs.h"
 #include "IDetailChildrenBuilder.h"
 #include "IPropertyUtilities.h"
 #include "PropertyHandle.h"
@@ -73,9 +73,9 @@ void FTableDropCustomization::CustomizeChildren(TSharedRef<IPropertyHandle> Prop
 	bool ShowSlotsProperty = false;
 
     // Only display the slots property if the asset is a graph that needs them, or a value has already been set.
-    if (ObjectValue->Implements<UFaerieItemSlotInterface>())
+    if (auto&& SlotInterface = Cast<IFaerieItemSlotInterface>(ObjectValue))
     {
-    	const FConstStructView SlotsView = UFaerieItemSlotLibrary::GetCraftingSlotsFromObject(ObjectValue);
+    	const FFaerieCraftingSlotsView SlotsView = Faerie::Crafting::GetCraftingSlots(SlotInterface);
     	const FFaerieItemCraftingSlots& SlotsPtr = SlotsView.Get<const FFaerieItemCraftingSlots>();
 
     	if (SlotsPtr.RequiredSlots.IsEmpty() &&

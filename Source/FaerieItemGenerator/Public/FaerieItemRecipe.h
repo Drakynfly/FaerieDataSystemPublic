@@ -3,7 +3,7 @@
 #pragma once
 
 #include "FaerieItemAsset.h"
-#include "FaerieItemSlotUtils.h"
+#include "FaerieItemSlotInterface.h"
 #include "FaerieItemRecipe.generated.h"
 
 /**
@@ -16,7 +16,7 @@ class FAERIEITEMGENERATOR_API UFaerieItemRecipe : public UObject, public IFaerie
 
 public:
 	//~ IFaerieItemSlotInterface
-	virtual FConstStructView GetCraftingSlots() const override;
+	virtual FFaerieCraftingSlotsView GetCraftingSlots() const override;
 	//~ IFaerieItemSlotInterface
 
 	TScriptInterface<IFaerieItemSource> GetItemSource() const { return ItemSource; }

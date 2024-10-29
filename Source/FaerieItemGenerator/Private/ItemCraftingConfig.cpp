@@ -31,7 +31,7 @@ EDataValidationResult UItemCraftingConfig::IsDataValid(FDataValidationContext& C
 
 #endif
 
-FConstStructView UItemCraftingConfig::GetCraftingSlots() const
+FFaerieCraftingSlotsView UItemCraftingConfig::GetCraftingSlots() const
 {
-	return UFaerieItemSlotLibrary::GetCraftingSlotsFromInterface(Recipe);
+	return Faerie::Crafting::GetCraftingSlots(Recipe);
 }

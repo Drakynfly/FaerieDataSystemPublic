@@ -2,8 +2,8 @@
 
 #pragma once
 
-#include "FaerieItemSlotUtils.h"
 #include "CraftingActionConfig.h"
+#include "FaerieItemSlotInterface.h"
 #include "ItemUpgradeConfig.generated.h"
 
 DECLARE_LOG_CATEGORY_EXTERN(LogItemUpgradeConfig, Log, All);
@@ -21,9 +21,9 @@ public:
 	virtual EDataValidationResult IsDataValid(FDataValidationContext& Context) const override;
 #endif
 
-	virtual FConstStructView GetCraftingSlots() const override;
+	virtual FFaerieCraftingSlotsView GetCraftingSlots() const override;
 
-	// Array of mutator objects, created inline.
+	// Mutator object, created inline.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Refinement Config")
 	TObjectPtr<class UFaerieItemMutator> Mutator;
 };

@@ -2,7 +2,7 @@
 
 #include "FaerieItemRecipe.h"
 
-FConstStructView UFaerieItemRecipe::GetCraftingSlots() const
+FFaerieCraftingSlotsView UFaerieItemRecipe::GetCraftingSlots() const
 {
-	return FConstStructView::Make(CraftingSlots);
+	return FFaerieCraftingSlotsView::Make(CraftingSlots);
 }

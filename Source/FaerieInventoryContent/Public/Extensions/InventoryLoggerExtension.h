@@ -97,15 +97,3 @@ protected:
 private:
 	int32 LocalEventLogCount = 0;
 };
-
-UCLASS()
-class ULoggedInventoryEventLibrary : public UBlueprintFunctionLibrary
-{
-	GENERATED_BODY()
-
-public:
-	UFUNCTION(BlueprintCallable, Category = "LoggedInventoryEventLibrary", meta = (NativeBreakFunc))
-	static void BreakLoggedInventoryEvent(const FLoggedInventoryEvent& LoggedEvent, FFaerieInventoryTag& Type, bool& Success,
-										  FDateTime& Timestamp, FEntryKey& EntryTouched, TArray<FFaerieItemKeyBase>& OtherKeysTouched,
-										  FFaerieItemStackView& Stack, FString& ErrorMessage);
-};

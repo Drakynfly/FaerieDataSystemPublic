@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "GenerationStructsLibrary.h"
+#include "GenerationStructs.h"
 #include "CraftingActionConfig.h"
 #include "InstancedStruct.h"
 #include "ItemSourcePool.h"

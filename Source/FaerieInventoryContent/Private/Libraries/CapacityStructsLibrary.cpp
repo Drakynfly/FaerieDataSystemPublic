@@ -1,8 +1,8 @@
 ﻿// Copyright Guy (Drakynfly) Lundvall. All Rights Reserved.
 
-#include "CapacityStructs.h"
+#include "CapacityStructsLibrary.h"
 
-#include UE_INLINE_GENERATED_CPP_BY_NAME(CapacityStructs)
+#include UE_INLINE_GENERATED_CPP_BY_NAME(CapacityStructsLibrary)
 
 FItemCapacity UCapacityStructsUtilities::WeightOfScaledComparison(const FItemCapacity& Original,
                                                                const FItemCapacity& Comparison)

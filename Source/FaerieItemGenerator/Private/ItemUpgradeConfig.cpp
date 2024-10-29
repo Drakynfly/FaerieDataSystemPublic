@@ -32,7 +32,8 @@ EDataValidationResult UItemUpgradeConfig::IsDataValid(FDataValidationContext& Co
 
 #endif
 
-FConstStructView UItemUpgradeConfig::GetCraftingSlots() const
+FFaerieCraftingSlotsView UItemUpgradeConfig::GetCraftingSlots() const
 {
-	return UFaerieItemSlotLibrary::GetCraftingSlotsFromObject(Mutator);
+	return FFaerieCraftingSlotsView();
+	//return Faerie::Crafting::GetCraftingSlots(Mutator);
 }

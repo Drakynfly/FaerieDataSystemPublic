@@ -1,6 +1,6 @@
 ﻿// Copyright Guy (Drakynfly) Lundvall. All Rights Reserved.
 
-#include "GenerationStructsLibrary.h"
+#include "GenerationStructs.h"
 #include "FaerieItem.h"
 #include "FaerieItemAsset.h"
 #include "FaerieItemDataProxy.h"

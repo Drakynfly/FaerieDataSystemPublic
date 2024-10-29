@@ -1,7 +1,7 @@
 ﻿// Copyright Guy (Drakynfly) Lundvall. All Rights Reserved.
 
 #include "WeightedDropCustomization.h"
-#include "GenerationStructsLibrary.h"
+#include "GenerationStructs.h"
 
 #include "DetailWidgetRow.h"
 #include "IDetailChildrenBuilder.h"
