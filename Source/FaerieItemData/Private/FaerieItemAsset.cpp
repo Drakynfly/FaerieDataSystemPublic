@@ -84,7 +84,7 @@ FFaerieAssetInfo UFaerieItemAsset::GetSourceInfo() const
 {
 	if (auto&& InfoToken = Item->GetToken<UFaerieInfoToken>())
 	{
-		return InfoToken->GetInfoObject();
+		return InfoToken->GetAssetInfo();
 	}
 	return FFaerieAssetInfo();
 }

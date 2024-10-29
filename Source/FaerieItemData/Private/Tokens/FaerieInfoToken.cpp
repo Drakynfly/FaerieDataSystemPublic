@@ -25,7 +25,7 @@ bool UFaerieInfoToken::CompareWithImpl(const UFaerieItemToken* Other) const
 	return true;
 }
 
-const FFaerieAssetInfo& UFaerieInfoToken::GetInfoObject() const
+const FFaerieAssetInfo& UFaerieInfoToken::GetAssetInfo() const
 {
 	return Info;
 }

@@ -23,7 +23,7 @@ protected:
 
 public:
 	UFUNCTION(BlueprintCallable, Category = "Faerie|InfoToken")
-	const FFaerieAssetInfo& GetInfoObject() const;
+	const FFaerieAssetInfo& GetAssetInfo() const;
 
 	UFUNCTION(BlueprintCallable, Category = "Faerie|InfoToken")
 	FText GetItemName() const;
