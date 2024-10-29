@@ -121,6 +121,9 @@ private:
     void HandleStateChanged();
 
 public:
+    FSimpleMulticastDelegate& GetOnStateChanged() { return OnStateChangedNative; }
+    FSimpleMulticastDelegate& GetOnConfigurationChanged() { return OnConfigurationChangedNative; }
+
     // Tests if the capacity of an entry can fit in this container.
     UFUNCTION(BlueprintPure, Category = "Faerie|InventoryCapacity")
     bool CanContain(FFaerieItemStackView Stack) const;
@@ -158,6 +161,13 @@ public:
     UFUNCTION(BlueprintPure, Category = "Faerie|InventoryCapacity")
     float GetPercentageFull() const;
 
+protected:
+    UFUNCTION(/* Replication */)
+    virtual void OnRep_Config();
+
+    UFUNCTION(/* Replication */)
+    virtual void OnRep_State();
+
     // Broadcast whenever the state changes.
     UPROPERTY(BlueprintCallable, BlueprintAssignable, Category = "Events")
     FInventoryCapacityEvent OnStateChanged;
@@ -166,14 +176,6 @@ public:
     UPROPERTY(BlueprintCallable, BlueprintAssignable, Category = "Events")
     FInventoryCapacityEvent OnConfigurationChanged;
 
-protected:
-    UFUNCTION(/* Replication */)
-    virtual void OnRep_Config();
-
-    UFUNCTION(/* Replication */)
-    virtual void OnRep_State();
-
-protected:
     UPROPERTY(ReplicatedUsing = "OnRep_Config", EditAnywhere, Category = "Capacity", meta = (ShowOnlyInnerProperties))
     FCapacityExtensionConfig Config;
 
@@ -183,4 +185,8 @@ protected:
     // Cache of all entries to maintain serverside integrity.
     // @todo actually use this to validate State
     TMap<TWeakObjectPtr<const UFaerieItemContainerBase>, TMap<FEntryKey, FWeightAndVolume>> ServerCapacityCache;
+
+private:
+    FSimpleMulticastDelegate OnStateChangedNative;
+    FSimpleMulticastDelegate OnConfigurationChangedNative;
 };

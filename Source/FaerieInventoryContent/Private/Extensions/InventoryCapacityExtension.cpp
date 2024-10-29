@@ -257,6 +257,7 @@ void UInventoryCapacityExtension::HandleStateChanged()
 {
 	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, State, this);
 	CheckCapacityLimit();
+	OnStateChangedNative.Broadcast();
 	OnStateChanged.Broadcast();
 }
 
@@ -328,6 +329,7 @@ void UInventoryCapacityExtension::SetConfiguration(const FCapacityExtensionConfi
 
 	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, Config, this);
 	CheckCapacityLimit();
+	OnConfigurationChangedNative.Broadcast();
 	OnConfigurationChanged.Broadcast();
 }
 
@@ -337,6 +339,7 @@ void UInventoryCapacityExtension::SetMaxCapacity(const FWeightAndVolume NewMax)
 	Config.MaxVolume = NewMax.Volume;
 	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, Config, this);
 	CheckCapacityLimit();
+	OnConfigurationChangedNative.Broadcast();
 	OnConfigurationChanged.Broadcast();
 }
 
@@ -369,10 +372,12 @@ float UInventoryCapacityExtension::GetPercentageFull() const
 
 void UInventoryCapacityExtension::OnRep_Config()
 {
+	OnConfigurationChangedNative.Broadcast();
 	OnConfigurationChanged.Broadcast();
 }
 
 void UInventoryCapacityExtension::OnRep_State()
 {
+	OnStateChangedNative.Broadcast();
 	OnStateChanged.Broadcast();
 }

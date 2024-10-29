@@ -96,8 +96,8 @@ protected:
 public:
 	FFaerieSlotTag GetSlotID() const { return SlotID; }
 
-	FEquipmentSlotEventNative& GetOnItemChangedNative() { return OnItemChangedNative; }
-	FEquipmentSlotEventNative& GetOnItemDataChangedNative() { return OnItemDataChangedNative; }
+	FEquipmentSlotEventNative& GetOnItemChanged() { return OnItemChangedNative; }
+	FEquipmentSlotEventNative& GetOnItemDataChanged() { return OnItemDataChangedNative; }
 
 	// This checks if the stack could ever be contained by this slot, ignoring its current state.
 	UFUNCTION(BlueprintCallable, Category = "Faerie|EquipmentSlot")
