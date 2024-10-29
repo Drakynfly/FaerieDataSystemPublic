@@ -6,5 +6,6 @@ struct FInventoryEntry;
 
 namespace Faerie::Inventory
 {
-	void SortEntriesLastModified(TArray<FInventoryEntry>& Entries);
+	/* Sorts an array of inventory entries by their modified data. */
+	FAERIEINVENTORY_API void SortEntriesLastModified(TArray<FInventoryEntry>& Entries);
 };

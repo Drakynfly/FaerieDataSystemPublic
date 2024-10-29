@@ -10,6 +10,7 @@ namespace Faerie::Inventory
 		Algo::Sort(Entries,
 			[](const FInventoryEntry& A, const FInventoryEntry& B)
 			{
+				if (!A.ItemObject || !B.ItemObject) return false;
 				return A.ItemObject->GetLastModified() < B.ItemObject->GetLastModified();
 			});
 	}
