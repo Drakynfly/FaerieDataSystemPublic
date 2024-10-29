@@ -36,8 +36,8 @@ protected:
 	bool DefaultInteractionTest() const;
 
 public:
-	UFUNCTION(BlueprintCallable, Category = "Bench|Player Interaction")
-	TSubclassOf<UUserWidget> GetInteractionWidget() const { return InteractionWidget; }
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Bench|Player Interaction")
+	UUserWidget* MakeInteractionWidget();
 
 	UFUNCTION(BlueprintCallable, Category = "Bench|Player Interaction")
 	bool CanPlayerInteract() const;
@@ -66,7 +66,4 @@ protected:
 	// manager component on our bench.
 	UPROPERTY()
 	FBenchInteractionTest ExternalInteractionTest;
-
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Player Interaction")
-	TSubclassOf<UUserWidget> InteractionWidget;
 };
