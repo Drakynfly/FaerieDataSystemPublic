@@ -11,7 +11,7 @@ bool UBlueprintReplicationUtils::AddReplicatedSubObject(AActor* Actor, UObject* 
 		if (Object->GetTypedOuter<AActor>() != Actor)
 		{
 			UE_LOG(LogTemp, Warning,
-				TEXT("AddObjectToActorReplicateSubObjectList: Should not register Object to Actor that does not own it."
+				TEXT("AddReplicatedSubObject: Should not register Object to Actor that does not own it."
 						" GivenActor: '%s', Object: '%s' DirectOuter: '%s', FirstActorOuter: '%s'"),
 						*Actor->GetName(), *Object->GetName(), *Object->GetOuter()->GetName(),
 						*Object->GetTypedOuter<AActor>()->GetName())
