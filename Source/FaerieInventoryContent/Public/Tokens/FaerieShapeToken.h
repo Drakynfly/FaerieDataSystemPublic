@@ -18,16 +18,7 @@ class FAERIEINVENTORYCONTENT_API UFaerieShapeToken : public UFaerieItemToken
 
 public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-
-    bool FitsInGrid(const FIntPoint& GridSize, const FIntPoint& Position,
-                                   const FSpatialContent& Occupied) const;
-
-    FFaerieGridShape Translate(const FIntPoint& Position) const;
-
-    TOptional<FIntPoint> GetFirstEmptyLocation(const FIntPoint& GridSize, const FSpatialContent& Occupied) const;
-
-	static FFaerieGridShape NormalizeShape(const FFaerieGridShape& InputShape);
-
+	FFaerieGridShape GetShape() const { return Shape; }
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Replicated, meta = (ShowOnlyInnerProperties))
 	FFaerieGridShape Shape;

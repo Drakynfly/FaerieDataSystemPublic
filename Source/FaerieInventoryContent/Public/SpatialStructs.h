@@ -17,4 +17,8 @@ struct FAERIEINVENTORYCONTENT_API FFaerieGridShape
 
 	// Make a rectangular shape
 	static FFaerieGridShape MakeRect(int32 Height, int32 Width);
+
+	void Translate(const FIntPoint& Position);
+
+	void NormalizeShape();
 };
