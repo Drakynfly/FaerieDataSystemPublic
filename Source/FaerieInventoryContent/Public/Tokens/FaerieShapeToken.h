@@ -26,6 +26,8 @@ public:
 
     TOptional<FIntPoint> GetFirstEmptyLocation(const FIntPoint& GridSize, const FSpatialContent& Occupied) const;
 
+	static FFaerieGridShape NormalizeShape(const FFaerieGridShape& InputShape);
+
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Replicated, meta = (ShowOnlyInnerProperties))
 	FFaerieGridShape Shape;

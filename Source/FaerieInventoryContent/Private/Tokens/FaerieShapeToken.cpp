@@ -16,7 +16,8 @@ void UFaerieShapeToken::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 bool UFaerieShapeToken::FitsInGrid(const FIntPoint& GridSize, const FIntPoint& Position,
                                    const FSpatialContent& Occupied) const
 {
-    for (const FIntPoint& Coord : Shape.Points)
+    FFaerieGridShape NormalizedShape = NormalizeShape(Shape);
+    for (const FIntPoint& Coord : NormalizedShape.Points)
     {
         const FIntPoint AbsolutePosition = Position + Coord;
 
@@ -40,8 +41,9 @@ bool UFaerieShapeToken::FitsInGrid(const FIntPoint& GridSize, const FIntPoint& P
 FFaerieGridShape UFaerieShapeToken::Translate(const FIntPoint& Position) const
 {
     FFaerieGridShape OccupiedPositions;
-    OccupiedPositions.Points.Reserve(Shape.Points.Num());
-    for (const FIntPoint& Coord : Shape.Points)
+    FFaerieGridShape NormalizedShape = NormalizeShape(Shape);
+    OccupiedPositions.Points.Reserve(NormalizedShape.Points.Num());
+    for (const FIntPoint& Coord : NormalizedShape.Points)
     {
         OccupiedPositions.Points.Add(Position + Coord);
     }
@@ -62,4 +64,34 @@ TOptional<FIntPoint> UFaerieShapeToken::GetFirstEmptyLocation(const FIntPoint& G
         }
     }
     return NullOpt;
+}
+
+FFaerieGridShape UFaerieShapeToken::NormalizeShape(const FFaerieGridShape& InputShape)
+{
+    if (InputShape.Points.IsEmpty())
+    {
+        return InputShape;
+    }
+    
+    int32 MinX = InputShape.Points[0].X;
+    int32 MinY = InputShape.Points[0].Y;
+    
+    for (const FIntPoint& Point : InputShape.Points)
+    {
+        MinX = FMath::Min(MinX, Point.X);
+        MinY = FMath::Min(MinY, Point.Y);
+    }
+    
+    FFaerieGridShape NormalizedShape;
+    NormalizedShape.Points.Reserve(InputShape.Points.Num());
+    
+    for (const FIntPoint& Point : InputShape.Points)
+    {
+        NormalizedShape.Points.Add(FIntPoint(
+            Point.X - MinX,
+            Point.Y - MinY
+        ));
+    }
+    
+    return NormalizedShape;
 }
