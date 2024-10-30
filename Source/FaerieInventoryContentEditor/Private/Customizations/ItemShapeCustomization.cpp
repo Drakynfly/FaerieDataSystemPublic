@@ -162,8 +162,8 @@ bool FItemShapeCustomization::IsCellSelected(FIntPoint CellCoord) const
 {
     void* StructPtr;
     StructHandle->GetValueData(StructPtr);
-    const TArray<FIntPoint>* ShapeGrid = static_cast<TArray<FIntPoint>*>(StructPtr);
-    return ShapeGrid ? ShapeGrid->Contains(CellCoord) : false;
+    const FFaerieGridShape* ShapeGrid = static_cast<FFaerieGridShape*>(StructPtr);
+    return ShapeGrid ? ShapeGrid->Points.Contains(CellCoord) : false;
 }
 
 #undef LOCTEXT_NAMESPACE
