@@ -8,10 +8,6 @@
 #include "Net/UnrealNetwork.h"
 #include "Tokens/FaerieShapeToken.h"
 
-FSpatialKeyedEntry::FSpatialKeyedEntry()
-{
-}
-
 void FSpatialKeyedEntry::PreReplicatedRemove(const FSpatialContent& InArraySerializer)
 {
 	InArraySerializer.PreEntryReplicatedRemove(*this);
@@ -35,7 +31,7 @@ void FSpatialContent::PreEntryReplicatedRemove(const FSpatialKeyedEntry& Entry) 
 
 void FSpatialContent::PostEntryReplicatedAdd(const FSpatialKeyedEntry& Entry)
 {
-	ChangeListener->SpatialEntryChangedDelegate.Broadcast(Entry.Value);
+	ChangeListener->PostEntryReplicatedAdd(Entry);
 	Sort();
 }
 
@@ -44,7 +40,7 @@ void FSpatialContent::PostEntryReplicatedChange(const FSpatialKeyedEntry& Entry)
 	//Todo
 }
 
-void FSpatialContent::Insert(FSpatialEntryKey Key, const FEntryKey& Value)
+void FSpatialContent::Insert(FSpatialEntryKey Key, FEntryKey Value)
 {
 	FSpatialKeyedEntry& NewEntry = BSOA::Insert({Key, Value});
 	MarkItemDirty(NewEntry);
@@ -58,7 +54,7 @@ void FSpatialContent::Remove(const FSpatialEntryKey Key)
 	}
 }
 
-void UInventorySpatialGridExtension::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
+void UInventorySpatialGridExtension::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
@@ -68,8 +64,46 @@ void UInventorySpatialGridExtension::GetLifetimeReplicatedProps(TArray<class FLi
 	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, OccupiedSlots, SharedParams);
 }
 
+void UInventorySpatialGridExtension::PostInitProperties()
+{
+	Super::PostInitProperties();
+
+	OccupiedSlots.ChangeListener = this;
+}
+
+EEventExtensionResponse UInventorySpatialGridExtension::AllowsAddition(const UFaerieItemContainerBase* Container, const FFaerieItemStackView Stack)
+{
+	if (!CanAddItemToGrid(Stack.Item->GetToken<UFaerieShapeToken>()))
+	{
+		return EEventExtensionResponse::Disallowed;
+	}
+
+	return EEventExtensionResponse::Allowed;
+}
+
+void UInventorySpatialGridExtension::PostAddition(const UFaerieItemContainerBase* Container,
+												  const Faerie::Inventory::FEventLog& Event)
+{
+	if (const UFaerieShapeToken* ShapeToken = Event.Item->GetToken<UFaerieShapeToken>())
+	{
+		AddItemToGrid(Event.EntryTouched, ShapeToken);
+	}
+}
+
+void UInventorySpatialGridExtension::PostRemoval(const UFaerieItemContainerBase* Container,
+												 const Faerie::Inventory::FEventLog& Event)
+{
+	RemoveItemFromGrid(Event.EntryTouched);
+}
+
+void UInventorySpatialGridExtension::PostEntryReplicatedAdd(const FSpatialKeyedEntry& Entry)
+{
+	SpatialEntryChangedDelegateNative.Broadcast(Entry.Value);
+	SpatialEntryChangedDelegate.Broadcast(Entry.Value);
+}
+
 bool UInventorySpatialGridExtension::CanAddItemToGrid(const UFaerieShapeToken* ShapeToken,
-                                                      const FIntPoint& Position) const
+													  const FIntPoint& Position) const
 {
 	if (!ShapeToken) return false;
 	return ShapeToken->FitsInGrid(GridSize, Position, OccupiedSlots);
@@ -78,6 +112,7 @@ bool UInventorySpatialGridExtension::CanAddItemToGrid(const UFaerieShapeToken* S
 bool UInventorySpatialGridExtension::CanAddItemToGrid(const UFaerieShapeToken* ShapeToken) const
 {
 	if (!ShapeToken) return false;
+
 	for (int32 x = 0; x < GridSize.X; x++)
 	{
 		for (int32 y = 0; y < GridSize.Y; y++)
@@ -92,51 +127,36 @@ bool UInventorySpatialGridExtension::CanAddItemToGrid(const UFaerieShapeToken* S
 	return false;
 }
 
-bool UInventorySpatialGridExtension::AddItemToGrid(const FEntryKey& Key, const UFaerieShapeToken* ShapeToken,
-                                                   const FIntPoint& Position)
+bool UInventorySpatialGridExtension::AddItemToGrid(const FEntryKey& Key, const UFaerieShapeToken* ShapeToken)
 {
-	if (!ShapeToken)
+	if (!ShapeToken ||
+		!Key.IsValid())
 	{
 		return false;
 	}
 
-	auto FoundPosition = ShapeToken->GetFirstEmptyLocation(GridSize, OccupiedSlots);
-	if (FoundPosition == FIntPoint(-1, -1)) return false;
-	FFaerieGridShape Positions = ShapeToken->Translate(FoundPosition);
+	TOptional<FIntPoint> FoundPosition = ShapeToken->GetFirstEmptyLocation(GridSize, OccupiedSlots);
+	if (!FoundPosition.IsSet()) return false;
 
+	const FFaerieGridShape Positions = ShapeToken->Translate(FoundPosition.GetValue());
 	for (const FIntPoint& Pos : Positions.Points)
 	{
-		FSpatialKeyedEntry Entry;
-		Entry.Key.Key = Pos;
-		Entry.Value = Key;
-		OccupiedSlots.Insert(Entry.Key, Entry.Value);
+		const FSpatialEntryKey EntryKey { Pos };
+		OccupiedSlots.Insert(EntryKey, Key);
 	}
 	return true;
 }
 
 void UInventorySpatialGridExtension::RemoveItemFromGrid(const FEntryKey& Key)
 {
-	TArray<FSpatialEntryKey> PositionsToRemove;
-
-	for (const FSpatialKeyedEntry& Entry : OccupiedSlots.GetEntries())
+	const auto& Entries = OccupiedSlots.GetEntries();
+	for (int32 i = Entries.Num() - 1; i >= 0; --i)
 	{
-		if (Entry.Value == Key)
+		if (Entries[i].Value == Key)
 		{
-			PositionsToRemove.Add(Entry.Key);
+			OccupiedSlots.Remove(Entries[i].Key);
 		}
 	}
-
-	for (const FSpatialEntryKey& Pos : PositionsToRemove)
-	{
-		OccupiedSlots.Remove(Pos);
-	}
-}
-
-void UInventorySpatialGridExtension::PostInitProperties()
-{
-	Super::PostInitProperties();
-
-	OccupiedSlots.ChangeListener = this;
 }
 
 FFaerieGridShape UInventorySpatialGridExtension::GetEntryPositions(const FEntryKey& Key) const
@@ -150,32 +170,4 @@ FFaerieGridShape UInventorySpatialGridExtension::GetEntryPositions(const FEntryK
 		}
 	}
 	return PositionsToReturn;
-}
-
-EEventExtensionResponse UInventorySpatialGridExtension::AllowsAddition(const UFaerieItemContainerBase* Container,
-                                                                       FFaerieItemStackView Stack)
-{
-	Super::AllowsAddition(Container, Stack);
-	if (!CanAddItemToGrid(Stack.Item->GetToken<UFaerieShapeToken>()))
-		return EEventExtensionResponse::Disallowed;
-
-	return EEventExtensionResponse::Allowed;
-}
-
-inline void UInventorySpatialGridExtension::PostAddition(const UFaerieItemContainerBase* Container,
-                                                         const Faerie::Inventory::FEventLog& Event)
-{
-	Super::PostAddition(Container, Event);
-	FIntPoint NewPos = FIntPoint();
-	AddItemToGrid(Event.EntryTouched,
-	              Cast<UFaerieShapeToken>(
-		              Container->Proxy(Event.EntryTouched).GetItemObject()->GetToken<UFaerieShapeToken>()),
-	              NewPos);
-}
-
-inline void UInventorySpatialGridExtension::PostRemoval(const UFaerieItemContainerBase* Container,
-                                                        const Faerie::Inventory::FEventLog& Event)
-{
-	Super::PostRemoval(Container, Event);
-	RemoveItemFromGrid(Event.EntryTouched);
 }

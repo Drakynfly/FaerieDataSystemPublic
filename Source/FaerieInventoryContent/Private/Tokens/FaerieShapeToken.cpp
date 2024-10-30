@@ -1,15 +1,14 @@
 // Copyright Guy (Drakynfly) Lundvall. All Rights Reserved.
 
 #include "Tokens/FaerieShapeToken.h"
-
-struct FSpatialKeyedEntry;
+#include "Extensions/InventorySpatialGridExtension.h"
 
 bool UFaerieShapeToken::FitsInGrid(const FIntPoint& GridSize, const FIntPoint& Position,
                                    const FSpatialContent& Occupied) const
 {
     for (const FIntPoint& Coord : Shape.Points)
     {
-        FIntPoint AbsolutePosition = Position + Coord;
+        const FIntPoint AbsolutePosition = Position + Coord;
 
         if (AbsolutePosition.X < 0 || AbsolutePosition.X >= GridSize.X ||
             AbsolutePosition.Y < 0 || AbsolutePosition.Y >= GridSize.Y)
@@ -31,6 +30,7 @@ bool UFaerieShapeToken::FitsInGrid(const FIntPoint& GridSize, const FIntPoint& P
 FFaerieGridShape UFaerieShapeToken::Translate(const FIntPoint& Position) const
 {
     FFaerieGridShape OccupiedPositions;
+    OccupiedPositions.Points.Reserve(Shape.Points.Num());
     for (const FIntPoint& Coord : Shape.Points)
     {
         OccupiedPositions.Points.Add(Position + Coord);
@@ -38,18 +38,18 @@ FFaerieGridShape UFaerieShapeToken::Translate(const FIntPoint& Position) const
     return OccupiedPositions;
 }
 
-FIntPoint UFaerieShapeToken::GetFirstEmptyLocation(const FIntPoint& GridSize, const FSpatialContent& Occupied) const
+TOptional<FIntPoint> UFaerieShapeToken::GetFirstEmptyLocation(const FIntPoint& GridSize, const FSpatialContent& Occupied) const
 {
-    for (int32 Y = 0; Y < GridSize.Y; Y++)
+    FIntPoint TestPosition = FIntPoint::ZeroValue;
+    for (; TestPosition.Y < GridSize.Y; TestPosition.Y++)
     {
-        for (int32 X = 0; X < GridSize.X; X++)
+        for (; TestPosition.X < GridSize.X; TestPosition.X++)
         {
-            FIntPoint TestPosition(X, Y);
             if (FitsInGrid(GridSize, TestPosition, Occupied))
             {
                 return TestPosition;
             }
         }
     }
-    return FIntPoint(-1, -1);
+    return NullOpt;
 }

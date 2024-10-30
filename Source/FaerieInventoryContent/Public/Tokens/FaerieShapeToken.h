@@ -3,26 +3,28 @@
 #pragma once
 
 #include "FaerieItemToken.h"
+#include "SpatialStructs.h"
 #include "FaerieShapeToken.generated.h"
 
-struct FFaerieGridShape;
 struct FSpatialContent;
+
 /**
- * 
+ * Adds a GridShape to an item. Used with Faerie Spatial Grid Extension.
  */
-UCLASS()
+UCLASS(meta = (DisplayName = "Token - Shape"))
 class FAERIEINVENTORYCONTENT_API UFaerieShapeToken : public UFaerieItemToken
 {
     GENERATED_BODY()
 
 public:
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Token | Shape")
-    TArray<FIntPoint> ShapeCoords;
-
     bool FitsInGrid(const FIntPoint& GridSize, const FIntPoint& Position,
                                    const FSpatialContent& Occupied) const;
 
     FFaerieGridShape Translate(const FIntPoint& Position) const;
 
-    FIntPoint GetFirstEmptyLocation(const FIntPoint& GridSize, const FSpatialContent& Occupied) const;
+    TOptional<FIntPoint> GetFirstEmptyLocation(const FIntPoint& GridSize, const FSpatialContent& Occupied) const;
+
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Token | Shape")
+	FFaerieGridShape Shape;
 };
