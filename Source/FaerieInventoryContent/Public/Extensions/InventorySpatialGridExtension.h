@@ -10,16 +10,18 @@ class UFaerieShapeToken;
 
 
 USTRUCT(BlueprintType)
-struct FFaerieGridShape {
+struct FFaerieGridShape
+{
 	GENERATED_BODY()
-	TArray<FIntPoint> Points;	
+	UPROPERTY(BlueprintReadOnly, Category = "Grid")
+	TArray<FIntPoint> Points;
 };
 
 USTRUCT()
 struct FSpatialEntryKey
 {
 	GENERATED_BODY()
-	UPROPERTY(VisibleInstanceOnly)
+	UPROPERTY(VisibleInstanceOnly, Category = "Grid")
 	FIntPoint Key;
 
 	friend bool operator<(const FSpatialEntryKey& A, const FSpatialEntryKey& B)
@@ -46,10 +48,10 @@ struct FSpatialKeyedEntry : public FFastArraySerializerItem
 	{
 	}
 
-	UPROPERTY(VisibleInstanceOnly)
+	UPROPERTY(VisibleInstanceOnly, Category = "Grid")
 	FSpatialEntryKey Key;
 
-	UPROPERTY(VisibleInstanceOnly)
+	UPROPERTY(VisibleInstanceOnly, Category = "Grid")
 	FEntryKey Value;
 
 	void PreReplicatedRemove(const FSpatialContent& InArraySerializer);
@@ -87,7 +89,7 @@ public:
 	{
 		return FastArrayDeltaSerialize<FSpatialKeyedEntry, FSpatialContent>(Items, DeltaParams, *this);
 	}
-	
+
 	void Insert(FSpatialEntryKey Value, const FEntryKey& Key);
 
 	void Remove(FSpatialEntryKey Key);
@@ -102,6 +104,7 @@ struct TStructOpsTypeTraits<FSpatialContent> : public TStructOpsTypeTraitsBase2<
 	};
 };
 
+using FSpatialEntryChangedNative = TMulticastDelegate<void(FEntryKey)>;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSpatialEntryChanged, FEntryKey, EntryKey);
 
 /**
@@ -114,13 +117,15 @@ class FAERIEINVENTORYCONTENT_API UInventorySpatialGridExtension : public UItemCo
 	GENERATED_BODY()
 
 public:
+	FSpatialEntryChangedNative& GetOnSpatialEntryChangedNative() { return SpatialEntryChangedDelegateNative; }
+
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 	bool CanAddItemToGrid(const UFaerieShapeToken* ShapeToken, const FIntPoint& Position) const;
 	bool CanAddItemToGrid(const UFaerieShapeToken* ShapeToken) const;
 	bool AddItemToGrid(const FEntryKey& Key, const UFaerieShapeToken* ShapeToken, const FIntPoint& Position);
 	void RemoveItemFromGrid(const FEntryKey& Key);
 	virtual void PostInitProperties() override;
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category = "Grid")
 	FFaerieGridShape GetEntryPositions(UPARAM() const FEntryKey& Key) const;
 
 	FSpatialContent& GetContent() { return OccupiedSlots; }
@@ -141,4 +146,7 @@ protected:
 
 	UPROPERTY(EditAnywhere, Replicated, Category = "Data")
 	FSpatialContent OccupiedSlots;
+
+private:
+	FSpatialEntryChangedNative SpatialEntryChangedDelegateNative;
 };
