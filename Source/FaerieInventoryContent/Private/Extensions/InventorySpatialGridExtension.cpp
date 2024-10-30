@@ -100,35 +100,35 @@ bool UInventorySpatialGridExtension::AddItemToGrid(const FEntryKey& Key, const U
 		return false;
 	}
 
-	auto FoundPosition = ShapeToken->GetWhereCanFit(GridSize, OccupiedSlots);
+	auto FoundPosition = ShapeToken->GetFirstEmptyLocation(GridSize, OccupiedSlots);
 	if (FoundPosition == FIntPoint(-1, -1)) return false;
-	TArray<FIntPoint> positions = ShapeToken->GetOccupiedPositions(FoundPosition);
+	FFaerieGridShape Positions = ShapeToken->Translate(FoundPosition);
 
-	for (const FIntPoint& pos : positions)
+	for (const FIntPoint& Pos : Positions.Points)
 	{
-		FSpatialKeyedEntry entry;
-		entry.Key.Key = pos;
-		entry.Value = Key;
-		OccupiedSlots.Insert(entry.Key, entry.Value);
+		FSpatialKeyedEntry Entry;
+		Entry.Key.Key = Pos;
+		Entry.Value = Key;
+		OccupiedSlots.Insert(Entry.Key, Entry.Value);
 	}
 	return true;
 }
 
 void UInventorySpatialGridExtension::RemoveItemFromGrid(const FEntryKey& Key)
 {
-	TArray<FSpatialEntryKey> positionsToRemove;
+	TArray<FSpatialEntryKey> PositionsToRemove;
 
-	for (const FSpatialKeyedEntry& entry : OccupiedSlots.GetEntries())
+	for (const FSpatialKeyedEntry& Entry : OccupiedSlots.GetEntries())
 	{
-		if (entry.Value == Key)
+		if (Entry.Value == Key)
 		{
-			positionsToRemove.Add(entry.Key);
+			PositionsToRemove.Add(Entry.Key);
 		}
 	}
 
-	for (const FSpatialEntryKey& pos : positionsToRemove)
+	for (const FSpatialEntryKey& Pos : PositionsToRemove)
 	{
-		OccupiedSlots.Remove(pos);
+		OccupiedSlots.Remove(Pos);
 	}
 }
 
@@ -139,14 +139,14 @@ void UInventorySpatialGridExtension::PostInitProperties()
 	OccupiedSlots.ChangeListener = this;
 }
 
-TArray<FIntPoint> UInventorySpatialGridExtension::GetEntryPositions(const FEntryKey& Key) const
+FFaerieGridShape UInventorySpatialGridExtension::GetEntryPositions(const FEntryKey& Key) const
 {
-	TArray<FIntPoint> PositionsToReturn;
-	for (const FSpatialKeyedEntry& entry : OccupiedSlots.GetEntries())
+	FFaerieGridShape PositionsToReturn;
+	for (const FSpatialKeyedEntry& Entry : OccupiedSlots.GetEntries())
 	{
-		if (entry.Value == Key)
+		if (Entry.Value == Key)
 		{
-			PositionsToReturn.Add(entry.Key.Key);
+			PositionsToReturn.Points.Add(Entry.Key.Key);
 		}
 	}
 	return PositionsToReturn;
@@ -166,11 +166,11 @@ inline void UInventorySpatialGridExtension::PostAddition(const UFaerieItemContai
                                                          const Faerie::Inventory::FEventLog& Event)
 {
 	Super::PostAddition(Container, Event);
-	FIntPoint newPos = FIntPoint();
+	FIntPoint NewPos = FIntPoint();
 	AddItemToGrid(Event.EntryTouched,
 	              Cast<UFaerieShapeToken>(
 		              Container->Proxy(Event.EntryTouched).GetItemObject()->GetToken<UFaerieShapeToken>()),
-	              newPos);
+	              NewPos);
 }
 
 inline void UInventorySpatialGridExtension::PostRemoval(const UFaerieItemContainerBase* Container,

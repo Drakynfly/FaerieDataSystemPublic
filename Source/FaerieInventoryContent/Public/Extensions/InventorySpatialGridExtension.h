@@ -2,13 +2,18 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
-#include "InstalledPlatformInfo.h"
 #include "ItemContainerExtensionBase.h"
 #include "InventorySpatialGridExtension.generated.h"
 
 class UInventorySpatialGridExtension;
 class UFaerieShapeToken;
+
+
+USTRUCT(BlueprintType)
+struct FFaerieGridShape {
+	GENERATED_BODY()
+	TArray<FIntPoint> Points;	
+};
 
 USTRUCT()
 struct FSpatialEntryKey
@@ -82,9 +87,7 @@ public:
 	{
 		return FastArrayDeltaSerialize<FSpatialKeyedEntry, FSpatialContent>(Items, DeltaParams, *this);
 	}
-
-	FString GetDebugString();
-
+	
 	void Insert(FSpatialEntryKey Value, const FEntryKey& Key);
 
 	void Remove(FSpatialEntryKey Key);
@@ -99,7 +102,7 @@ struct TStructOpsTypeTraits<FSpatialContent> : public TStructOpsTypeTraitsBase2<
 	};
 };
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSpatilEntryChanged, FEntryKey, EntryKey);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSpatialEntryChanged, FEntryKey, EntryKey);
 
 /**
  * 
@@ -118,7 +121,7 @@ public:
 	void RemoveItemFromGrid(const FEntryKey& Key);
 	virtual void PostInitProperties() override;
 	UFUNCTION(BlueprintCallable)
-	TArray<FIntPoint> GetEntryPositions(UPARAM() const FEntryKey& Key) const;
+	FFaerieGridShape GetEntryPositions(UPARAM() const FEntryKey& Key) const;
 
 	FSpatialContent& GetContent() { return OccupiedSlots; }
 
@@ -130,12 +133,12 @@ protected:
 	virtual void PostRemoval(const UFaerieItemContainerBase* Container,
 	                         const Faerie::Inventory::FEventLog& Event) override;
 
-	UPROPERTY(BlueprintAssignable)
-	FSpatilEntryChanged SpatialEntryChangedDelegate;
+	UPROPERTY(BlueprintAssignable, Category = "Delegates")
+	FSpatialEntryChanged SpatialEntryChangedDelegate;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Config")
 	FIntPoint GridSize = FIntPoint(10, 40);
 
-	UPROPERTY(EditAnywhere, Replicated)
+	UPROPERTY(EditAnywhere, Replicated, Category = "Data")
 	FSpatialContent OccupiedSlots;
 };

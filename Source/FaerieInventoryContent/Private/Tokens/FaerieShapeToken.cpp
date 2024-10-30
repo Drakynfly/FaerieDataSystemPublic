@@ -30,17 +30,17 @@ bool UFaerieShapeToken::FitsInGrid(const FIntPoint& GridSize, const FIntPoint& P
     return true;
 }
 
-TArray<FIntPoint> UFaerieShapeToken::GetOccupiedPositions(const FIntPoint& Position) const
+FFaerieGridShape UFaerieShapeToken::Translate(const FIntPoint& Position) const
 {
-    TArray<FIntPoint> OccupiedPositions;
+    FFaerieGridShape OccupiedPositions;
     for (const FIntPoint& Coord : ShapeCoords)
     {
-        OccupiedPositions.Add(Position + Coord);
+        OccupiedPositions.Points.Add(Position + Coord);
     }
     return OccupiedPositions;
 }
 
-FIntPoint UFaerieShapeToken::GetWhereCanFit(const FIntPoint& GridSize, const FSpatialContent& Occupied) const
+FIntPoint UFaerieShapeToken::GetFirstEmptyLocation(const FIntPoint& GridSize, const FSpatialContent& Occupied) const
 {
     for (int32 Y = 0; Y < GridSize.Y; Y++)
     {

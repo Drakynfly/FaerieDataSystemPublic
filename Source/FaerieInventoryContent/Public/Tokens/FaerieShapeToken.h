@@ -6,12 +6,13 @@
 #include "FaerieItemToken.h"
 #include "FaerieShapeToken.generated.h"
 
+struct FFaerieGridShape;
 struct FSpatialContent;
 /**
  * 
  */
 UCLASS()
-class FAERIEITEMDATA_API UFaerieShapeToken : public UFaerieItemToken
+class FAERIEINVENTORYCONTENT_API UFaerieShapeToken : public UFaerieItemToken
 {
     GENERATED_BODY()
 
@@ -22,7 +23,7 @@ public:
     bool FitsInGrid(const FIntPoint& GridSize, const FIntPoint& Position,
                                    const FSpatialContent& Occupied) const;
 
-    TArray<FIntPoint> GetOccupiedPositions(const FIntPoint& Position) const;
+    FFaerieGridShape Translate(const FIntPoint& Position) const;
 
-    FIntPoint GetWhereCanFit(const FIntPoint& GridSize, const FSpatialContent& Occupied) const;
+    FIntPoint GetFirstEmptyLocation(const FIntPoint& GridSize, const FSpatialContent& Occupied) const;
 };
