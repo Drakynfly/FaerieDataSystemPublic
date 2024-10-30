@@ -2,14 +2,12 @@
 
 #include "Tokens/FaerieShapeToken.h"
 
-#include "FaerieInventoryContent/Public/Extensions/InventorySpatialGridExtension.h"
-
 struct FSpatialKeyedEntry;
 
 bool UFaerieShapeToken::FitsInGrid(const FIntPoint& GridSize, const FIntPoint& Position,
                                    const FSpatialContent& Occupied) const
 {
-    for (const FIntPoint& Coord : ShapeCoords)
+    for (const FIntPoint& Coord : Shape.Points)
     {
         FIntPoint AbsolutePosition = Position + Coord;
 
@@ -33,7 +31,7 @@ bool UFaerieShapeToken::FitsInGrid(const FIntPoint& GridSize, const FIntPoint& P
 FFaerieGridShape UFaerieShapeToken::Translate(const FIntPoint& Position) const
 {
     FFaerieGridShape OccupiedPositions;
-    for (const FIntPoint& Coord : ShapeCoords)
+    for (const FIntPoint& Coord : Shape.Points)
     {
         OccupiedPositions.Points.Add(Position + Coord);
     }
