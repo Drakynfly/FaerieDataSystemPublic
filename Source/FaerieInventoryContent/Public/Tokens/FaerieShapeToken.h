@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
 #include "FaerieItemToken.h"
 #include "FaerieShapeToken.generated.h"
 
