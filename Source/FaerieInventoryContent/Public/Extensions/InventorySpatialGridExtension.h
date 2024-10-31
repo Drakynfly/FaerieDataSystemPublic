@@ -15,7 +15,7 @@ struct FSpatialEntryKey
 	GENERATED_BODY()
 
 	UPROPERTY(VisibleInstanceOnly, Category = "SpatialEntryKey")
-	FIntPoint Key;
+	FIntPoint Key = FIntPoint::ZeroValue;
 
 	friend bool operator<(const FSpatialEntryKey& A, const FSpatialEntryKey& B)
 	{
@@ -38,9 +38,7 @@ struct FSpatialKeyedEntry : public FFastArraySerializerItem
 	FSpatialKeyedEntry() = default;
 
 	FSpatialKeyedEntry(const FSpatialEntryKey Key, const FEntryKey Value)
-		: Key(Key), Value(Value)
-	{
-	}
+	  : Key(Key), Value(Value) {}
 
 	UPROPERTY(VisibleInstanceOnly, Category = "SpatialKeyedEntry")
 	FSpatialEntryKey Key;
@@ -120,17 +118,17 @@ public:
 
 protected:
 	//~ UItemContainerExtensionBase
-	virtual EEventExtensionResponse AllowsAddition(const UFaerieItemContainerBase* Container,
-	                                               FFaerieItemStackView Stack) override;
-	virtual void PostAddition(const UFaerieItemContainerBase* Container,
-	                          const Faerie::Inventory::FEventLog& Event) override;
-	virtual void PostRemoval(const UFaerieItemContainerBase* Container,
-	                         const Faerie::Inventory::FEventLog& Event) override;
+	virtual EEventExtensionResponse AllowsAddition(const UFaerieItemContainerBase* Container, FFaerieItemStackView Stack) override;
+	virtual void PostAddition(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) override;
+	virtual void PostRemoval(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) override;
 	//~ UItemContainerExtensionBase
 
 	void PreEntryReplicatedRemove(const FSpatialKeyedEntry& Entry);
 	void PostEntryReplicatedAdd(const FSpatialKeyedEntry& Entry);
 	void PostEntryReplicatedChange(const FSpatialKeyedEntry& Entry);
+
+	UFUNCTION(/* Replication */)
+	virtual void OnRep_GridSize();
 
 public:
 	bool CanAddItemToGrid(const UFaerieShapeToken* ShapeToken, const FIntPoint& Position) const;
@@ -142,27 +140,29 @@ public:
 	bool AddItemToGrid(const FEntryKey& Key, const UFaerieShapeToken* ShapeToken);
 	void RemoveItemFromGrid(const FEntryKey& Key);
 
-	UFUNCTION(BlueprintCallable, Category = "Grid")
-	FFaerieGridShape GetEntryPositions(const FEntryKey& Key) const;
-	bool FitsInGrid(const FFaerieGridShape& Shape, const FIntPoint& Position, const FSpatialContent& Occupied,
-	                const bool bCheckingRotation = false,
-	                const FEntryKey& ExcludeKey = FEntryKey()) const;
-	TOptional<FIntPoint> GetFirstEmptyLocation(const FFaerieGridShape& InShape, const FSpatialContent& Occupied) const;
+	// @todo probably split into two functions. one with rotation check, one without. public API probably doesn't need to see the rotation check!
+	bool FitsInGrid(const FFaerieGridShape& Shape, const FIntPoint& Position, const bool bCheckingRotation = false,
+	                const FEntryKey& ExcludedKey = FEntryKey()) const;
+
+	TOptional<FIntPoint> GetFirstEmptyLocation(const FFaerieGridShape& InShape) const;
 
 	FSpatialEntryChangedNative& GetOnSpatialEntryChanged() { return SpatialEntryChangedDelegateNative; }
-	FSpatialContent& GetContent() { return OccupiedSlots; }
+	FGridSizeChangedNative& GetOnGridSizeChanged() { return GridSizeChangedDelegateNative; }
+
+	UFUNCTION(BlueprintCallable, Category = "Grid")
+	FFaerieGridShape GetEntryPositions(const FEntryKey& Key) const;
 
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Grid")
 	void SetGridSize(FIntPoint NewGridSize);
 
 protected:
-	UPROPERTY(BlueprintAssignable, Category = "Delegates")
+	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FSpatialEntryChanged SpatialEntryChangedDelegate;
 
-	UPROPERTY(BlueprintAssignable, Category = "Delegates")
+	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FGridSizeChanged GridSizeChangedDelegate;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, ReplicatedUsing=OnRep_GridSize, Category = "Config")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, ReplicatedUsing = "OnRep_GridSize", Category = "Config")
 	FIntPoint GridSize = FIntPoint(10, 40);
 
 	UPROPERTY(EditAnywhere, Replicated, Category = "Data")
@@ -171,6 +171,4 @@ protected:
 private:
 	FSpatialEntryChangedNative SpatialEntryChangedDelegateNative;
 	FGridSizeChangedNative GridSizeChangedDelegateNative;
-	UFUNCTION()
-	void OnRep_GridSize();
 };

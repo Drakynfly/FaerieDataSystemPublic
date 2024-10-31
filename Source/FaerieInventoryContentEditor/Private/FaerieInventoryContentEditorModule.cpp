@@ -27,15 +27,15 @@ void FFaerieInventoryContentEditorModule::StartupModule()
 	TMap<FName, FOnGetPropertyTypeCustomizationInstance> StructCustomizations;
 
 	StructCustomizations.Add(FFaerieInventoryMetaTag::StaticStruct()->GetFName(),
-	FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FGameplayTagCustomizationPublic::MakeInstance));
+		FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FGameplayTagCustomizationPublic::MakeInstance));
 	StructCustomizations.Add(FFaerieInventoryUserTag::StaticStruct()->GetFName(),
-	FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FGameplayTagCustomizationPublic::MakeInstance));
+		FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FGameplayTagCustomizationPublic::MakeInstance));
 	StructCustomizations.Add(FWeightEditor::StaticStruct()->GetFName(),
-	FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FInventoryWeightCustomization::MakeInstance));
+		FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FInventoryWeightCustomization::MakeInstance));
 	StructCustomizations.Add(FWeightEditor_Float::StaticStruct()->GetFName(),
-	FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FInventoryWeightCustomization::MakeInstance));
+		FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FInventoryWeightCustomization::MakeInstance));
 	StructCustomizations.Add(FItemCapacity::StaticStruct()->GetFName(),
-	FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FItemCapacityCustomization::MakeInstance));
+		FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FItemCapacityCustomization::MakeInstance));
 	StructCustomizations.Add(FFaerieGridShape::StaticStruct()->GetFName(),
 		FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FItemShapeCustomization::MakeInstance));
 

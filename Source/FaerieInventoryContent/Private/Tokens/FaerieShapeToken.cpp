@@ -1,7 +1,6 @@
 // Copyright Guy (Drakynfly) Lundvall. All Rights Reserved.
 
 #include "Tokens/FaerieShapeToken.h"
-#include "Extensions/InventorySpatialGridExtension.h"
 #include "Net/UnrealNetwork.h"
 
 void UFaerieShapeToken::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

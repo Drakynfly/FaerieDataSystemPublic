@@ -16,11 +16,23 @@ struct FAERIEINVENTORYCONTENT_API FFaerieGridShape
 	TArray<FIntPoint> Points;
 
 	// Make a rectangular shape
+	static FFaerieGridShape MakeSquare(int32 Size);
 	static FFaerieGridShape MakeRect(int32 Height, int32 Width);
 
-	void Translate(const FIntPoint& Position);
+	FIntPoint GetSize() const;
 
-	void Rotate(const FIntPoint& PivotPoint);
-	
-	void NormalizeShape();
+	bool CanRotate() const;
+
+	void TranslateInline(const FIntPoint& Position);
+	[[nodiscard]] FFaerieGridShape Translate(const FIntPoint& Position) const;
+
+	/* 90 degree rotation */
+	void RotateInline(const FIntPoint& PivotPoint);
+	[[nodiscard]] FFaerieGridShape Rotate(const FIntPoint& PivotPoint) const;
+
+	void NormalizeInline();
+	[[nodiscard]] FFaerieGridShape Normalize() const;
+
+	friend bool operator==(const FFaerieGridShape& Lhs, const FFaerieGridShape& Rhs);
+	friend bool operator!=(const FFaerieGridShape& Lhs, const FFaerieGridShape& Rhs) { return !(Lhs == Rhs); }
 };

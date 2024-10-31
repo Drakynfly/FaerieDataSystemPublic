@@ -29,6 +29,7 @@ public class FaerieInventoryContentEditor : ModuleRules
                 "GameplayTagsEditor",
                 "Slate",
                 "SlateCore",
+                "UnrealEd"
             }
         );
     }

@@ -6,8 +6,6 @@
 #include "SpatialStructs.h"
 #include "FaerieShapeToken.generated.h"
 
-struct FSpatialContent;
-
 /**
  * Adds a GridShape to an item. Used with Faerie Spatial Grid Extension.
  */
@@ -18,7 +16,9 @@ class FAERIEINVENTORYCONTENT_API UFaerieShapeToken : public UFaerieItemToken
 
 public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 	FFaerieGridShape GetShape() const { return Shape; }
+
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Replicated, meta = (ShowOnlyInnerProperties))
 	FFaerieGridShape Shape;

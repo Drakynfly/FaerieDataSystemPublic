@@ -202,7 +202,12 @@ void FFaerieClientAction_RequestMoveItemBetweenSpatialSlots::Server_Execute(cons
 
 void FFaerieClientAction_RequestRotateSpatialEntry::Server_Execute(const UFaerieInventoryClient* Client) const
 {
-	auto* SpatialExtension = Storage->GetExtension<UInventorySpatialGridExtension>();
-	SpatialExtension->RotateItem(Key,Loc);
-}
+	if (!IsValid(Storage)) return;
+	if (!Client->CanAccessStorage(Storage)) return;
 
+	if (auto&& SpatialExtension = Storage->GetExtension<UInventorySpatialGridExtension>())
+	{
+		// @todo the extension should know where the Loc is. we shouldn't have to provide it here!
+		SpatialExtension->RotateItem(Key, Loc);
+	}
+}

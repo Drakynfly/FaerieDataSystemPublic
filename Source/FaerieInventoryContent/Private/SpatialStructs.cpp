@@ -2,6 +2,11 @@
 
 #include "SpatialStructs.h"
 
+FFaerieGridShape FFaerieGridShape::MakeSquare(const int32 Size)
+{
+	return MakeRect(Size, Size);
+}
+
 FFaerieGridShape FFaerieGridShape::MakeRect(const int32 Height, const int32 Width)
 {
 	FFaerieGridShape OutShape;
@@ -16,47 +21,110 @@ FFaerieGridShape FFaerieGridShape::MakeRect(const int32 Height, const int32 Widt
 	return OutShape;
 }
 
-void FFaerieGridShape::Translate(const FIntPoint& Position)
+FIntPoint FFaerieGridShape::GetSize() const
 {
-	NormalizeShape();
+	FFaerieGridShape Normal = Normalize();
+	FIntPoint Size = FIntPoint::ZeroValue;
+	for (auto&& Point : Normal.Points)
+	{
+		Size.X = FMath::Max(Size.X, Point.X);
+		Size.Y = FMath::Max(Size.Y, Point.Y);
+	}
+	return Size;
+}
+
+bool FFaerieGridShape::CanRotate() const
+{
+	const FIntPoint Size = GetSize();
+
+	// If our dimensions are dissimilar, we can be rotated
+	if (Size.X != Size.Y) return true;
+
+	// If we are a square of our dimension, we cannot rotate
+	return MakeSquare(Size.X) != *this;
+
+	// @todo there are other shapes that cannot rotate! any shape that is radially symmetrical at 90 degree angles is un-rotatable.
+}
+
+void FFaerieGridShape::TranslateInline(const FIntPoint& Position)
+{
 	for (FIntPoint& Coord : Points)
 	{
 		Coord += Position;
 	}
 }
 
-void FFaerieGridShape::NormalizeShape()
+FFaerieGridShape FFaerieGridShape::Translate(const FIntPoint& Position) const
+{
+	FFaerieGridShape OutShape = *this;
+	OutShape.TranslateInline(Position);
+	return OutShape;
+}
+
+void FFaerieGridShape::RotateInline(const FIntPoint& PivotPoint)
+{
+	for (FIntPoint& Point : Points)
+	{
+		// Rebase to pivot
+		FIntPoint Relative = Point - PivotPoint;
+
+		// Trade places
+		Swap(Relative.X, Relative.Y);
+
+		// Flip Y
+		Relative.Y *= -1;
+
+		// Remove rebase
+		Point = Relative + PivotPoint;
+	}
+}
+
+FFaerieGridShape FFaerieGridShape::Rotate(const FIntPoint& PivotPoint) const
+{
+	FFaerieGridShape NewShape = *this;
+	NewShape.RotateInline(PivotPoint);
+	return NewShape;
+}
+
+void FFaerieGridShape::NormalizeInline()
 {
 	if (Points.IsEmpty())
 	{
 		return;
 	}
-    
-	int32 MinX = Points[0].X;
-	int32 MinY = Points[0].Y;
-    
+
+	FIntPoint Min(TNumericLimits<int32>::Max());
+
 	for (const FIntPoint& Point : Points)
 	{
-		MinX = FMath::Min(MinX, Point.X);
-		MinY = FMath::Min(MinY, Point.Y);
+		Min.X = FMath::Min(Min.X, Point.X);
+		Min.Y = FMath::Min(Min.Y, Point.Y);
 	}
-    
+
 	for (FIntPoint& Point : Points)
 	{
-		Point.X -= MinX;
-		Point.Y -= MinY;
+		Point -= Min;
 	}
 }
 
-void FFaerieGridShape::Rotate(const FIntPoint& PivotPoint)
+FFaerieGridShape FFaerieGridShape::Normalize() const
 {
-	FFaerieGridShape NewShape;
-	NewShape.Points.Reserve(Points.Num());
-	for (const FIntPoint& Point : Points)
+	FFaerieGridShape NewShape = *this;
+	NewShape.NormalizeInline();
+	return NewShape;
+}
+
+bool operator==(const FFaerieGridShape& Lhs, const FFaerieGridShape& Rhs)
+{
+	// Mismatching point numbers; auto-fail
+	if (Lhs.Points.Num() != Rhs.Points.Num()) return false;
+
+	// @todo points have to be found individually, instead of just comparing the arrays, because the same points are not guaranteed to be in the same order.
+	// to fix this, Points would have to be sorted. until then, this is really slow!!
+	for (auto&& Point : Lhs.Points)
 	{
-		FIntPoint Relative = Point - PivotPoint;
-		FIntPoint Rotated(Relative.Y, -Relative.X);
-		NewShape.Points.Add(Rotated + PivotPoint);
+		if (!Rhs.Points.Contains(Point)) return false;
 	}
-	Points = NewShape.Points;
+
+	return true;
 }

@@ -140,7 +140,7 @@ struct FFaerieClientAction_RequestMoveItemBetweenSlots : public FFaerieClientAct
 	TObjectPtr<UFaerieEquipmentSlot> ToSlot = nullptr;
 
 	UPROPERTY(BlueprintReadWrite, Category = "RequestMoveItemBetweenSlots")
-	bool CanSwapSlots;
+	bool CanSwapSlots = true;
 };
 
 USTRUCT(BlueprintType)
@@ -190,12 +190,12 @@ struct FFaerieClientAction_RequestRotateSpatialEntry : public FFaerieClientActio
 
 	virtual void Server_Execute(const UFaerieInventoryClient* Client) const override;
 
-	UPROPERTY(BlueprintReadWrite, Category = "RequestEjectEntry")
-	TObjectPtr<UFaerieItemStorage> Storage;
+	UPROPERTY(BlueprintReadWrite, Category = "RequestRotateSpatialEntry")
+	TObjectPtr<UFaerieItemStorage> Storage = nullptr;
 
-	UPROPERTY(BlueprintReadWrite, Category = "RequestEjectEntry")
+	UPROPERTY(BlueprintReadWrite, Category = "RequestRotateSpatialEntry")
 	FEntryKey Key;
-	
-	UPROPERTY(BlueprintReadWrite, Category = "RequestMoveEntryToEquipmentSlot")
-	FIntPoint Loc;
+
+	UPROPERTY(BlueprintReadWrite, Category = "RequestRotateSpatialEntry")
+	FIntPoint Loc = FIntPoint::ZeroValue;
 };

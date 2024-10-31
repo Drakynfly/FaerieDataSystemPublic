@@ -1,93 +1,55 @@
 // Copyright Guy (Drakynfly) Lundvall. All Rights Reserved.
 
-
 #include "ItemShapeCustomization.h"
 
 #include "DetailWidgetRow.h"
-#include "Widgets/Input/SSpinBox.h"
 #include "Widgets/Layout/SUniformGridPanel.h"
 #include "IDetailChildrenBuilder.h"
-#include "IPropertyUtilities.h"
 #include "SpatialStructs.h"
 
-#define LOCTEXT_NAMESPACE "ShapeGridCustomization"
+#define LOCTEXT_NAMESPACE "ItemShapeCustomization"
 
 TSharedRef<IPropertyTypeCustomization> FItemShapeCustomization::MakeInstance()
 {
     return MakeShareable(new FItemShapeCustomization());
 }
 
-void FItemShapeCustomization::CustomizeHeader(TSharedRef<IPropertyHandle> PropertyHandle, FDetailWidgetRow& HeaderRow, IPropertyTypeCustomizationUtils& CustomizationUtils)
+void FItemShapeCustomization::CustomizeHeader(const TSharedRef<IPropertyHandle> PropertyHandle, FDetailWidgetRow& HeaderRow, IPropertyTypeCustomizationUtils& CustomizationUtils)
 {
-    StructHandle = PropertyHandle;
-    
     HeaderRow.NameContent()
     [
-        PropertyHandle->CreatePropertyNameWidget(FText().FromString("Item Shape Builder"))
+        PropertyHandle->CreatePropertyNameWidget()
     ];
 }
 
-void FItemShapeCustomization::CustomizeChildren(TSharedRef<IPropertyHandle> PropertyHandle, IDetailChildrenBuilder& ChildBuilder, IPropertyTypeCustomizationUtils& CustomizationUtils)
+void FItemShapeCustomization::CustomizeChildren(const TSharedRef<IPropertyHandle> PropertyHandle, IDetailChildrenBuilder& ChildBuilder, IPropertyTypeCustomizationUtils& CustomizationUtils)
 {
-    const float CellSize = 25.0f;
-    
+    StructHandle = PropertyHandle;
+    StructHandle->SetOnPropertyValueChanged(FSimpleDelegate::CreateSP(this, &FItemShapeCustomization::UpdateGridPanel));
+
     GridPanel = SNew(SUniformGridPanel)
-    .SlotPadding(FMargin(1));
-    
-    for (int32 Y = 0; Y < GridSize; Y++)
-    {
-        for (int32 X = 0; X < GridSize; X++)
-        {
-            const FIntPoint CellCoord(X, Y);
-            GridPanel->AddSlot(X, Y)
-            [
-                SNew(SBox)
-                .HeightOverride(CellSize)
-                .WidthOverride(CellSize)
-                [
-                    SNew(SButton)
-                    .OnClicked_Lambda([this, CellCoord]()
-                    {
-                        OnCellClicked(CellCoord);
-                        return FReply::Handled();
-                    })
-                    .ButtonColorAndOpacity_Lambda([this, CellCoord]()
-                    {
-                        return IsCellSelected(CellCoord) ? FLinearColor::Blue : FLinearColor::White;
-                    })
-                    .ContentPadding(FMargin(0))
-                    .DesiredSizeScale(FVector2D(1.0f, 1.0f))
-                    .HAlign(HAlign_Fill)
-                    .VAlign(VAlign_Fill)
-                ]
-            ];
-        }
-    }
-    
+        .SlotPadding(FMargin(1.f));
+
+    UpdateGridPanel();
+
     ChildBuilder.AddCustomRow(LOCTEXT("GridRow", "Grid"))
-    .WholeRowContent()
-    [
-        SNew(SBox)
-        .Padding(FMargin(0, 5))
-        .HAlign(HAlign_Center)
+        .WholeRowContent()
         [
-            GridPanel.ToSharedRef()
-        ]
-    ];
-
-    Builder = &ChildBuilder;
-    Utils = &CustomizationUtils;
+            SNew(SBox)
+            .Padding(FMargin(0, 5))
+            .HAlign(HAlign_Center)
+            [
+                GridPanel.ToSharedRef()
+            ]
+        ];
 }
-
 
 void FItemShapeCustomization::UpdateGridPanel()
 {
-    if (!Builder) return;
-    
-    const float CellSize = 25.0f;
-    
+    static constexpr float CellSize = 24.0f;
+
     GridPanel->ClearChildren();
-    
+
     for (int32 Y = 0; Y < GridSize; Y++)
     {
         for (int32 X = 0; X < GridSize; X++)
@@ -100,6 +62,7 @@ void FItemShapeCustomization::UpdateGridPanel()
                 .WidthOverride(CellSize)
                 [
                     SNew(SButton)
+                    .IsEnabled(!StructHandle->IsEditConst())
                     .OnClicked_Lambda([this, CellCoord]()
                     {
                         OnCellClicked(CellCoord);
@@ -119,51 +82,80 @@ void FItemShapeCustomization::UpdateGridPanel()
     }
 }
 
-void FItemShapeCustomization::OnGridSizeChanged(int32 NewValue, ETextCommit::Type CommitType)
+void FItemShapeCustomization::OnGridSizeChanged(const int32 NewValue, ETextCommit::Type CommitType)
 {
     GridSize = NewValue;
-    
-    TArray<FIntPoint> CurrentPoints;
-    void* StructPtr;
-    StructHandle->GetValueData(StructPtr);
-    FFaerieGridShape* ShapeGrid = static_cast<FFaerieGridShape*>(StructPtr);
-    if (ShapeGrid)
+    ON_SCOPE_EXIT
     {
-        CurrentPoints = ShapeGrid->Points;
-        CurrentPoints.RemoveAll([this](const FIntPoint& Point) {
-            return Point.X >= GridSize || Point.Y >= GridSize;
-        });
-        ShapeGrid->Points = CurrentPoints;
-        StructHandle->NotifyPostChange(EPropertyChangeType::ArrayAdd);
-    }
+        UpdateGridPanel();
+    };
 
-    UpdateGridPanel();
+    if (!StructHandle.IsValid()) return;
+
+    void* StructPtr = nullptr;
+    const FPropertyAccess::Result Result = StructHandle->GetValueData(StructPtr);
+    if (Result == FPropertyAccess::Success)
+    {
+        check(StructPtr);
+        FFaerieGridShape* ShapeGrid = static_cast<FFaerieGridShape*>(StructPtr);
+
+        ShapeGrid->Points.RemoveAll(
+            [this](const FIntPoint& Point)
+            {
+                return Point.X >= GridSize || Point.Y >= GridSize;
+            });
+
+        StructHandle->NotifyPostChange(EPropertyChangeType::ArrayRemove);
+    }
 }
 
-void FItemShapeCustomization::OnCellClicked(FIntPoint CellCoord)
+void FItemShapeCustomization::OnCellClicked(const FIntPoint CellCoord)
 {
-    void* StructPtr;
-    StructHandle->GetValueData(StructPtr);
-    FFaerieGridShape* ShapeGrid = static_cast<FFaerieGridShape*>(StructPtr);
-    if (ShapeGrid)
+    if (!StructHandle.IsValid()) return;
+
+    void* StructPtr = nullptr;
+    const FPropertyAccess::Result Result = StructHandle->GetValueData(StructPtr);
+    if (Result == FPropertyAccess::Success)
     {
+        check(StructPtr);
+        FFaerieGridShape* ShapeGrid = static_cast<FFaerieGridShape*>(StructPtr);
+
+        const FScopedTransaction Transaction(LOCTEXT("TogglePoint", "Toggle point on shape"));
+
+        TArray<UObject*> Outers;
+        StructHandle->GetOuterObjects(Outers);
+        for (auto&& Outer : Outers)
+        {
+            Outer->Modify();
+        }
+
+        StructHandle->NotifyPreChange();
         if (ShapeGrid->Points.Contains(CellCoord))
         {
             ShapeGrid->Points.Remove(CellCoord);
+            StructHandle->NotifyPostChange(EPropertyChangeType::ArrayRemove);
         }
         else
         {
             ShapeGrid->Points.Add(CellCoord);
+            StructHandle->NotifyPostChange(EPropertyChangeType::ArrayAdd);
         }
     }
 }
 
-bool FItemShapeCustomization::IsCellSelected(FIntPoint CellCoord) const
+bool FItemShapeCustomization::IsCellSelected(const FIntPoint CellCoord) const
 {
-    void* StructPtr;
-    StructHandle->GetValueData(StructPtr);
-    const FFaerieGridShape* ShapeGrid = static_cast<FFaerieGridShape*>(StructPtr);
-    return ShapeGrid ? ShapeGrid->Points.Contains(CellCoord) : false;
+    if (!StructHandle.IsValid()) return false;
+
+    void* StructPtr = nullptr;
+    const FPropertyAccess::Result Result = StructHandle->GetValueData(StructPtr);
+    if (Result == FPropertyAccess::Success)
+    {
+        check(StructPtr);
+        const FFaerieGridShape* ShapeGrid = static_cast<FFaerieGridShape*>(StructPtr);
+        return ShapeGrid->Points.Contains(CellCoord);
+    }
+    return false;
 }
 
 #undef LOCTEXT_NAMESPACE
