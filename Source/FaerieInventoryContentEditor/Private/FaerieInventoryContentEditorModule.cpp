@@ -3,7 +3,9 @@
 #include "FaerieInventoryContentEditorModule.h"
 #include "PropertyEditorModule.h"
 #include "GameplayTagsEditorModule.h"
+#include "SpatialStructs.h"
 #include "Customizations/ItemCapacityCustomization.h"
+#include "Customizations/ItemShapeCustomization.h"
 #include "Extensions/InventoryMetadataExtension.h"
 #include "Extensions/InventoryUserdataExtension.h"
 #include "Tokens/CapacityTokenDetailsCustomization.h"
@@ -34,6 +36,8 @@ void FFaerieInventoryContentEditorModule::StartupModule()
 	FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FInventoryWeightCustomization::MakeInstance));
 	StructCustomizations.Add(FItemCapacity::StaticStruct()->GetFName(),
 	FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FItemCapacityCustomization::MakeInstance));
+	StructCustomizations.Add(FFaerieGridShape::StaticStruct()->GetFName(),
+		FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FItemShapeCustomization::MakeInstance));
 
 	RegisterPropertyCustomizations(StructCustomizations);
 }

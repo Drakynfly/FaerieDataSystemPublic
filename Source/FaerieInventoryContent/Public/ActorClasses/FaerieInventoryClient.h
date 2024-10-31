@@ -173,3 +173,29 @@ struct FFaerieClientAction_RequestMoveEquipmentSlotToInventory : public FFaerieC
 	UPROPERTY(BlueprintReadWrite, Category = "RequestMoveEquipmentSlotToInventory")
 	int32 Amount = -1;
 };
+
+USTRUCT(BlueprintType)
+struct FFaerieClientAction_RequestMoveItemBetweenSpatialSlots : public FFaerieClientActionBase
+{
+	GENERATED_BODY()
+
+	virtual void Server_Execute(const UFaerieInventoryClient* Client) const override;
+	//TODO
+};
+
+USTRUCT(BlueprintType)
+struct FFaerieClientAction_RequestRotateSpatialEntry : public FFaerieClientActionBase
+{
+	GENERATED_BODY()
+
+	virtual void Server_Execute(const UFaerieInventoryClient* Client) const override;
+
+	UPROPERTY(BlueprintReadWrite, Category = "RequestEjectEntry")
+	TObjectPtr<UFaerieItemStorage> Storage;
+
+	UPROPERTY(BlueprintReadWrite, Category = "RequestEjectEntry")
+	FEntryKey Key;
+	
+	UPROPERTY(BlueprintReadWrite, Category = "RequestMoveEntryToEquipmentSlot")
+	FIntPoint Loc;
+};

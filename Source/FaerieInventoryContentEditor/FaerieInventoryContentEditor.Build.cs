@@ -15,7 +15,8 @@ public class FaerieInventoryContentEditor : ModuleRules
                 "FaerieEquipmentEditor",
                 "FaerieInventoryContent",
                 "FaerieDataSystemEditor",
-                "StructUtils"
+                "StructUtils",
+                "InputCore"
             }
         );
 
