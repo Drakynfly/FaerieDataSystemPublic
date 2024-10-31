@@ -196,6 +196,9 @@ struct FFaerieClientAction_RequestRotateSpatialEntry : public FFaerieClientActio
 	UPROPERTY(BlueprintReadWrite, Category = "RequestRotateSpatialEntry")
 	FEntryKey Key;
 
+	// Location to pivot around
 	UPROPERTY(BlueprintReadWrite, Category = "RequestRotateSpatialEntry")
 	FIntPoint Loc = FIntPoint::ZeroValue;
+
+	// @todo should also pass a 90 degree / 180 degree parameter...
 };

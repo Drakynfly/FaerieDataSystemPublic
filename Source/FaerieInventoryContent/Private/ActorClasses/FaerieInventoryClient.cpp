@@ -207,7 +207,6 @@ void FFaerieClientAction_RequestRotateSpatialEntry::Server_Execute(const UFaerie
 
 	if (auto&& SpatialExtension = Storage->GetExtension<UInventorySpatialGridExtension>())
 	{
-		// @todo the extension should know where the Loc is. we shouldn't have to provide it here!
 		SpatialExtension->RotateItem(Key, Loc);
 	}
 }
