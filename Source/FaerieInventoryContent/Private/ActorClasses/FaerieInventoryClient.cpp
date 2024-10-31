@@ -4,6 +4,7 @@
 #include "FaerieEquipmentSlot.h"
 #include "FaerieItemStorage.h"
 #include "Extensions/InventoryEjectionHandlerExtension.h"
+#include "Extensions/InventorySpatialGridExtension.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FaerieInventoryClient)
 
@@ -193,3 +194,15 @@ void FFaerieClientAction_RequestMoveEquipmentSlotToInventory::Server_Execute(con
 		ToStorage->AddItemStack(Stack);
 	}
 }
+
+void FFaerieClientAction_RequestMoveItemBetweenSpatialSlots::Server_Execute(const UFaerieInventoryClient* Client) const
+{
+	//ToDo
+}
+
+void FFaerieClientAction_RequestRotateSpatialEntry::Server_Execute(const UFaerieInventoryClient* Client) const
+{
+	auto* SpatialExtension = Storage->GetExtension<UInventorySpatialGridExtension>();
+	SpatialExtension->RotateItem(Key,Loc);
+}
+

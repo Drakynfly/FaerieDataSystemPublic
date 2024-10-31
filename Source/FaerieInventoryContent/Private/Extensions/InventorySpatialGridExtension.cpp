@@ -193,7 +193,8 @@ FFaerieGridShape UInventorySpatialGridExtension::GetEntryPositions(const FEntryK
 }
 
 bool UInventorySpatialGridExtension::FitsInGrid(const FFaerieGridShape& Shape, const FIntPoint& Position,
-                                                const FSpatialContent& Occupied) const
+                                                const FSpatialContent& Occupied, const bool bCheckingRotation,
+                                                const FEntryKey& ExcludedKey) const
 {
 	FFaerieGridShape LocalShape = Shape;
 	LocalShape.NormalizeShape();
@@ -211,6 +212,10 @@ bool UInventorySpatialGridExtension::FitsInGrid(const FFaerieGridShape& Shape, c
 		{
 			if (Entry.Key.Key == AbsolutePosition)
 			{
+				if(bCheckingRotation && Entry.Value == ExcludedKey)
+				{
+					continue;
+				}
 				return false;
 			}
 		}
@@ -245,35 +250,30 @@ bool UInventorySpatialGridExtension::MoveItem(const FEntryKey& Key, const FIntPo
                                               const FIntPoint& TargetPoint)
 {
 	FFaerieGridShape CurrentShape = GetEntryPositions(Key);
-	if (CurrentShape.Points.Num() == 0)
-	{
-		return false;
-	}
-
-	if (!CurrentShape.Points.Contains(SourcePoint))
+	if (CurrentShape.Points.IsEmpty() || !CurrentShape.Points.Contains(SourcePoint))
 	{
 		return false;
 	}
 
 	FIntPoint Offset = TargetPoint - SourcePoint;
 
-	if (!CanMoveItem(CurrentShape, Offset))
+	FFaerieGridShape NewShape;
+	NewShape.Points.Reserve(CurrentShape.Points.Num());
+	for (const FIntPoint& Point : CurrentShape.Points)
+	{
+		NewShape.Points.Add(Point + Offset);
+	}
+
+	if (!FitsInGrid(NewShape, FIntPoint::ZeroValue, OccupiedSlots))
 	{
 		return false;
 	}
 
 	RemoveItemFromGrid(Key);
 
-	FFaerieGridShape NewShape;
-	for (const FIntPoint& Point : CurrentShape.Points)
-	{
-		NewShape.Points.Add(Point + Offset);
-	}
-
 	for (const FIntPoint& Pos : NewShape.Points)
 	{
-		const FSpatialEntryKey EntryKey{Pos};
-		OccupiedSlots.Insert(EntryKey, Key);
+		OccupiedSlots.Insert(FSpatialEntryKey{Pos}, Key);
 	}
 
 	return true;
@@ -281,92 +281,15 @@ bool UInventorySpatialGridExtension::MoveItem(const FEntryKey& Key, const FIntPo
 
 bool UInventorySpatialGridExtension::RotateItem(const FEntryKey& Key, const FIntPoint& PivotPoint)
 {
-	FFaerieGridShape CurrentShape = GetEntryPositions(Key);
-	if (CurrentShape.Points.Num() == 0 || CurrentShape.Points.IsEmpty())
-	{
-		return false;
-	}
-
-	if(Key.Value() == -1) return false;
-
-	if (!CurrentShape.Points.Contains(PivotPoint))
-	{
-		return false;
-	}
-	
-	if(!CanRotateItem(CurrentShape, PivotPoint)) return false;
-
+	FFaerieGridShape NewShape = GetEntryPositions(Key);
+	NewShape.Rotate(PivotPoint);
+	if (!FitsInGrid(NewShape, PivotPoint, OccupiedSlots, true, Key)) return false;
 	RemoveItemFromGrid(Key);
-
-	FFaerieGridShape NewShape;
-	NewShape.Points.Reserve(CurrentShape.Points.Num());
-	for (const FIntPoint& Point : CurrentShape.Points)
-	{
-		FIntPoint Relative = Point - PivotPoint;
-		FIntPoint Rotated(Relative.Y, -Relative.X);
-		NewShape.Points.Add(Rotated + PivotPoint);
-	}
-
 	for (const FIntPoint& Pos : NewShape.Points)
 	{
 		const FSpatialEntryKey EntryKey{Pos};
 		OccupiedSlots.Insert(EntryKey, Key);
 	}
-	return true;
-}
-
-bool UInventorySpatialGridExtension::CanMoveItem(const FFaerieGridShape& Shape, const FIntPoint& Offset) const
-{
-	FFaerieGridShape NewShape;
-	for (const FIntPoint& Point : Shape.Points)
-	{
-		FIntPoint NewPoint = Point + Offset;
-
-		if (NewPoint.X < 0 || NewPoint.X >= GridSize.X ||
-			NewPoint.Y < 0 || NewPoint.Y >= GridSize.Y)
-		{
-			return false;
-		}
-
-		const FSpatialEntryKey EntryKey{NewPoint};
-		for (const FSpatialKeyedEntry& Entry : OccupiedSlots.GetEntries())
-		{
-			if (Entry.Key == EntryKey && !Shape.Points.Contains(Entry.Key.Key))
-			{
-				return false;
-			}
-		}
-
-		NewShape.Points.Add(NewPoint);
-	}
-
-	return true;
-}
-
-bool UInventorySpatialGridExtension::CanRotateItem(const FFaerieGridShape& Shape, const FIntPoint& PivotPoint) const
-{
-	for (const FIntPoint& Point : Shape.Points)
-	{
-		FIntPoint Relative = Point - PivotPoint;
-		FIntPoint Rotated(Relative.Y, -Relative.X);
-		FIntPoint NewPoint = Rotated + PivotPoint;
-
-		if (NewPoint.X < 0 || NewPoint.X >= GridSize.X ||
-		   NewPoint.Y < 0 || NewPoint.Y >= GridSize.Y)
-		{
-			return false;
-		}
-
-		const FSpatialEntryKey EntryKey{NewPoint};
-		for (const FSpatialKeyedEntry& Entry : OccupiedSlots.GetEntries())
-		{
-			if (Entry.Key == EntryKey && !Shape.Points.Contains(Entry.Key.Key))
-			{
-				return false;
-			}
-		}
-	}
-
 	return true;
 }
 

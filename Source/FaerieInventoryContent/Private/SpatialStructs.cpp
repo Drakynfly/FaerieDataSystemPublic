@@ -47,3 +47,16 @@ void FFaerieGridShape::NormalizeShape()
 		Point.Y -= MinY;
 	}
 }
+
+void FFaerieGridShape::Rotate(const FIntPoint& PivotPoint)
+{
+	FFaerieGridShape NewShape;
+	NewShape.Points.Reserve(Points.Num());
+	for (const FIntPoint& Point : Points)
+	{
+		FIntPoint Relative = Point - PivotPoint;
+		FIntPoint Rotated(Relative.Y, -Relative.X);
+		NewShape.Points.Add(Rotated + PivotPoint);
+	}
+	Points = NewShape.Points;
+}

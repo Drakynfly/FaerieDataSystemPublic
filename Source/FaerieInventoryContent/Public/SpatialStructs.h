@@ -20,5 +20,7 @@ struct FAERIEINVENTORYCONTENT_API FFaerieGridShape
 
 	void Translate(const FIntPoint& Position);
 
+	void Rotate(const FIntPoint& PivotPoint);
+	
 	void NormalizeShape();
 };
