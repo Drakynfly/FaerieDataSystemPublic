@@ -48,73 +48,94 @@ void UFaerieInventoryClient::RequestExecuteAction_Implementation(const TInstance
 {
 	if (Args.IsValid())
 	{
-		Args.Get().Server_Execute(this);
+		(void)Args.Get().Server_Execute(this);
 	}
 }
 
-void FFaerieClientAction_RequestDeleteEntry::Server_Execute(const UFaerieInventoryClient* Client) const
+void UFaerieInventoryClient::RequestExecuteAction_Batch_Implementation(
+	const TArray<TInstancedStruct<FFaerieClientActionBase>>& Args, const EFaerieClientRequestBatchType Type)
 {
-	auto&& Storage = Handle.ItemStorage.Get();
-	if (!IsValid(Storage)) return;
-	if (!Client->CanAccessStorage(Storage)) return;
+	for (auto&& Element : Args)
+	{
+		bool Ran = false;
+		if (Element.IsValid())
+		{
+			Ran = Element.Get().Server_Execute(this);
+		}
 
-	Storage->RemoveStack(Handle.Key, FFaerieItemStorageEvents::Get().Removal_Deletion, Amount);
+		if (!Ran && Type == EFaerieClientRequestBatchType::Sequence)
+		{
+			// Sequence failed, exit.
+			return;
+		}
+	}
 }
 
-void FFaerieClientAction_RequestEjectEntry::Server_Execute(const UFaerieInventoryClient* Client) const
+bool FFaerieClientAction_RequestDeleteEntry::Server_Execute(const UFaerieInventoryClient* Client) const
 {
 	auto&& Storage = Handle.ItemStorage.Get();
-	if (!IsValid(Storage)) return;
-	if (!Client->CanAccessStorage(Storage)) return;
+	if (!IsValid(Storage)) return false;
+	if (!Client->CanAccessStorage(Storage)) return false;
 
-	Storage->RemoveStack(Handle.Key, FFaerieEjectionEvent::Get().Removal_Ejection, Amount);
+	return Storage->RemoveStack(Handle.Key, FFaerieItemStorageEvents::Get().Removal_Deletion, Amount);
 }
 
-void FFaerieClientAction_RequestMoveEntry::Server_Execute(const UFaerieInventoryClient* Client) const
+bool FFaerieClientAction_RequestEjectEntry::Server_Execute(const UFaerieInventoryClient* Client) const
 {
 	auto&& Storage = Handle.ItemStorage.Get();
-	if (!IsValid(Storage)) return;
-	if (!IsValid(ToStorage)) return;
-	if (!Client->CanAccessStorage(Storage)) return;
-	if (Storage == ToStorage) return;
+	if (!IsValid(Storage)) return false;
+	if (!Client->CanAccessStorage(Storage)) return false;
 
-	Storage->MoveStack(ToStorage, Handle.Key, Amount);
+	return Storage->RemoveStack(Handle.Key, FFaerieEjectionEvent::Get().Removal_Ejection, Amount);
+}
+
+bool FFaerieClientAction_RequestMoveEntry::Server_Execute(const UFaerieInventoryClient* Client) const
+{
+	auto&& Storage = Handle.ItemStorage.Get();
+	if (!IsValid(Storage)) return false;
+	if (!IsValid(ToStorage)) return false;
+	if (!Client->CanAccessStorage(Storage)) return false;
+	if (Storage == ToStorage) return false;
+
+	return Storage->MoveStack(ToStorage, Handle.Key, Amount).IsValid();
 }
 
 
-void FFaerieClientAction_RequestSetItemInSlot::Server_Execute(const UFaerieInventoryClient* Client) const
+bool FFaerieClientAction_RequestSetItemInSlot::Server_Execute(const UFaerieInventoryClient* Client) const
 {
-	if (!IsValid(Slot)) return;
-	if (!Client->CanAccessSlot(Slot)) return;
-	if (!Slot->CanSetInSlot(Stack)) return;
-	if (!IsValid(Stack.Item)) return;
+	if (!IsValid(Slot)) return false;
+	if (!Client->CanAccessSlot(Slot)) return false;
+	if (!Slot->CanSetInSlot(Stack)) return false;
+	if (!IsValid(Stack.Item)) return false;
 
 	if (Slot->CanSetInSlot(Stack))
 	{
 		Slot->SetItemInSlot(Stack);
+		return true;
 	}
+	return false;
 }
 
-void FFaerieClientAction_RequestMoveItemBetweenSlots::Server_Execute(const UFaerieInventoryClient* Client) const
+bool FFaerieClientAction_RequestMoveItemBetweenSlots::Server_Execute(const UFaerieInventoryClient* Client) const
 {
 	// Instant failure states
 	if (!IsValid(FromSlot) ||
 		!IsValid(ToSlot) ||
 		!Client->CanAccessSlot(FromSlot) ||
-		!Client->CanAccessSlot(ToSlot)) return;
+		!Client->CanAccessSlot(ToSlot)) return false;
 
 	// If we are not in Swap mode, return if either FromSlot is *not* filled or ToSlot *is* filled.
 	if (!CanSwapSlots &&
 		(!FromSlot->IsFilled() || ToSlot->IsFilled()))
 	{
-		return;
+		return false;
 	}
 
 	// This must always pass.
 	if (FromSlot->IsFilled() &&
 		!ToSlot->CouldSetInSlot(FromSlot->View()))
 	{
-		return;
+		return false;
 	}
 
 	TOptional<FFaerieItemStack> ToSlotStack;
@@ -123,7 +144,7 @@ void FFaerieClientAction_RequestMoveItemBetweenSlots::Server_Execute(const UFaer
 		if (!FromSlot->CouldSetInSlot(ToSlot->View()))
 		{
 			// If we are in Swap mode, but the FromSlot cannot take the item in the ToSlot then we must abort
-			return;
+			return false;
 		}
 
 		ToSlotStack = ToSlot->TakeItemFromSlot(Faerie::ItemData::UnlimitedStack);
@@ -139,40 +160,45 @@ void FFaerieClientAction_RequestMoveItemBetweenSlots::Server_Execute(const UFaer
 	{
 		FromSlot->SetItemInSlot(ToSlotStack.GetValue());
 	}
+
+	return true;
 }
 
 
-void FFaerieClientAction_RequestMoveEntryToEquipmentSlot::Server_Execute(const UFaerieInventoryClient* Client) const
+bool FFaerieClientAction_RequestMoveEntryToEquipmentSlot::Server_Execute(const UFaerieInventoryClient* Client) const
 {
 	// @todo expose amount as a parameter
 	int32 TempAmount = 1;
 
 	auto&& Storage = Handle.ItemStorage.Get();
-	if (!IsValid(Storage)) return;
-	if (!Client->CanAccessStorage(Storage)) return;
-	if (!IsValid(Slot)) return;
-	if (!Client->CanAccessSlot(Slot)) return;
-	if (!Slot->CanSetInSlot(Storage->View(Handle.Key.EntryKey).Resize(TempAmount))) return;
+	if (!IsValid(Storage)) return false;
+	if (!Client->CanAccessStorage(Storage)) return false;
+	if (!IsValid(Slot)) return false;
+	if (!Client->CanAccessSlot(Slot)) return false;
+	if (!Slot->CanSetInSlot(Storage->View(Handle.Key.EntryKey).Resize(TempAmount))) return false;
 
 	FFaerieItemStack OutStack;
 	if (!Storage->TakeStack(Handle.Key, OutStack, FFaerieItemStorageEvents::Get().Removal_Moving, TempAmount))
 	{
-		return;
+		return false;
 	}
 
 	if (IsValid(OutStack.Item) && OutStack.Copies == TempAmount)
 	{
 		Slot->SetItemInSlot(OutStack);
+		return true;
 	}
+
+	return false;
 }
 
-void FFaerieClientAction_RequestMoveEquipmentSlotToInventory::Server_Execute(const UFaerieInventoryClient* Client) const
+bool FFaerieClientAction_RequestMoveEquipmentSlotToInventory::Server_Execute(const UFaerieInventoryClient* Client) const
 {
-	if (!IsValid(Slot)) return;
-	if (!Slot->IsFilled()) return;
-	if (!Client->CanAccessSlot(Slot)) return;
-	if (!IsValid(ToStorage)) return;
-	if (!Client->CanAccessStorage(ToStorage)) return;
+	if (!IsValid(Slot)) return false;
+	if (!Slot->IsFilled()) return false;
+	if (!Client->CanAccessSlot(Slot)) return false;
+	if (!IsValid(ToStorage)) return false;
+	if (!Client->CanAccessStorage(ToStorage)) return false;
 
 	int32 StackAmount = Amount;
 
@@ -185,28 +211,33 @@ void FFaerieClientAction_RequestMoveEquipmentSlotToInventory::Server_Execute(con
 
 	if (!ToStorage->CanAddStack({Slot->GetItemObject(), StackAmount}))
 	{
-		return;
+		return false;
 	}
 
 	if (const FFaerieItemStack Stack = Slot->TakeItemFromSlot(StackAmount);
 		IsValid(Stack.Item))
 	{
-		ToStorage->AddItemStack(Stack);
+		return ToStorage->AddItemStack(Stack);
 	}
+
+	return false;
 }
 
-void FFaerieClientAction_RequestMoveItemBetweenSpatialSlots::Server_Execute(const UFaerieInventoryClient* Client) const
+bool FFaerieClientAction_RequestMoveItemBetweenSpatialSlots::Server_Execute(const UFaerieInventoryClient* Client) const
 {
 	//ToDo
+	return false;
 }
 
-void FFaerieClientAction_RequestRotateSpatialEntry::Server_Execute(const UFaerieInventoryClient* Client) const
+bool FFaerieClientAction_RequestRotateSpatialEntry::Server_Execute(const UFaerieInventoryClient* Client) const
 {
-	if (!IsValid(Storage)) return;
-	if (!Client->CanAccessStorage(Storage)) return;
+	if (!IsValid(Storage)) return false;
+	if (!Client->CanAccessStorage(Storage)) return false;
 
 	if (auto&& SpatialExtension = Storage->GetExtension<UInventorySpatialGridExtension>())
 	{
-		SpatialExtension->RotateItem(Key, Loc);
+		return SpatialExtension->RotateItem(Key, Loc);
 	}
+
+	return false;
 }

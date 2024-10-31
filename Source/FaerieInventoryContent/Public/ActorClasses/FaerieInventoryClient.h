@@ -25,7 +25,7 @@ struct FFaerieClientActionBase
 	 * Runs on the server when called by UFaerieInventoryClient::RequestExecuteAction.
 	 * Use this to implement Client-to-Server edits to item storage.
 	 */
-	virtual void Server_Execute(const UFaerieInventoryClient* Client) const PURE_VIRTUAL(FFaerieClientActionBase::Server_Execute, )
+	virtual bool Server_Execute(const UFaerieInventoryClient* Client) const PURE_VIRTUAL(FFaerieClientActionBase::Server_Execute, return false; )
 };
 
 template<>
@@ -35,6 +35,16 @@ struct TStructOpsTypeTraits<FFaerieClientActionBase> : public TStructOpsTypeTrai
 	{
 		WithPureVirtual = true,
 	};
+};
+
+UENUM()
+enum class EFaerieClientRequestBatchType : uint8
+{
+	// This batch is for sending multiple individual requests at once. Each one will be run, even if some fail.
+	Individuals,
+
+	// This batch is for sending a sequence of requests. If one fails, no more will run.
+	Sequence
 };
 
 /**
@@ -62,6 +72,16 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Server, Reliable, Category = "Faerie|InventoryClient")
 	void RequestExecuteAction(const TInstancedStruct<FFaerieClientActionBase>& Args);
+
+	/**
+	 * Sends requests to the server to perform a batch of inventory related edits.
+	 * Each Args struct must be an InstancedStruct deriving from FFaerieClientActionBase.
+	 * This can be called in BP by calling MakeInstancedStruct, and passing any struct into it that is named like "FFaerieClientAction_Request...".
+	 *
+	 * To define custom actions, derive a struct from FFaerieClientActionBase, and override Server_Execute.
+	 */
+	UFUNCTION(BlueprintCallable, Server, Reliable, Category = "Faerie|InventoryClient")
+	void RequestExecuteAction_Batch(const TArray<TInstancedStruct<FFaerieClientActionBase>>& Args, EFaerieClientRequestBatchType Type);
 };
 
 USTRUCT(BlueprintType)
@@ -69,7 +89,7 @@ struct FFaerieClientAction_RequestDeleteEntry : public FFaerieClientActionBase
 {
 	GENERATED_BODY()
 
-	virtual void Server_Execute(const UFaerieInventoryClient* Client) const override;
+	virtual bool Server_Execute(const UFaerieInventoryClient* Client) const override;
 
 	UPROPERTY(BlueprintReadWrite, Category = "RequestDeleteEntry")
 	FInventoryKeyHandle Handle;
@@ -83,7 +103,7 @@ struct FFaerieClientAction_RequestEjectEntry : public FFaerieClientActionBase
 {
 	GENERATED_BODY()
 
-	virtual void Server_Execute(const UFaerieInventoryClient* Client) const override;
+	virtual bool Server_Execute(const UFaerieInventoryClient* Client) const override;
 
 	UPROPERTY(BlueprintReadWrite, Category = "RequestEjectEntry")
 	FInventoryKeyHandle Handle;
@@ -97,7 +117,7 @@ struct FFaerieClientAction_RequestMoveEntry : public FFaerieClientActionBase
 {
 	GENERATED_BODY()
 
-	virtual void Server_Execute(const UFaerieInventoryClient* Client) const override;
+	virtual bool Server_Execute(const UFaerieInventoryClient* Client) const override;
 
 	UPROPERTY(BlueprintReadWrite, Category = "RequestMoveEntry")
 	FInventoryKeyHandle Handle;
@@ -115,7 +135,7 @@ struct FFaerieClientAction_RequestSetItemInSlot : public FFaerieClientActionBase
 {
 	GENERATED_BODY()
 
-	virtual void Server_Execute(const UFaerieInventoryClient* Client) const override;
+	virtual bool Server_Execute(const UFaerieInventoryClient* Client) const override;
 
 	UPROPERTY(BlueprintReadWrite, Category = "RequestSetItemInSlot")
 	TObjectPtr<UFaerieEquipmentSlot> Slot = nullptr;
@@ -131,7 +151,7 @@ struct FFaerieClientAction_RequestMoveItemBetweenSlots : public FFaerieClientAct
 {
 	GENERATED_BODY()
 
-	virtual void Server_Execute(const UFaerieInventoryClient* Client) const override;
+	virtual bool Server_Execute(const UFaerieInventoryClient* Client) const override;
 
 	UPROPERTY(BlueprintReadWrite, Category = "RequestMoveItemBetweenSlots")
 	TObjectPtr<UFaerieEquipmentSlot> FromSlot = nullptr;
@@ -148,7 +168,7 @@ struct FFaerieClientAction_RequestMoveEntryToEquipmentSlot : public FFaerieClien
 {
 	GENERATED_BODY()
 
-	virtual void Server_Execute(const UFaerieInventoryClient* Client) const override;
+	virtual bool Server_Execute(const UFaerieInventoryClient* Client) const override;
 
 	UPROPERTY(BlueprintReadWrite, Category = "RequestMoveEntryToEquipmentSlot")
 	FInventoryKeyHandle Handle;
@@ -162,7 +182,7 @@ struct FFaerieClientAction_RequestMoveEquipmentSlotToInventory : public FFaerieC
 {
 	GENERATED_BODY()
 
-	virtual void Server_Execute(const UFaerieInventoryClient* Client) const override;
+	virtual bool Server_Execute(const UFaerieInventoryClient* Client) const override;
 
 	UPROPERTY(BlueprintReadWrite, Category = "RequestMoveEquipmentSlotToInventory")
 	TObjectPtr<UFaerieEquipmentSlot> Slot = nullptr;
@@ -179,7 +199,7 @@ struct FFaerieClientAction_RequestMoveItemBetweenSpatialSlots : public FFaerieCl
 {
 	GENERATED_BODY()
 
-	virtual void Server_Execute(const UFaerieInventoryClient* Client) const override;
+	virtual bool Server_Execute(const UFaerieInventoryClient* Client) const override;
 	//TODO
 };
 
@@ -188,7 +208,7 @@ struct FFaerieClientAction_RequestRotateSpatialEntry : public FFaerieClientActio
 {
 	GENERATED_BODY()
 
-	virtual void Server_Execute(const UFaerieInventoryClient* Client) const override;
+	virtual bool Server_Execute(const UFaerieInventoryClient* Client) const override;
 
 	UPROPERTY(BlueprintReadWrite, Category = "RequestRotateSpatialEntry")
 	TObjectPtr<UFaerieItemStorage> Storage = nullptr;

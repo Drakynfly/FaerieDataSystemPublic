@@ -90,7 +90,7 @@ struct FFaerieClientAction_RequestMarkStackWithTag : public FFaerieClientActionB
 {
 	GENERATED_BODY()
 
-	virtual void Server_Execute(const UFaerieInventoryClient* Client) const override;
+	virtual bool Server_Execute(const UFaerieInventoryClient* Client) const override;
 
 	UPROPERTY(BlueprintReadWrite, Category = "FaerieClientAction_RequestMarkStackWithTag")
 	FInventoryKeyHandle Handle;
@@ -104,7 +104,7 @@ struct FFaerieClientAction_RequestClearTagFromStack : public FFaerieClientAction
 {
 	GENERATED_BODY()
 
-	virtual void Server_Execute(const UFaerieInventoryClient* Client) const override;
+	virtual bool Server_Execute(const UFaerieInventoryClient* Client) const override;
 
 	UPROPERTY(BlueprintReadWrite, Category = "FaerieClientAction_RequestClearTagFromStack")
 	FInventoryKeyHandle Handle;
