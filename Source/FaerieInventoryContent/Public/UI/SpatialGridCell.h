@@ -1,0 +1,22 @@
+// Copyright Guy (Drakynfly) Lundvall. All Rights Reserved.
+
+#pragma once
+
+#include "InventoryDataStructs.h"
+#include "Blueprint/UserWidget.h"
+#include "SpatialGridCell.generated.h"
+
+class USpatialGridWrapper;
+/**
+ * 
+ */
+UCLASS()
+class FAERIEINVENTORYCONTENT_API USpatialGridCell : public UUserWidget
+{
+	friend USpatialGridWrapper;
+	GENERATED_BODY()
+	
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FInventoryKey SlotKey;
+};

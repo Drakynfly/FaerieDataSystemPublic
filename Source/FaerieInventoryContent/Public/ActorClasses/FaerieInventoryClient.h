@@ -200,7 +200,18 @@ struct FFaerieClientAction_RequestMoveItemBetweenSpatialSlots : public FFaerieCl
 	GENERATED_BODY()
 
 	virtual bool Server_Execute(const UFaerieInventoryClient* Client) const override;
-	//TODO
+
+	UPROPERTY(BlueprintReadWrite, Category = "RequestRotateSpatialEntry")
+	TObjectPtr<UFaerieItemStorage> Storage = nullptr;
+	
+	UPROPERTY(BlueprintReadWrite, Category = "RequestMoveSpatialEntry")
+	FInventoryKey TargetKey;
+
+	UPROPERTY(BlueprintReadWrite, Category = "RequestMoveSpatialEntry")
+	FIntPoint DragStart;
+
+	UPROPERTY(BlueprintReadWrite, Category = "RequestMoveSpatialEntry")
+	FIntPoint DragEnd;
 };
 
 USTRUCT(BlueprintType)
@@ -214,11 +225,7 @@ struct FFaerieClientAction_RequestRotateSpatialEntry : public FFaerieClientActio
 	TObjectPtr<UFaerieItemStorage> Storage = nullptr;
 
 	UPROPERTY(BlueprintReadWrite, Category = "RequestRotateSpatialEntry")
-	FEntryKey Key;
-
-	// Location to pivot around
-	UPROPERTY(BlueprintReadWrite, Category = "RequestRotateSpatialEntry")
-	FIntPoint Loc = FIntPoint::ZeroValue;
+	FInventoryKey Key;
 
 	// @todo should also pass a 90 degree / 180 degree parameter...
 };

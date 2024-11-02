@@ -225,7 +225,14 @@ bool FFaerieClientAction_RequestMoveEquipmentSlotToInventory::Server_Execute(con
 
 bool FFaerieClientAction_RequestMoveItemBetweenSpatialSlots::Server_Execute(const UFaerieInventoryClient* Client) const
 {
-	//ToDo
+	if (!IsValid(Storage)) return false;
+	if (!Client->CanAccessStorage(Storage)) return false;
+
+	if (auto&& SpatialExtension = Storage->GetExtension<UInventorySpatialGridExtension>())
+	{
+		return SpatialExtension->MoveItem(TargetKey, DragStart, DragEnd);
+	}
+	
 	return false;
 }
 
@@ -236,7 +243,7 @@ bool FFaerieClientAction_RequestRotateSpatialEntry::Server_Execute(const UFaerie
 
 	if (auto&& SpatialExtension = Storage->GetExtension<UInventorySpatialGridExtension>())
 	{
-		return SpatialExtension->RotateItem(Key, Loc);
+		return SpatialExtension->RotateItem(Key);
 	}
 
 	return false;

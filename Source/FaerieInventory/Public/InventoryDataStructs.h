@@ -175,7 +175,7 @@ struct FInventoryKey
 	{
 		return EntryKey.ToString() + ":" + StackKey.ToString();
 	}
-
+	
 	friend bool operator==(const FInventoryKey Lhs, const FInventoryKey Rhs)
 	{
 		return Lhs.EntryKey == Rhs.EntryKey
