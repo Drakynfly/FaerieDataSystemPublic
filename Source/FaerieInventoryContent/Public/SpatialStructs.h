@@ -20,9 +20,7 @@ struct FAERIEINVENTORYCONTENT_API FFaerieGridShape
 	static FFaerieGridShape MakeRect(int32 Height, int32 Width);
 
 	FIntPoint GetSize() const;
-
-	
-
+	FIntPoint GetShapeCenter();
 	bool CanRotate() const;
 
 	void TranslateInline(const FIntPoint& Position);
@@ -31,7 +29,7 @@ struct FAERIEINVENTORYCONTENT_API FFaerieGridShape
 	/* 90 degree rotation */
 	void RotateInline(const FIntPoint& PivotPoint);
 	[[nodiscard]] FFaerieGridShape Rotate(const FIntPoint& PivotPoint) const;
-	
+
 	void RotateAroundCenterInline();
 	[[nodiscard]] FFaerieGridShape RotateAroundCenter() const;
 
@@ -39,8 +37,6 @@ struct FAERIEINVENTORYCONTENT_API FFaerieGridShape
 
 	void NormalizeInline();
 	[[nodiscard]] FFaerieGridShape Normalize() const;
-
-	FIntPoint GetShapeCenter();
 
 	friend bool operator==(const FFaerieGridShape& Lhs, const FFaerieGridShape& Rhs);
 	friend bool operator!=(const FFaerieGridShape& Lhs, const FFaerieGridShape& Rhs) { return !(Lhs == Rhs); }

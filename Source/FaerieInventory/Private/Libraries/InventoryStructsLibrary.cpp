@@ -27,12 +27,12 @@ FFaerieItemStackView UInventoryStructsLibrary::EntryToStackView(const FInventory
 	return Entry.ToItemStackView();
 }
 
-bool UInventoryStructsLibrary::EqualInventoryKey(const FInventoryKey A, const FInventoryKey B)
+bool UInventoryStructsLibrary::EqualEqual_InventoryKey(const FInventoryKey A, const FInventoryKey B)
 {
 	return A == B;
 }
 
-bool UInventoryStructsLibrary::EqualStackKey(const FStackKey A,const FStackKey B)
+bool UInventoryStructsLibrary::EqualEqual_StackKey(const FStackKey A, const FStackKey B)
 {
 	return A == B;
 }

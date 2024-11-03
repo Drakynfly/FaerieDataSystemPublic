@@ -33,6 +33,23 @@ FIntPoint FFaerieGridShape::GetSize() const
 	return Size;
 }
 
+FIntPoint FFaerieGridShape::GetShapeCenter()
+{
+	if (Points.IsEmpty())
+	{
+		return FIntPoint::ZeroValue;
+	}
+
+	FIntPoint Sum = FIntPoint::ZeroValue;
+	for (const FIntPoint& Point : Points)
+	{
+		Sum += Point;
+	}
+
+	// Calculate average and return
+	return Sum / Points.Num();
+}
+
 bool FFaerieGridShape::CanRotate() const
 {
 	const FIntPoint Size = GetSize();
@@ -93,17 +110,8 @@ void FFaerieGridShape::RotateAroundCenterInline()
 		return;
 	}
 
-	// Calculate the center point
-	FVector2D Center = GetShapeCenter();
-
-	// Convert center to FIntPoint, rounding to nearest integer
-	FIntPoint PivotPoint(
-		FMath::RoundToInt(Center.X),
-		FMath::RoundToInt(Center.Y)
-	);
-
 	// Use existing rotation logic with calculated center
-	RotateInline(PivotPoint);
+	RotateInline(GetShapeCenter());
 }
 
 FFaerieGridShape FFaerieGridShape::RotateAroundCenter() const
@@ -113,28 +121,28 @@ FFaerieGridShape FFaerieGridShape::RotateAroundCenter() const
 	return NewShape;
 }
 
-void FFaerieGridShape::RotateAboutAngle(float AngleDegrees)
+void FFaerieGridShape::RotateAboutAngle(const float AngleDegrees)
 {
 	// Get center point
-	FIntPoint Center = GetShapeCenter();
-    
+	const FIntPoint Center = GetShapeCenter();
+
 	// Convert angle to radians
-	float AngleRadians = FMath::DegreesToRadians(AngleDegrees);
+	const float AngleRadians = FMath::DegreesToRadians(AngleDegrees);
 
 	// Calculate sine and cosine
-	float CosTheta = FMath::Cos(AngleRadians);
-	float SinTheta = FMath::Sin(AngleRadians);
+	const float CosTheta = FMath::Cos(AngleRadians);
+	const float SinTheta = FMath::Sin(AngleRadians);
 
-	for(FIntPoint& Point : Points)
+	for (FIntPoint& Point : Points)
 	{
 		// Translate to origin
-		int32 TranslatedX = Point.X - Center.X;
-		int32 TranslatedY = Point.Y - Center.Y;
-        
+		const int32 TranslatedX = Point.X - Center.X;
+		const int32 TranslatedY = Point.Y - Center.Y;
+
 		// Rotate
-		float RotatedX = TranslatedX * CosTheta - TranslatedY * SinTheta;
-		float RotatedY = TranslatedX * SinTheta + TranslatedY * CosTheta;
-        
+		const float RotatedX = TranslatedX * CosTheta - TranslatedY * SinTheta;
+		const float RotatedY = TranslatedX * SinTheta + TranslatedY * CosTheta;
+
 		// Translate back and round
 		Point.X = FMath::RoundToInt(RotatedX + Center.X);
 		Point.Y = FMath::RoundToInt(RotatedY + Center.Y);
@@ -182,27 +190,4 @@ bool operator==(const FFaerieGridShape& Lhs, const FFaerieGridShape& Rhs)
 	}
 
 	return true;
-}
-
-FIntPoint FFaerieGridShape::GetShapeCenter()
-{
-    if (Points.IsEmpty())
-    {
-        return FIntPoint::ZeroValue;
-    }
-
-    float SumX = 0.0f;
-    float SumY = 0.0f;
-    for (const FIntPoint& Point : Points)
-    {
-        SumX += Point.X;
-        SumY += Point.Y;
-    }
-
-    // Calculate floating point average and round properly
-    float AvgX = SumX / Points.Num();
-    float AvgY = SumY / Points.Num();
-
-    // Use FMath::RoundToInt for proper rounding
-    return FIntPoint(FMath::RoundToInt(AvgX), FMath::RoundToInt(AvgY));
 }

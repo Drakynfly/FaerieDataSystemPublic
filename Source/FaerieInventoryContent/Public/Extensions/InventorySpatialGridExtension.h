@@ -55,14 +55,12 @@ struct FSpatialKeyedEntry : public FFastArraySerializerItem
 
 	FSpatialKeyedEntry() = default;
 
-	FSpatialKeyedEntry(const FInventoryKey Key, const FSpatialItemPlacement Value)
-		: Key(Key), Value(Value)
-	{
-	}
-	
+	FSpatialKeyedEntry(const FInventoryKey Key, const FSpatialItemPlacement& Value)
+	  : Key(Key), Value(Value) {}
+
 	UPROPERTY(VisibleInstanceOnly, Category = "SpatialKeyedEntry")
 	FInventoryKey Key;
-	
+
 	UPROPERTY(VisibleInstanceOnly, Category = "SpatialKeyedEntry")
 	FSpatialItemPlacement Value;
 
@@ -102,7 +100,7 @@ public:
 		return FastArrayDeltaSerialize<FSpatialKeyedEntry, FSpatialContent>(Items, DeltaParams, *this);
 	}
 
-	void Insert(FInventoryKey Key, FSpatialItemPlacement Value);
+	void Insert(FInventoryKey Key, const FSpatialItemPlacement& Value);
 
 	void Remove(FInventoryKey Key);
 };
@@ -138,12 +136,9 @@ public:
 
 protected:
 	//~ UItemContainerExtensionBase
-	virtual EEventExtensionResponse AllowsAddition(const UFaerieItemContainerBase* Container,
-	                                               FFaerieItemStackView Stack) override;
-	virtual void PostAddition(const UFaerieItemContainerBase* Container,
-	                          const Faerie::Inventory::FEventLog& Event) override;
-	virtual void PostRemoval(const UFaerieItemContainerBase* Container,
-	                         const Faerie::Inventory::FEventLog& Event) override;
+	virtual EEventExtensionResponse AllowsAddition(const UFaerieItemContainerBase* Container, FFaerieItemStackView Stack) override;
+	virtual void PostAddition(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) override;
+	virtual void PostRemoval(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) override;
 	//~ UItemContainerExtensionBase
 
 	void PreEntryReplicatedRemove(const FSpatialKeyedEntry& Entry);
@@ -179,30 +174,22 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Grid")
 	FSpatialItemPlacement GetEntryPlacementData(const FInventoryKey& Key) const;
 
+	// @todo Drakyn: move static
 	UFUNCTION(BlueprintCallable, Category="Shape Manipulation")
 	static FFaerieGridShape RotateShape(FFaerieGridShape InShape, const ESpatialItemRotation Rotation);
+
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Grid")
 	void SetGridSize(FIntPoint NewGridSize);
 
 protected:
 	FSpatialKeyedEntry* FindItemByKey(const FInventoryKey& Key);
-	
-	static bool ValidateSourcePoint(const FSpatialKeyedEntry* Entry, const FIntPoint& SourcePoint);
-	
-	FSpatialKeyedEntry* FindOverlappingItem(
-		const FFaerieGridShape& Shape,
-		const FIntPoint& Offset,
-		const FInventoryKey& ExcludeKey
-	);
 
-	bool TrySwapItems(
-		FSpatialKeyedEntry* MovingItem,
-		FSpatialKeyedEntry* OverlappingItem,
-		const FIntPoint& Offset
-	);
-	
+	static bool ValidateSourcePoint(const FSpatialKeyedEntry* Entry, const FIntPoint& SourcePoint);
+
+	// @todo Drakyn: look at these
+	FSpatialKeyedEntry* FindOverlappingItem(const FFaerieGridShape& Shape, const FIntPoint& Offset, const FInventoryKey& ExcludeKey);
+	bool TrySwapItems(FSpatialKeyedEntry* MovingItem, FSpatialKeyedEntry* OverlappingItem, const FIntPoint& Offset);
 	bool MoveSingleItem(FSpatialKeyedEntry* Item, const FIntPoint& Offset);
-	
 	void UpdateItemPosition(FSpatialKeyedEntry* Item, const FIntPoint& Offset);
 
 	UPROPERTY(BlueprintAssignable, Category = "Events")
@@ -211,6 +198,7 @@ protected:
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FGridSizeChanged GridSizeChangedDelegate;
 
+	// @todo should default to 10, 10
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, ReplicatedUsing = "OnRep_GridSize", Category = "Config")
 	FIntPoint GridSize = FIntPoint(10, 40);
 

@@ -36,7 +36,7 @@ void FItemShapeCustomization::CustomizeChildren(const TSharedRef<IPropertyHandle
         .WholeRowContent()
         [
             SNew(SBox)
-            .Padding(FMargin(0, 5))
+            .Padding(FMargin(0.f, 5.f))
             .HAlign(HAlign_Center)
             [
                 GridPanel.ToSharedRef()
@@ -51,21 +51,21 @@ void FItemShapeCustomization::UpdateGridPanel()
     static constexpr float Padding = 0.25f; // This is the padding for the button to show the border color
 
     GridPanel->ClearChildren();
-    
+
     // Set the grid panel's slot padding to 0 to avoid gaps
-    GridPanel->SetSlotPadding(FMargin(0));
-    
+    GridPanel->SetSlotPadding(FMargin(0.f));
+
     static FButtonStyle ButtonStyle = []()
     {
         FButtonStyle Style = FCoreStyle::Get().GetWidgetStyle<FButtonStyle>("FlatButton");
         FSlateBrush ButtonBrush;
         ButtonBrush.DrawAs = ESlateBrushDrawType::Box;
         ButtonBrush.TintColor = FLinearColor::White;
-        
+
         ButtonBrush.OutlineSettings.Width = BorderThickness;
         ButtonBrush.OutlineSettings.Color = FLinearColor::Black;
         Style.SetNormal(ButtonBrush);
-        
+
         ButtonBrush.TintColor = FLinearColor(0.0f, 0.4f, 0.9f, 0.85f);
         Style.SetHovered(ButtonBrush);
         return Style;

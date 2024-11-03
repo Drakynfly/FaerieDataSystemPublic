@@ -38,7 +38,7 @@ void FSpatialContent::PostEntryReplicatedChange(const FSpatialKeyedEntry& Entry)
 	ChangeListener->PostEntryReplicatedChange(Entry);
 }
 
-void FSpatialContent::Insert(FInventoryKey Key, FSpatialItemPlacement Value)
+void FSpatialContent::Insert(FInventoryKey Key, const FSpatialItemPlacement& Value)
 {
 	FSpatialKeyedEntry& NewEntry = BSOA::Insert({Key, Value});
 	MarkItemDirty(NewEntry);
@@ -161,9 +161,9 @@ bool UInventorySpatialGridExtension::AddItemToGrid(const FInventoryKey& Key, con
 
 	if(OccupiedSlots.Find(Key) != nullptr)
 	{
-		return true;	
+		return true;
 	}
-	
+
 	FFaerieGridShape Shape;
 	if (ShapeToken)
 	{
@@ -173,7 +173,7 @@ bool UInventorySpatialGridExtension::AddItemToGrid(const FInventoryKey& Key, con
 	{
 		Shape = FFaerieGridShape::MakeRect(1, 1);
 	}
-	
+
 	// @todo this should check for possible rotations! (but only if the shape is different when its rotated)
 	TOptional<FIntPoint> FoundPosition = GetFirstEmptyLocation(Shape);
 
@@ -203,25 +203,22 @@ void UInventorySpatialGridExtension::RemoveItemFromGrid(const FInventoryKey& Key
 
 FFaerieGridShape UInventorySpatialGridExtension::GetEntryShape(const FInventoryKey& Key) const
 {
-	for (const FSpatialKeyedEntry& Entry : OccupiedSlots.GetEntries())
+	if (auto&& Placement = OccupiedSlots.Find(Key))
 	{
-		if (Entry.Key == Key)
-		{
-			return Entry.Value.ItemShape;
-		}
+		return Placement->ItemShape;
 	}
-	return FFaerieGridShape::MakeRect(1, 1);
+
+	// No entry,
+	return FFaerieGridShape();
 }
 
 FSpatialItemPlacement UInventorySpatialGridExtension::GetEntryPlacementData(const FInventoryKey& Key) const
 {
-	for (const FSpatialKeyedEntry& Entry : OccupiedSlots.GetEntries())
+	if (auto&& Placement = OccupiedSlots.Find(Key))
 	{
-		if (Entry.Key == Key)
-		{
-			return Entry.Value;
-		}
+		return *Placement;
 	}
+
 	return FSpatialItemPlacement();
 }
 
@@ -352,7 +349,7 @@ FSpatialKeyedEntry* UInventorySpatialGridExtension::FindOverlappingItem(
 			if (ExcludeKey == In.Key)
 				return false;
 
-			// Create a rotated version of the "In" item's shape 
+			// Create a rotated version of the "In" item's shape
 			FFaerieGridShape OtherRotatedShape = In.Value.ItemShape;
 			OtherRotatedShape.RotateAboutAngle(static_cast<float>(In.Value.Rotation) * 90.f);
 
@@ -446,6 +443,7 @@ bool UInventorySpatialGridExtension::MoveSingleItem(FSpatialKeyedEntry* Item, co
 
 void UInventorySpatialGridExtension::UpdateItemPosition(FSpatialKeyedEntry* Item, const FIntPoint& Offset)
 {
+	// @todo Drakyn: look at this
 	Item->Value.Origin = Item->Value.Origin + Offset;
 	Item->Value.PivotPoint = Item->Value.PivotPoint + Offset;
 	OccupiedSlots.MarkItemDirty(*Item);
