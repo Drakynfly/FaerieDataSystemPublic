@@ -83,17 +83,20 @@ EEventExtensionResponse UInventorySpatialGridExtension::AllowsAddition(const UFa
 void UInventorySpatialGridExtension::PostAddition(const UFaerieItemContainerBase* Container,
                                                   const Faerie::Inventory::FEventLog& Event)
 {
-	const FStackKey BaseStackKey(Event.OtherKeysTouched[0].Value());
-	FInventoryKey NewKey;
-	NewKey.EntryKey = Event.EntryTouched;
-	NewKey.StackKey = BaseStackKey;
-	if (const UFaerieShapeToken* ShapeToken = Event.Item->GetToken<UFaerieShapeToken>())
+	for(const FFaerieItemKeyBase BaseKey : Event.OtherKeysTouched)
 	{
-		AddItemToGrid(NewKey, ShapeToken);
-	}
-	else
-	{
-		AddItemToGrid(NewKey, nullptr);
+		const FStackKey BaseStackKey(BaseKey.Value());
+		FInventoryKey NewKey;
+		NewKey.EntryKey = Event.EntryTouched;
+		NewKey.StackKey = BaseStackKey;
+		if (const UFaerieShapeToken* ShapeToken = Event.Item->GetToken<UFaerieShapeToken>())
+		{
+			AddItemToGrid(NewKey, ShapeToken);
+		}
+		else
+		{
+			AddItemToGrid(NewKey, nullptr);
+		}
 	}
 }
 
@@ -195,7 +198,6 @@ void UInventorySpatialGridExtension::RemoveItemFromGrid(const FInventoryKey& Key
 
 FFaerieGridShape UInventorySpatialGridExtension::GetEntryShape(const FInventoryKey& Key) const
 {
-	FFaerieGridShape PositionsToReturn;
 	for (const FSpatialKeyedEntry& Entry : OccupiedSlots.GetEntries())
 	{
 		if (Entry.Value == Key)
@@ -203,7 +205,7 @@ FFaerieGridShape UInventorySpatialGridExtension::GetEntryShape(const FInventoryK
 			return Entry.Key.ItemShape;
 		}
 	}
-	return PositionsToReturn;
+	return FFaerieGridShape::MakeRect(1, 1);
 }
 
 FSpatialItemPlacement UInventorySpatialGridExtension::GetEntryPlacementData(const FInventoryKey& Key) const

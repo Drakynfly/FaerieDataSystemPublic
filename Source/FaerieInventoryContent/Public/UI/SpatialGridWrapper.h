@@ -5,6 +5,7 @@
 #include "FaerieItemStorage.h"
 #include "InventoryDataStructs.h"
 #include "Blueprint/UserWidget.h"
+#include "Extensions/InventorySpatialGridExtension.h"
 #include "SpatialGridWrapper.generated.h"
 
 class UUniformGridPanel;
@@ -20,31 +21,18 @@ public:
 	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 	virtual void NativeConstruct() override;
 	virtual bool NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation) override;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FIntPoint GridSize;
+	virtual void NativeOnDragDetected(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent, UDragDropOperation*& OutOperation) override;
 	
-protected:
-	TObjectPtr<UWidget> FindChildUnderCursor(const FVector2D& AbsoluteMousePosition) const;
-	TArray<TObjectPtr<UWidget>> GetChildrenByKey(const FInventoryKey& TargetKey) const;
-	
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget), Category = "Grid")
-	TObjectPtr<UUniformGridPanel> GridPanel;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Grid | Dragging Data")
-	TArray<TObjectPtr<UWidget>> TargetWidgets;
-	
-	UPROPERTY(BlueprintReadOnly, Category = "Grid | Dragging Data")
-	FIntPoint TargetOffset;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Grid | Dragging Data")
-	FIntPoint DragFrom;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Grid | Dragging Data")
-	FIntPoint DragTo;
-
-	FInventoryKey CurrentKey;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TObjectPtr<UFaerieItemStorage> ItemStorage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+	TObjectPtr<UUniformGridPanel> GridPanel;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<UUserWidget> DragWidgetClass;
+	
+protected:
+	static TObjectPtr<UWidget> FindChildUnderCursor(const FVector2D& AbsoluteMousePosition, const UUniformGridPanel* GridPanel);
+	static TArray<TObjectPtr<UWidget>> GetChildrenByKey(const FInventoryKey& TargetKey, const UUniformGridPanel* GridPanel);
 };

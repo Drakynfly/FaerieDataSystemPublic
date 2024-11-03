@@ -13,8 +13,8 @@ class USpatialGridWrapper;
 UCLASS()
 class FAERIEINVENTORYCONTENT_API USpatialGridCell : public UUserWidget
 {
-	friend USpatialGridWrapper;
 	GENERATED_BODY()
+	friend USpatialGridWrapper;
 	
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
