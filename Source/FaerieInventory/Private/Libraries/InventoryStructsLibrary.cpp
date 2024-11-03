@@ -31,3 +31,8 @@ bool UInventoryStructsLibrary::EqualInventoryKey(const FInventoryKey A, const FI
 {
 	return A == B;
 }
+
+bool UInventoryStructsLibrary::EqualStackyKey(const FStackKey A,const FStackKey B)
+{
+	return A == B;
+}
