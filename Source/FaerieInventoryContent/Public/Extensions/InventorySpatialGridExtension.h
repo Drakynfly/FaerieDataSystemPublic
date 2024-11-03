@@ -46,25 +46,6 @@ struct FSpatialItemPlacement
 	}
 };
 
-USTRUCT()
-struct FSpatialEntryKey
-{
-	GENERATED_BODY()
-
-	UPROPERTY(VisibleInstanceOnly, Category = "SpatialEntryKey")
-	FIntPoint Key = FIntPoint::ZeroValue;
-
-	friend bool operator<(const FSpatialEntryKey& A, const FSpatialEntryKey& B)
-	{
-		return A.Key.X < B.Key.X || (A.Key.X == B.Key.X && A.Key.Y < B.Key.Y);
-	}
-
-	friend bool operator==(const FSpatialEntryKey& A, const FSpatialEntryKey& B)
-	{
-		return A.Key.X == B.Key.X && A.Key.Y == B.Key.Y;
-	}
-};
-
 struct FSpatialContent;
 
 USTRUCT(BlueprintType)
@@ -74,16 +55,16 @@ struct FSpatialKeyedEntry : public FFastArraySerializerItem
 
 	FSpatialKeyedEntry() = default;
 
-	FSpatialKeyedEntry(const FSpatialItemPlacement Key, const FInventoryKey Value)
+	FSpatialKeyedEntry(const FInventoryKey Key, const FSpatialItemPlacement Value)
 		: Key(Key), Value(Value)
 	{
 	}
-
+	
 	UPROPERTY(VisibleInstanceOnly, Category = "SpatialKeyedEntry")
-	FSpatialItemPlacement Key;
-
+	FInventoryKey Key;
+	
 	UPROPERTY(VisibleInstanceOnly, Category = "SpatialKeyedEntry")
-	FInventoryKey Value;
+	FSpatialItemPlacement Value;
 
 	void PreReplicatedRemove(const FSpatialContent& InArraySerializer);
 	void PostReplicatedAdd(FSpatialContent& InArraySerializer);
@@ -121,9 +102,9 @@ public:
 		return FastArrayDeltaSerialize<FSpatialKeyedEntry, FSpatialContent>(Items, DeltaParams, *this);
 	}
 
-	void Insert(FSpatialItemPlacement Key, FInventoryKey Value);
+	void Insert(FInventoryKey Key, FSpatialItemPlacement Value);
 
-	void Remove(FSpatialItemPlacement Key);
+	void Remove(FInventoryKey Key);
 };
 
 template <>

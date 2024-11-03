@@ -44,7 +44,7 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Faerie|Inventory|Utils")
 	static FFaerieItemStackView EntryToStackView(const FInventoryEntry& Entry);
 
-	/** Returns true if inventory keys are equal */
-	UFUNCTION(BlueprintPure, meta=(DisplayName = "Equal (Inventory Key)", CompactNodeTitle = "==", Keywords = "== equal compare", ScriptOperator = "=="), Category="Inventory Struct")
+	/* Returns true if inventory keys are equal */
+	UFUNCTION(BlueprintPure, meta=(DisplayName = "Equal (Inventory Key)", CompactNodeTitle = "==", Keywords = "== equal compare", ScriptOperator = "=="), Category="Inventory Key Struct")
 	static bool EqualInventoryKey(FInventoryKey A, FInventoryKey B);
 };
