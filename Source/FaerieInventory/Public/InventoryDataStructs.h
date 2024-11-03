@@ -29,6 +29,7 @@ enum class EEntryEquivalencyFlags : uint8
 	// When set, all other flags are considered set.
 	All = Test_ItemData | Test_StackSum | Test_Limit UMETA(Hidden),
 };
+
 ENUM_CLASS_FLAGS(EEntryEquivalencyFlags)
 
 DECLARE_LOG_CATEGORY_EXTERN(LogInventoryStructs, Log, All)
@@ -125,11 +126,11 @@ struct FAERIEINVENTORY_API FKeyedStack
 	GENERATED_BODY()
 
 	// Unique key to identify this stack.
-	UPROPERTY(VisibleAnywhere, Category = "Keyed Stack")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Keyed Stack")
 	FStackKey Key;
 
 	// Amount in the stack
-	UPROPERTY(VisibleAnywhere, Category = "Keyed Stack")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Keyed Stack")
 	int32 Stack = 0;
 
 	friend bool operator==(const FKeyedStack& Lhs, const FStackKey& Rhs)
@@ -140,7 +141,7 @@ struct FAERIEINVENTORY_API FKeyedStack
 	friend bool operator==(const FKeyedStack& Lhs, const FKeyedStack& Rhs)
 	{
 		return Lhs.Key == Rhs.Key
-			   && Lhs.Stack == Rhs.Stack;
+			&& Lhs.Stack == Rhs.Stack;
 	}
 
 	friend bool operator!=(const FKeyedStack& Lhs, const FKeyedStack& Rhs)
@@ -179,12 +180,22 @@ struct FInventoryKey
 	friend bool operator==(const FInventoryKey Lhs, const FInventoryKey Rhs)
 	{
 		return Lhs.EntryKey == Rhs.EntryKey
-			   && Lhs.StackKey == Rhs.StackKey;
+			&& Lhs.StackKey == Rhs.StackKey;
 	}
 
 	friend bool operator!=(const FInventoryKey Lhs, const FInventoryKey Rhs)
 	{
 		return !(Lhs == Rhs);
+	}
+
+	friend bool operator<(const FInventoryKey Lhs, const FInventoryKey Rhs)
+	{
+		if (Lhs.EntryKey == Rhs.EntryKey)
+			if (Lhs.StackKey < Rhs.StackKey)
+				return true;
+		if (Lhs.EntryKey < Rhs.EntryKey)
+			return true;
+		return false;
 	}
 };
 
@@ -195,7 +206,7 @@ USTRUCT(BlueprintType, meta = (Categories = "Fae.Inventory"))
 struct FFaerieInventoryTag : public FGameplayTag
 {
 	GENERATED_BODY()
-	END_TAG_DECL2(FFaerieInventoryTag, TEXT("Fae.Inventory"))
+END_TAG_DECL2(FFaerieInventoryTag, TEXT("Fae.Inventory"))
 };
 
 class UFaerieItem;
@@ -206,13 +217,15 @@ class UFaerieItem;
 USTRUCT(BlueprintType)
 struct FAERIEINVENTORY_API FInventoryEntry
 {
-    GENERATED_BODY()
+	GENERATED_BODY()
 
-    FInventoryEntry() {}
+	FInventoryEntry()
+	{
+	}
 
-    // Actual data for this entry.
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "InventoryEntry")
-    TObjectPtr<UFaerieItem> ItemObject;
+	// Actual data for this entry.
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "InventoryEntry")
+	TObjectPtr<UFaerieItem> ItemObject;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "InventoryEntry")
 	TArray<FKeyedStack> Stacks;
@@ -239,14 +252,15 @@ public:
 
 	// Remove the amount from any number of stacks. Can optionally return the list of modified stacks, and/or just the removed stacks
 	// ReturnValue is 0 if Stack was successfully removed, or the remainder, if not.
-	int32 RemoveFromAnyStack(int32 Amount, TArray<FStackKey>* OutAllModifiedKeys = nullptr, TArray<FStackKey>* OutRemovedKeys = nullptr);
+	int32 RemoveFromAnyStack(int32 Amount, TArray<FStackKey>* OutAllModifiedKeys = nullptr,
+	                         TArray<FStackKey>* OutRemovedKeys = nullptr);
 
 	bool IsValid() const;
 
 	// Gets a view of the item and stack
-    FFaerieItemStackView ToItemStackView() const;
+	FFaerieItemStackView ToItemStackView() const;
 
-    static bool IsEqualTo(const FInventoryEntry& A, const FInventoryEntry& B, EEntryEquivalencyFlags CheckFlags);
+	static bool IsEqualTo(const FInventoryEntry& A, const FInventoryEntry& B, EEntryEquivalencyFlags CheckFlags);
 };
 
 
@@ -258,11 +272,15 @@ struct FKeyedInventoryEntry : public FFastArraySerializerItem
 {
 	GENERATED_BODY()
 
-	FKeyedInventoryEntry() {}
+	FKeyedInventoryEntry()
+	{
+	}
 
 	FKeyedInventoryEntry(const FEntryKey Key, const FInventoryEntry& Value)
-	  : Key(Key),
-		Value(Value) {}
+		: Key(Key),
+		  Value(Value)
+	{
+	}
 
 	// Unique key to identify this entry.
 	UPROPERTY(VisibleAnywhere, Category = "Inventory Key and Entry")
@@ -283,7 +301,7 @@ struct FKeyedInventoryEntry : public FFastArraySerializerItem
  */
 USTRUCT()
 struct FInventoryContent : public FFastArraySerializer,
-						   public TBinarySearchOptimizedArray<FInventoryContent, FKeyedInventoryEntry>
+                           public TBinarySearchOptimizedArray<FInventoryContent, FKeyedInventoryEntry>
 {
 	GENERATED_BODY()
 
@@ -332,8 +350,10 @@ public:
 	struct FScopedItemHandle
 	{
 		FScopedItemHandle(const FEntryKey Key, FInventoryContent& Source)
-		  : Handle(Source.Entries[Source.IndexOf(Key)]),
-			Source(Source) {}
+			: Handle(Source.Entries[Source.IndexOf(Key)]),
+			  Source(Source)
+		{
+		}
 
 		~FScopedItemHandle();
 
@@ -371,10 +391,10 @@ public:
 	// Only const iteration is allowed.
 	using TRangedForConstIterator = TArray<FKeyedInventoryEntry>::RangedForConstIteratorType;
 	FORCEINLINE TRangedForConstIterator begin() const { return TRangedForConstIterator(Entries.begin()); }
-	FORCEINLINE TRangedForConstIterator end() const   { return TRangedForConstIterator(Entries.end());   }
+	FORCEINLINE TRangedForConstIterator end() const { return TRangedForConstIterator(Entries.end()); }
 };
 
-template<>
+template <>
 struct TStructOpsTypeTraits<FInventoryContent> : public TStructOpsTypeTraitsBase2<FInventoryContent>
 {
 	enum
@@ -400,5 +420,6 @@ struct FAERIEINVENTORY_API FInventoryKeyHandle
 
 namespace Faerie::Inventory
 {
-	FAERIEINVENTORY_API void BreakKeyedEntriesIntoInventoryKeys(const TArray<FKeyedInventoryEntry>& Entries, TArray<FInventoryKey>& OutKeys);
+	FAERIEINVENTORY_API void BreakKeyedEntriesIntoInventoryKeys(const TArray<FKeyedInventoryEntry>& Entries,
+	                                                            TArray<FInventoryKey>& OutKeys);
 }
