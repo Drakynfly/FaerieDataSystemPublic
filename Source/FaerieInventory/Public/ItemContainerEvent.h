@@ -56,13 +56,25 @@ namespace Faerie::Inventory
 		}
 
 	public:
+		// Either the Addition tag or some kind of Removal.
 		FFaerieInventoryTag Type;
+
+		// Did this event succeed?
 		bool Success = false;
 
+		// The entry that this event pertained to.
 		FEntryKey EntryTouched;
-		TArray<FFaerieItemKeyBase> OtherKeysTouched;
+
+		// All stacks that were modified by this event.
+		TArray<FStackKey> StackKeys;
+
+		// The number of item copies added or removed.
 		int32 Amount = 0;
+
+		// The item from this entry.
 		TWeakObjectPtr<const UFaerieItem> Item;
+
+		// Message, in case of a failure event.
 		FString ErrorMessage;
 
 		friend FArchive& operator<<(FArchive& Ar, FEventLog& Val)
@@ -70,7 +82,7 @@ namespace Faerie::Inventory
 			return Ar << Val.Type
 					  << Val.Success
 					  << Val.EntryTouched
-					  << Val.OtherKeysTouched
+					  << Val.StackKeys
 					  << Val.Amount
 					  << Val.Item
 					  << Val.ErrorMessage

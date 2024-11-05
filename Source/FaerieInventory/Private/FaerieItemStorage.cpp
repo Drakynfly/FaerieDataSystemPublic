@@ -258,13 +258,11 @@ Faerie::Inventory::FEventLog UFaerieItemStorage::AddEntryImpl(const FInventoryEn
 	// Execute PreAddition on all extensions
 	Extensions->PreAddition(this, {InEntry.ItemObject, Event.Amount });
 
-	TArray<FStackKey> StacksTouched;
-
 	// Try to fill up the stacks of existing entries first, before creating a new entry.
 	if (Event.EntryTouched.IsValid())
 	{
 		const FInventoryContent::FScopedItemHandle& Entry = EntryMap.GetHandle(Event.EntryTouched);
-		Entry->AddToAnyStack(Event.Amount, &StacksTouched);
+		Entry->AddToAnyStack(Event.Amount, &Event.StackKeys);
 	}
 	else
 	{
@@ -275,10 +273,8 @@ Faerie::Inventory::FEventLog UFaerieItemStorage::AddEntryImpl(const FInventoryEn
 		TakeOwnership(InEntry.ItemObject);
 
 		/*FKeyedInventoryEntry& AddedEntry =*/ EntryMap.Append(Event.EntryTouched, InEntry);
-		StacksTouched = InEntry.CopyKeys();
+		Event.StackKeys = InEntry.CopyKeys();
 	}
-
-	Event.OtherKeysTouched.Append(StacksTouched);
 
 	Event.Success = true;
 
@@ -321,24 +317,20 @@ Faerie::Inventory::FEventLog UFaerieItemStorage::RemoveFromEntryImpl(const FEntr
 		const FInventoryContent::FScopedItemHandle& Handle = EntryMap.GetHandle(Key);
 
 		Event.Item = Handle->ItemObject;
-		auto&& Sum = Handle->StackSum();
-
-		TArray<FStackKey> StacksTouched;
+		const int32 Sum = Handle->StackSum();
 
 		if (Amount == Faerie::ItemData::UnlimitedStack || Amount >= Sum) // Remove the entire entry
 		{
 			Event.Amount = Sum;
-			StacksTouched = Handle->CopyKeys();
+			Event.StackKeys = Handle->CopyKeys();
 			ReleaseOwnership(Handle->ItemObject);
 			Remove = true;
 		}
 		else // Remove part of the entry
 		{
 			Event.Amount = FMath::Clamp(Amount, 1, Sum-1);
-			Handle->RemoveFromAnyStack(Event.Amount, &StacksTouched);
+			Handle->RemoveFromAnyStack(Event.Amount, &Event.StackKeys);
 		}
-
-		Event.OtherKeysTouched.Append(StacksTouched);
 	}
 	// Close Mutable scope
 
@@ -368,7 +360,7 @@ Faerie::Inventory::FEventLog UFaerieItemStorage::RemoveFromStackImpl(const FInve
 	// Log for this event
 	Event.Type = Reason;
 	Event.EntryTouched = Key.EntryKey;
-	Event.OtherKeysTouched.Add(Key.StackKey);
+	Event.StackKeys.Add(Key.StackKey);
 
 	bool Remove = false;
 

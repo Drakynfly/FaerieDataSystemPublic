@@ -89,7 +89,7 @@ private:
 	TWeakObjectPtr<UInventorySpatialGridExtension> ChangeListener;
 
 public:
-	TConstArrayView<FSpatialKeyedEntry> GetEntries() const { return Items; };
+	bool EditItem(FInventoryKey Key, const TFunctionRef<void(FSpatialItemPlacement&)>& Func);
 
 	void PreEntryReplicatedRemove(const FSpatialKeyedEntry& Entry) const;
 	void PostEntryReplicatedAdd(const FSpatialKeyedEntry& Entry);
@@ -103,6 +103,11 @@ public:
 	void Insert(FInventoryKey Key, const FSpatialItemPlacement& Value);
 
 	void Remove(FInventoryKey Key);
+
+	// Only const iteration is allowed.
+	using TRangedForConstIterator = TArray<FSpatialKeyedEntry>::RangedForConstIteratorType;
+	FORCEINLINE TRangedForConstIterator begin() const { return TRangedForConstIterator(Items.begin()); }
+	FORCEINLINE TRangedForConstIterator end() const { return TRangedForConstIterator(Items.end()); }
 };
 
 template <>
