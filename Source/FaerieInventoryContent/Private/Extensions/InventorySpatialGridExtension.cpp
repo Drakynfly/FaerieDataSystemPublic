@@ -369,7 +369,9 @@ bool UInventorySpatialGridExtension::FitsInGrid(const FFaerieGridShape& Shape, c
 				continue;
 			}
 
-			for (const FFaerieGridShape& ExistingShape = Entry.Value.ItemShape; const FIntPoint& ExistingPoint : ExistingShape.Points)
+			FFaerieGridShape ShapeToCheck = Entry.Value.ItemShape;
+			ShapeToCheck.RotateAboutAngle(static_cast<float>(Entry.Value.Rotation) * 90.f);
+			for (const FIntPoint& ExistingPoint : ShapeToCheck.Points)
 			{
 				if (AbsolutePosition == (Entry.Value.Origin + ExistingPoint))
 				{
