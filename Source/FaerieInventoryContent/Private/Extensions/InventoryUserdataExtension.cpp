@@ -4,6 +4,8 @@
 
 #include "FaerieItemStorage.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(InventoryUserdataExtension)
+
 FFaerieInventoryUserTags FFaerieInventoryUserTags::FaerieInventoryUserTags;
 
 UScriptStruct* UInventoryUserdataExtension::GetDataScriptStruct() const

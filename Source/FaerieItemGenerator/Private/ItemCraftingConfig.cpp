@@ -7,6 +7,8 @@
 #include "Misc/DataValidation.h"
 #endif
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(ItemCraftingConfig)
+
 DEFINE_LOG_CATEGORY(LogItemCraftingConfig)
 
 #if WITH_EDITOR

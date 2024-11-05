@@ -4,6 +4,8 @@
 #include "FaerieItem.h"
 #include "FaerieItemToken.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(FaerieItemDataLibrary)
+
 bool UFaerieItemDataLibrary::Equal_ItemData(const UFaerieItem* A, const UFaerieItem* B)
 {
 	return A->CompareWith(B);

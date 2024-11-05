@@ -4,6 +4,8 @@
 #include "Net/UnrealNetwork.h"
 #include "Net/Core/PushModel/PushModel.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(FaerieItemUsesToken)
+
 void UFaerieItemUsesToken::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);

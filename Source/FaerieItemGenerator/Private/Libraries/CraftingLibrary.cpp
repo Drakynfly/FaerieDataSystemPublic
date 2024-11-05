@@ -4,6 +4,8 @@
 #include "FaerieItemSlotInterface.h"
 #include "ItemGeneratorConfig.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(CraftingLibrary)
+
 DEFINE_LOG_CATEGORY(LogCraftingLibrary);
 
 UItemGenerationConfig* UCraftingLibrary::CreateGenerationDriver(const TArray<FWeightedDrop>& DropList, const FGeneratorAmountBase& Amount)

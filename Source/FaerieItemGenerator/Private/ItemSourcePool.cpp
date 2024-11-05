@@ -12,6 +12,8 @@
 #include "Misc/DataValidation.h"
 #endif
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(ItemSourcePool)
+
 FTableDrop FFaerieWeightedDropPool::GenerateDrop(const double RanWeight) const
 {
 	if (DropList.IsEmpty())

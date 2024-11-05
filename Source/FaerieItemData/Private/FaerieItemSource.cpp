@@ -2,7 +2,7 @@
 
 #include "FaerieItemSource.h"
 
-// Add default functionality here for any IFaerieItemSource functions that are not pure virtual.
+#include UE_INLINE_GENERATED_CPP_BY_NAME(FaerieItemSource)
 
 UFaerieItem* IFaerieItemSource::CreateItemInstance(UObject* Outer) const
 {

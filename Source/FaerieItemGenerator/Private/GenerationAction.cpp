@@ -12,6 +12,8 @@
 #include "FaerieItemTemplate.h"
 #include "Tokens/FaerieItemUsesToken.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(GenerationAction)
+
 DEFINE_LOG_CATEGORY(LogGenerationAction)
 
 UCraftingActionBase::UCraftingActionBase()

@@ -3,6 +3,8 @@
 #include "FaerieItemToken.h"
 #include "FaerieItem.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(FaerieItemToken)
+
 bool UFaerieItemToken::IsMutable() const
 {
 	return false;

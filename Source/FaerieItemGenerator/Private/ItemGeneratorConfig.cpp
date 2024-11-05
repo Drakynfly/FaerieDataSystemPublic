@@ -6,6 +6,8 @@
 #include "Squirrel.h"
 #include "UObject/ObjectSaveContext.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(ItemGeneratorConfig)
+
 DEFINE_LOG_CATEGORY(LogItemGenConfig)
 
 UItemGenerationConfig::UItemGenerationConfig()

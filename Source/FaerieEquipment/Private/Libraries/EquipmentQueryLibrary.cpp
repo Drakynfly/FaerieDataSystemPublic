@@ -3,6 +3,8 @@
 #include "EquipmentQueryLibrary.h"
 #include "EquipmentQueryStatics.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(EquipmentQueryLibrary)
+
 bool UFaerieEquipmentQueryLibrary::RunEquipmentQuery(const UFaerieEquipmentManager* Manager, const FFaerieEquipmentSetQuery& SetQuery, UFaerieEquipmentSlot*& PassingSlot)
 {
 	return Faerie::Equipment::RunEquipmentQuery(Manager, SetQuery, PassingSlot);

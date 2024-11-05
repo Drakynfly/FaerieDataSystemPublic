@@ -10,6 +10,8 @@
 #include "FaerieItemStackHashInstruction.h"
 #endif
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(EquipmentHashAsset)
+
 void UFaerieEquipmentHashAsset::PreSave(FObjectPreSaveContext SaveContext)
 {
 	Super::PreSave(SaveContext);

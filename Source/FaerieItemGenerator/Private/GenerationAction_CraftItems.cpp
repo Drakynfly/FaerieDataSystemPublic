@@ -8,6 +8,8 @@
 #include "ItemCraftingConfig.h"
 #include "ItemInstancingContext_Crafting.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(GenerationAction_CraftItems)
+
 DEFINE_LOG_CATEGORY(LogCraftItems)
 
 void UGenerationAction_CraftItems::Configure(FActionArgs& Args)

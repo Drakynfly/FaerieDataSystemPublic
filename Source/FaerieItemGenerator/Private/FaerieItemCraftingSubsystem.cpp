@@ -12,6 +12,8 @@
 #include "GenerationAction_GenerateItems.h"
 #include "GenerationAction_UpgradeItems.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(FaerieItemCraftingSubsystem)
+
 DEFINE_LOG_CATEGORY(LogItemGeneratorSubsystem)
 
 void UFaerieItemCraftingSubsystem::Initialize(FSubsystemCollectionBase& Collection)

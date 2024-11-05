@@ -3,6 +3,8 @@
 #include "Libraries/LoggedInventoryEventLibrary.h"
 #include "Extensions/InventoryLoggerExtension.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(LoggedInventoryEventLibrary)
+
 void ULoggedInventoryEventLibrary::BreakLoggedInventoryEvent(const FLoggedInventoryEvent& LoggedEvent, FFaerieInventoryTag& Type,
 															 bool& Success, FDateTime& Timestamp, FEntryKey& EntryTouched,
 															 TArray<FFaerieItemKeyBase>& OtherKeysTouched, FFaerieItemStackView& Stack, FString& ErrorMessage)

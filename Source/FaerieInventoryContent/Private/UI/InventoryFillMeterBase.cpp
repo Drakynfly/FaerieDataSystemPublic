@@ -3,6 +3,8 @@
 #include "UI/InventoryFillMeterBase.h"
 #include "Extensions/InventoryCapacityExtension.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(InventoryFillMeterBase)
+
 void UInventoryFillMeterBase::InitWithExtension(UInventoryCapacityExtension* Extension)
 {
 	if (Extension && Extension != CapacityModule)

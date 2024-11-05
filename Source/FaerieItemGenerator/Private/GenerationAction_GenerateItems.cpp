@@ -7,6 +7,8 @@
 #include "ItemGeneratorConfig.h"
 #include "ItemInstancingContext_Crafting.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(GenerationAction_GenerateItems)
+
 #define LOCTEXT_NAMESPACE "GenerationAction_GenerateItems"
 
 void UGenerationAction_GenerateItems::Configure(FActionArgs& Args)

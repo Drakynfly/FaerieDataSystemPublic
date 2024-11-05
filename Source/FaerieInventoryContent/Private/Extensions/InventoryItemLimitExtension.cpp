@@ -4,6 +4,8 @@
 
 #include "FaerieItemStorage.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(InventoryItemLimitExtension)
+
 void UInventoryItemLimitExtension::InitializeExtension(const UFaerieItemContainerBase* Container)
 {
 	if (!ensure(IsValid(Container))) return;

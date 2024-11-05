@@ -13,6 +13,8 @@
 #include "Tokens/FaerieInfoToken.h"
 #include "UObject/ObjectSaveContext.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(FaerieItemAsset)
+
 void UFaerieItemAsset::PreSave(FObjectPreSaveContext SaveContext)
 {
 #if WITH_EDITOR

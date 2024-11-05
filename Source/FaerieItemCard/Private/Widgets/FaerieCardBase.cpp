@@ -2,6 +2,8 @@
 
 #include "Widgets/FaerieCardBase.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(FaerieCardBase)
+
 void UFaerieCardBase::NativeConstruct()
 {
 	Super::NativeConstruct();

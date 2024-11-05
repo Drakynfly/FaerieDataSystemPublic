@@ -6,6 +6,8 @@
 #include "FaerieItemDataFilter.h"
 #include "Squirrel.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(BasicItemHashInstructions)
+
 // WARNING: Changing any of these will invalidate all existing hashes generated with them.
 // These are all random large primes, that will *hopefully* generate decent hashes with Squirrel
 

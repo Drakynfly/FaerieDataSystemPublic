@@ -4,6 +4,8 @@
 #include "Extensions/InventoryEjectionHandlerExtension.h"
 #include "FaerieItemStorage.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(InventoryMetadataExtension)
+
 FFaerieInventoryMetaTags FFaerieInventoryMetaTags::FaerieInventoryMetaTags;
 
 EEventExtensionResponse UInventoryMetadataExtension::AllowsRemoval(const UFaerieItemContainerBase* Container,

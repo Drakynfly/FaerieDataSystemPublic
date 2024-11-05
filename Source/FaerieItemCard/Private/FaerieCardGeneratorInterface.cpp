@@ -1,7 +1,5 @@
 ﻿// Copyright Guy (Drakynfly) Lundvall. All Rights Reserved.
 
-
 #include "FaerieCardGeneratorInterface.h"
 
-
-// Add default functionality here for any IFaerieCardGeneratorInterface functions that are not pure virtual.
+#include UE_INLINE_GENERATED_CPP_BY_NAME(FaerieCardGeneratorInterface)

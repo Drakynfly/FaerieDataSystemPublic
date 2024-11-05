@@ -3,6 +3,8 @@
 #include "UI/InventoryUIAction.h"
 #include "UI/InventoryContentsBase.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(InventoryUIAction)
+
 DEFINE_LOG_CATEGORY(LogInventoryUIAction)
 
 UWorld* UInventoryUIAction::GetWorld() const

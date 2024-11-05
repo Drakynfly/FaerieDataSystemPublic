@@ -9,6 +9,8 @@
 
 #include "Components/PanelWidget.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(InventoryContentsBase)
+
 #define LOCTEXT_NAMESPACE "InventoryContentsBase"
 
 DEFINE_LOG_CATEGORY(LogInventoryContents)

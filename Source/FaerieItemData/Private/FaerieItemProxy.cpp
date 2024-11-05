@@ -3,6 +3,8 @@
 #include "FaerieItemProxy.h"
 #include "FaerieItemDataProxy.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(FaerieItemProxy)
+
 const UFaerieItem* FFaerieItemProxy::GetItemObject() const
 {
 	if (IsValid())

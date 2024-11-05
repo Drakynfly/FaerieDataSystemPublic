@@ -4,6 +4,8 @@
 #include "FaerieItemDataFilter.h"
 #include "FaerieItemTemplate.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(FaerieItemMutator)
+
 bool UFaerieItemMutator::CanApply(const FFaerieItemProxy Proxy) const
 {
 	return Proxy->CanMutate() &&

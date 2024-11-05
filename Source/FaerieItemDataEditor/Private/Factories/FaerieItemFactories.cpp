@@ -4,6 +4,8 @@
 #include "FaerieItemAsset.h"
 #include "FaerieItemTemplate.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(FaerieItemFactories)
+
 // FAERIE ITEM ASSET
 UFaerieItemAsset_Factory::UFaerieItemAsset_Factory(const FObjectInitializer& ObjectInitializer)
   : Super(ObjectInitializer)

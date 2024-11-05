@@ -7,6 +7,8 @@
 #include "FaerieItemDataProxy.h"
 #include "CardTokens/CustomCardClass.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(FaerieCardGenerateAsync)
+
 bool UFaerieCardGenerateAsync::GenerateItemCard(APlayerController* OwningPlayer,
 												const TScriptInterface<IFaerieCardGeneratorInterface> Generator,
 												const FFaerieItemProxy Proxy, const TSubclassOf<UCustomCardClass> Type,

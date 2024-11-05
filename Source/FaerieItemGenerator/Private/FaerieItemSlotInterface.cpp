@@ -2,6 +2,8 @@
 
 #include "FaerieItemSlotInterface.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(FaerieItemSlotInterface)
+
 namespace Faerie::Crafting
 {
 	FFaerieCraftingSlotsView GetCraftingSlots(const IFaerieItemSlotInterface* Interface)

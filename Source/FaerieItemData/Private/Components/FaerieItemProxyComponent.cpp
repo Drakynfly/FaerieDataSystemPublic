@@ -2,6 +2,8 @@
 
 #include "Components/FaerieItemProxyComponent.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(FaerieItemProxyComponent)
+
 UFaerieItemProxyComponent::UFaerieItemProxyComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;

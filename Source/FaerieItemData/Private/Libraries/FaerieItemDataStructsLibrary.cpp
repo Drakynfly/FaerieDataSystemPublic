@@ -3,6 +3,8 @@
 #include "FaerieItemDataStructsLibrary.h"
 #include "FaerieItemStack.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(FaerieItemDataStructsLibrary)
+
 int32 UFaerieItemDataStructsLibrary::UnlimitedStack()
 {
 	return Faerie::ItemData::UnlimitedStack;

@@ -4,11 +4,13 @@
 #include "FaerieItemDataFilter.h"
 #include "FaerieItemDataProxy.h"
 
-#define LOCTEXT_NAMESPACE "FaerieItemTemplate"
-
 #if WITH_EDITOR
 #include "Misc/DataValidation.h"
 #endif
+
+#include UE_INLINE_GENERATED_CPP_BY_NAME(FaerieItemTemplate)
+
+#define LOCTEXT_NAMESPACE "FaerieItemTemplate"
 
 #if WITH_EDITOR
 

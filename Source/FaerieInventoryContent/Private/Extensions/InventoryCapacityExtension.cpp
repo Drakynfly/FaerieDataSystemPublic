@@ -7,6 +7,8 @@
 #include "Net/UnrealNetwork.h"
 #include "Tokens/FaerieCapacityToken.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(InventoryCapacityExtension)
+
 void UInventoryCapacityExtension::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);

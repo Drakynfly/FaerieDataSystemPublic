@@ -4,7 +4,6 @@
 
 #include "NetSupportedObject.h"
 
-#include "FaerieItemStack.h"
 #include "InventoryDataStructs.h"
 
 #include "ItemContainerExtensionBase.generated.h"

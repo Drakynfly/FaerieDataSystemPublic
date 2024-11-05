@@ -3,6 +3,8 @@
 #include "Extensions/InventoryContentFilterExtension.h"
 #include "FaerieItemDataFilter.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(InventoryContentFilterExtension)
+
 EEventExtensionResponse UInventoryContentFilterExtension::AllowsAddition(const UFaerieItemContainerBase* Container,
                                                                          const FFaerieItemStackView Stack)
 {

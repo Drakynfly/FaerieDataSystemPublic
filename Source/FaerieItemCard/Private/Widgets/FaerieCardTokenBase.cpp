@@ -7,6 +7,8 @@
 #include "FaerieItemToken.h"
 #include "Widgets/FaerieCardBase.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(FaerieCardTokenBase)
+
 void UFaerieCardTokenBase::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();

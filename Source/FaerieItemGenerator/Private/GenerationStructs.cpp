@@ -7,6 +7,8 @@
 #include "ItemInstancingContext_Crafting.h"
 #include "Squirrel.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(GenerationStructs)
+
 UFaerieItem* FTableDrop::Resolve(const UItemInstancingContext_Crafting* Context) const
 {
 	auto&& DropObject = Asset.Object.LoadSynchronous();

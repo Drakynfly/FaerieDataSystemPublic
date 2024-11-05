@@ -2,6 +2,8 @@
 
 #include "FaerieItemDataProxy.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(FaerieItemDataProxy)
+
 const UFaerieItem* UFaerieItemDataStackLiteral::GetItemObject() const
 {
 	return ItemStack.Item;

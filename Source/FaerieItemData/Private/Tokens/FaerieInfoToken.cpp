@@ -3,6 +3,8 @@
 #include "Tokens/FaerieInfoToken.h"
 #include "Net/UnrealNetwork.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(FaerieInfoToken)
+
 #define LOCTEXT_NAMESPACE "FaerieInfoToken"
 
 void UFaerieInfoToken::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

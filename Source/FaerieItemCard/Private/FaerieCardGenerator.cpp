@@ -8,6 +8,8 @@
 #include "FaerieItemCardModule.h"
 #include "Engine/AssetManager.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(FaerieCardGenerator)
+
 TSoftClassPtr<UFaerieCardBase> UFaerieCardGenerator::GetCardClassFromProxy(const FFaerieItemProxy Proxy, const TSubclassOf<UCustomCardClass> Type) const
 {
 	auto&& Item = Proxy.GetInterface()->GetItemObject();

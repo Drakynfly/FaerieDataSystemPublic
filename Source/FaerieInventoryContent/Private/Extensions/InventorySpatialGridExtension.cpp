@@ -7,6 +7,8 @@
 #include "Net/UnrealNetwork.h"
 #include "Tokens/FaerieShapeToken.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(InventorySpatialGridExtension)
+
 void FSpatialKeyedEntry::PreReplicatedRemove(const FSpatialContent& InArraySerializer)
 {
 	InArraySerializer.PreEntryReplicatedRemove(*this);

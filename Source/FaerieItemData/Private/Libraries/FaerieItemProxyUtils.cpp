@@ -2,6 +2,8 @@
 
 #include "FaerieItemProxyUtils.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(FaerieItemProxyUtils)
+
 bool UFaerieItemProxyUtils::CastProxy(const FFaerieItemProxy Proxy, UClass* Class, UObject*& ProxyObject)
 {
 	// @Todo the const-safety here! ProxyObject escapes into blueprint as non-const (BP doesn't understand const objects)

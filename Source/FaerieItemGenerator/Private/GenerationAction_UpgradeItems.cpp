@@ -4,6 +4,8 @@
 #include "FaerieItemMutator.h"
 #include "ItemUpgradeConfig.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(GenerationAction_UpgradeItems)
+
 void UGenerationAction_UpgradeItems::Configure(FActionArgs& Args)
 {
 	UpgradeConfig = Args.UpgradeConfig;

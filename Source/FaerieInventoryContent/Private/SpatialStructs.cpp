@@ -2,6 +2,8 @@
 
 #include "SpatialStructs.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(SpatialStructs)
+
 FFaerieGridShape FFaerieGridShape::MakeSquare(const int32 Size)
 {
 	return MakeRect(Size, Size);

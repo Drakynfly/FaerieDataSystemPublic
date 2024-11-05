@@ -6,6 +6,8 @@
 #include "Net/Core/PushModel/PushModel.h"
 #include "UObject/ObjectSaveContext.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(FaerieItem)
+
 #if WITH_EDITOR
 // This is really the module startup time, since this is set whenever this module loads :)
 static FDateTime EditorStartupTime = FDateTime::UtcNow();

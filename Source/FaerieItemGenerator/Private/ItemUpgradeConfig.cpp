@@ -9,6 +9,8 @@
 
 DEFINE_LOG_CATEGORY(LogItemUpgradeConfig)
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(ItemUpgradeConfig)
+
 #if WITH_EDITOR
 
 #define LOCTEXT_NAMESPACE "ItemUpgradeConfigValidation"

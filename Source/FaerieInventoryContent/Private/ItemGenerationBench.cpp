@@ -3,6 +3,8 @@
 #include "ItemGenerationBench.h"
 #include "ItemGeneratorConfig.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(ItemGenerationBench)
+
 #if WITH_EDITOR
 void UItemGenerationBench::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
