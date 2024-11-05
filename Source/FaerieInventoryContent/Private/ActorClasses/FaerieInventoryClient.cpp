@@ -77,7 +77,7 @@ bool FFaerieClientAction_RequestDeleteEntry::Server_Execute(const UFaerieInvento
 	if (!IsValid(Storage)) return false;
 	if (!Client->CanAccessStorage(Storage)) return false;
 
-	return Storage->RemoveStack(Handle.Key, FFaerieItemStorageEvents::Get().Removal_Deletion, Amount);
+	return Storage->RemoveStack(Handle.Key, Faerie::Inventory::Tags::RemovalDeletion, Amount);
 }
 
 bool FFaerieClientAction_RequestEjectEntry::Server_Execute(const UFaerieInventoryClient* Client) const
@@ -86,7 +86,7 @@ bool FFaerieClientAction_RequestEjectEntry::Server_Execute(const UFaerieInventor
 	if (!IsValid(Storage)) return false;
 	if (!Client->CanAccessStorage(Storage)) return false;
 
-	return Storage->RemoveStack(Handle.Key, FFaerieEjectionEvent::Get().Removal_Ejection, Amount);
+	return Storage->RemoveStack(Handle.Key, Faerie::Inventory::Tags::RemovalEject, Amount);
 }
 
 bool FFaerieClientAction_RequestMoveEntry::Server_Execute(const UFaerieInventoryClient* Client) const
@@ -178,7 +178,7 @@ bool FFaerieClientAction_RequestMoveEntryToEquipmentSlot::Server_Execute(const U
 	if (!Slot->CanSetInSlot(Storage->View(Handle.Key.EntryKey).Resize(TempAmount))) return false;
 
 	FFaerieItemStack OutStack;
-	if (!Storage->TakeStack(Handle.Key, OutStack, FFaerieItemStorageEvents::Get().Removal_Moving, TempAmount))
+	if (!Storage->TakeStack(Handle.Key, OutStack, Faerie::Inventory::Tags::RemovalMoving, TempAmount))
 	{
 		return false;
 	}
@@ -232,7 +232,7 @@ bool FFaerieClientAction_RequestMoveItemBetweenSpatialSlots::Server_Execute(cons
 	{
 		return SpatialExtension->MoveItem(TargetKey, DragStart, DragEnd);
 	}
-	
+
 	return false;
 }
 

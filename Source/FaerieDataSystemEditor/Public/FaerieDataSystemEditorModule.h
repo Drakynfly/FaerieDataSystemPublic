@@ -17,6 +17,8 @@ public:
     /** IModuleInterface implementation */
 
 protected:
+    void OnPostEngineInit();
+
     void RegisterDetailCustomizations(const TMap<FName, FOnGetDetailCustomizationInstance>& Customizations);
     void RegisterPropertyCustomizations(const TMap<FName, FOnGetPropertyTypeCustomizationInstance>& Customizations);
 

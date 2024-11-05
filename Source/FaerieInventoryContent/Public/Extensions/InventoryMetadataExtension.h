@@ -5,6 +5,7 @@
 #include "GameplayTagContainer.h"
 #include "ItemContainerExtensionBase.h"
 #include "InventoryReplicatedDataExtensionBase.h"
+#include "TypedGameplayTags.h"
 #include "InventoryMetadataExtension.generated.h"
 
 /**
@@ -18,39 +19,14 @@ struct FAERIEINVENTORYCONTENT_API FFaerieInventoryMetaTag : public FFaerieInvent
 };
 
 // Server-only metadata flags
-struct FAERIEINVENTORYCONTENT_API FFaerieInventoryMetaTags : public FGameplayTagNativeAdder
+namespace Faerie::Inventory::Tags
 {
-	FORCEINLINE static const FFaerieInventoryMetaTags& Get() { return FaerieInventoryMetaTags; }
-
-	FFaerieInventoryMetaTag CannotRemove;
-	FFaerieInventoryMetaTag CannotDelete;
-	FFaerieInventoryMetaTag CannotMove;
-	FFaerieInventoryMetaTag CannotEject;
-	FFaerieInventoryMetaTag CannotSplit;
-
-protected:
-	virtual void AddTags() override
-	{
-		CannotRemove = FFaerieInventoryMetaTag::AddNativeTag(TEXT("CannotRemove"),
-						"Denies permission for the user to remove this entry. Typically used to mark required quest items.");
-
-		CannotDelete = FFaerieInventoryMetaTag::AddNativeTag(TEXT("CannotDelete"),
-						"Denies permission for the user to delete this entry. Can still be otherwise removed!");
-
-		CannotMove = FFaerieInventoryMetaTag::AddNativeTag(TEXT("CannotMove"),
-						"Denies permission for the user to move this entry.");
-
-		CannotEject = FFaerieInventoryMetaTag::AddNativeTag(TEXT("CannotEject"),
-						"Denies permission for the user to eject this entry.");
-
-		CannotSplit = FFaerieInventoryMetaTag::AddNativeTag(TEXT("CannotSplit"),
-						"Denies permission to split a stack. Typically used to mark required quest item stacks.");
-	}
-
-private:
-	// Private static object for the global tags. Use the Get() function to access externally.
-	static FFaerieInventoryMetaTags FaerieInventoryMetaTags;
-};
+	FAERIEINVENTORYCONTENT_API UE_DECLARE_GAMEPLAY_TAG_TYPED_EXTERN(FFaerieInventoryMetaTag, CannotRemove)
+	FAERIEINVENTORYCONTENT_API UE_DECLARE_GAMEPLAY_TAG_TYPED_EXTERN(FFaerieInventoryMetaTag, CannotDelete)
+	FAERIEINVENTORYCONTENT_API UE_DECLARE_GAMEPLAY_TAG_TYPED_EXTERN(FFaerieInventoryMetaTag, CannotMove)
+	FAERIEINVENTORYCONTENT_API UE_DECLARE_GAMEPLAY_TAG_TYPED_EXTERN(FFaerieInventoryMetaTag, CannotEject)
+	FAERIEINVENTORYCONTENT_API UE_DECLARE_GAMEPLAY_TAG_TYPED_EXTERN(FFaerieInventoryMetaTag, CannotSplit)
+}
 
 USTRUCT()
 struct FInventoryEntryMetadata
@@ -84,6 +60,8 @@ public:
 	bool CanSetEntryTag(const UFaerieItemContainerBase* Container, const FEntryKey Key, const FFaerieInventoryMetaTag Tag, const bool StateToSetTo) const;
 
 	bool MarkStackWithTag(const UFaerieItemContainerBase* Container, const FEntryKey Key, FFaerieInventoryMetaTag Tag);
+
+	// @todo tag type-safety
 	void TrySetTags(const UFaerieItemContainerBase* Container, const FEntryKey Key, const FGameplayTagContainer& Tags);
 
 	bool ClearTagFromStack(const UFaerieItemContainerBase* Container, const FEntryKey Key, FFaerieInventoryMetaTag Tag);

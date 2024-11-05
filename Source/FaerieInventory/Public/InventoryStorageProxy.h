@@ -121,6 +121,7 @@ public:
 	virtual FEntryKey GetKey() const override;
 	//~ UInventoryEntryStorageProxy
 
+	UFUNCTION(BlueprintCallable, Category = "Faerie|StackProxy")
 	FInventoryKeyHandle GetHandle() const;
 
 protected:

@@ -42,7 +42,8 @@ public class FaerieDataSystemEditor : ModuleRules
                 "GraphEditor",
                 "AssetTools",
                 "GameplayTags",
-                "GameplayTagsEditor"
+                "GameplayTagsEditor",
+                "UnrealEd"
             });
     }
 }

@@ -7,6 +7,7 @@
 #include "Modules/ModuleManager.h"
 #include "Interfaces/IPluginManager.h"
 #include "Styling/SlateStyleRegistry.h"
+#include "Customizations/SGameplayTagGraphPin_FIXED.h"
 
 DEFINE_LOG_CATEGORY(LogFaerieDataSystemEditorModule);
 
@@ -14,13 +15,16 @@ DEFINE_LOG_CATEGORY(LogFaerieDataSystemEditorModule);
 
 void IFaerieDataSystemEditorModuleBase::StartupModule()
 {
+    FCoreDelegates::OnPostEngineInit.AddRaw(this, &IFaerieDataSystemEditorModuleBase::OnPostEngineInit);
 }
 
 void IFaerieDataSystemEditorModuleBase::ShutdownModule()
 {
-    if (FModuleManager::Get().IsModuleLoaded("PropertyEditor"))
+    FCoreDelegates::OnPostEngineInit.RemoveAll(this);
+
+    if (FModuleManager::Get().IsModuleLoaded(TEXT("PropertyEditor")))
     {
-        auto&& PropertyModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
+        auto&& PropertyModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>(TEXT("PropertyEditor"));
 
         // Unregister detail customizations
         for (auto&& Customization : DetailCustomizations)
@@ -38,10 +42,17 @@ void IFaerieDataSystemEditorModuleBase::ShutdownModule()
     }
 }
 
+void IFaerieDataSystemEditorModuleBase::OnPostEngineInit()
+{
+    // @note: this is a patch to fix a bug in Unreal as of 5.4/5.5 where gameplay tag filter are evaluated in the wrong order
+    TSharedPtr<FGameplayTagsGraphPanelPinFactory_ForFix> GameplayTagsGraphPanelPinFactoryFixed = MakeShareable(new FGameplayTagsGraphPanelPinFactory_ForFix());
+    FEdGraphUtilities::RegisterVisualPinFactory(GameplayTagsGraphPanelPinFactoryFixed);
+}
+
 void IFaerieDataSystemEditorModuleBase::RegisterDetailCustomizations(
     const TMap<FName, FOnGetDetailCustomizationInstance>& Customizations)
 {
-    auto&& PropertyModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
+    auto&& PropertyModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>(TEXT("PropertyEditor"));
 
     for (auto&& Element : Customizations)
     {
@@ -55,7 +66,7 @@ void IFaerieDataSystemEditorModuleBase::RegisterDetailCustomizations(
 void IFaerieDataSystemEditorModuleBase::RegisterPropertyCustomizations(
     const TMap<FName, FOnGetPropertyTypeCustomizationInstance>& Customizations)
 {
-    auto&& PropertyModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
+    auto&& PropertyModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>(TEXT("PropertyEditor"));
 
     for (auto&& Element : Customizations)
     {

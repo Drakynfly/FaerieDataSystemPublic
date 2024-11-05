@@ -6,14 +6,18 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(InventoryUserdataExtension)
 
-FFaerieInventoryUserTags FFaerieInventoryUserTags::FaerieInventoryUserTags;
+namespace Faerie::Inventory::Tags
+{
+	UE_DEFINE_GAMEPLAY_TAG_TYPED_COMMENT(FFaerieInventoryUserTag, Favorite,
+		"Fae.Inventory.Public.Favorite", "Marks an item to show up in player favorites / quick access.");
+}
 
 UScriptStruct* UInventoryUserdataExtension::GetDataScriptStruct() const
 {
 	return FInventoryEntryUserdata::StaticStruct();
 }
 
-bool UInventoryUserdataExtension::DoesStackHaveTag(UFaerieItemContainerBase* Container, const FEntryKey Key, const FFaerieInventoryUserTag Tag) const
+bool UInventoryUserdataExtension::DoesStackHaveTag(const UFaerieItemContainerBase* Container, const FEntryKey Key, const FFaerieInventoryUserTag Tag) const
 {
 	const FConstStructView DataView = GetDataForEntry(Container, Key);
 	if (!DataView.IsValid())
@@ -24,13 +28,13 @@ bool UInventoryUserdataExtension::DoesStackHaveTag(UFaerieItemContainerBase* Con
 	return DataView.Get<const FInventoryEntryUserdata>().Tags.HasTag(Tag);
 }
 
-bool UInventoryUserdataExtension::CanSetStackTag(UFaerieItemContainerBase* Container, const FEntryKey Key, const FFaerieInventoryUserTag Tag,
+bool UInventoryUserdataExtension::CanSetStackTag(const UFaerieItemContainerBase* Container, const FEntryKey Key, const FFaerieInventoryUserTag Tag,
                                                   const bool StateToSetTo) const
 {
 	return DoesStackHaveTag(Container, Key, Tag) != StateToSetTo;
 }
 
-bool UInventoryUserdataExtension::MarkStackWithTag(UFaerieItemContainerBase* Container, const FEntryKey Key, const FFaerieInventoryUserTag Tag)
+bool UInventoryUserdataExtension::MarkStackWithTag(const UFaerieItemContainerBase* Container, const FEntryKey Key, const FFaerieInventoryUserTag Tag)
 {
 	if (!Tag.IsValid())
 	{
@@ -54,7 +58,7 @@ bool UInventoryUserdataExtension::MarkStackWithTag(UFaerieItemContainerBase* Con
 		});
 }
 
-bool UInventoryUserdataExtension::ClearTagFromStack(UFaerieItemContainerBase* Container, const FEntryKey Key, const FFaerieInventoryUserTag Tag)
+bool UInventoryUserdataExtension::ClearTagFromStack(const UFaerieItemContainerBase* Container, const FEntryKey Key, const FFaerieInventoryUserTag Tag)
 {
 	if (!Tag.IsValid())
 	{

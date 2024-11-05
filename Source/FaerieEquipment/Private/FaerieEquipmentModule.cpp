@@ -6,8 +6,6 @@
 
 #define LOCTEXT_NAMESPACE "FaerieEquipmentModule"
 
-FFaerieSlotTags FFaerieSlotTags::FaerieSlotTags;
-
 void FFaerieEquipmentModule::StartupModule()
 {
 }

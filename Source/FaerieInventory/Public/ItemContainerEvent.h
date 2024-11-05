@@ -3,50 +3,21 @@
 #pragma once
 
 #include "GameplayTagContainer.h"
+#include "TypedGameplayTags.h"
 #include "InventoryDataStructs.h"
-
-struct FAERIEINVENTORY_API FFaerieItemStorageEvents : public FGameplayTagNativeAdder
-{
-	FORCEINLINE static const FFaerieItemStorageEvents& Get() { return FaerieInventoryEvents; }
-
-	// Tag for events where items are added to the inventory.
-	FFaerieInventoryTag Addition;
-
-	// Tag for events where items are removed from the inventory.
-	FFaerieInventoryTag RemovalBaseTag;
-
-	FFaerieInventoryTag Removal_Deletion;
-	FFaerieInventoryTag Removal_Moving;
-
-protected:
-	virtual void AddTags() override
-	{
-		Addition = FFaerieInventoryTag::AddNativeTag(TEXT("Addition"),
-				"Inventory item data added event");
-
-		RemovalBaseTag = FFaerieInventoryTag::AddNativeTag(TEXT("Removal"),
-				"Inventory item data removed event");
-
-		Removal_Deletion = FFaerieInventoryTag::AddNativeTag(TEXT("Removal.Deletion"),
-						"Remove an item by deleting it entirely");
-
-		Removal_Moving = FFaerieInventoryTag::AddNativeTag(TEXT("Removal.Moving"),
-						"Remove an item for the purpose of moving it elsewhere");
-
-		RemovalTagsAllowedByDefault.Emplace(Removal_Deletion);
-		RemovalTagsAllowedByDefault.Emplace(Removal_Moving);
-	}
-
-private:
-	// Private static object for the global tags. Use the Get() function to access externally.
-	static FFaerieItemStorageEvents FaerieInventoryEvents;
-
-public:
-	static TSet<FFaerieInventoryTag> RemovalTagsAllowedByDefault;
-};
 
 namespace Faerie::Inventory
 {
+	namespace Tags
+	{
+		FAERIEINVENTORY_API UE_DECLARE_GAMEPLAY_TAG_TYPED_EXTERN(FFaerieInventoryTag, Addition)
+		FAERIEINVENTORY_API UE_DECLARE_GAMEPLAY_TAG_TYPED_EXTERN(FFaerieInventoryTag, RemovalBase)
+		FAERIEINVENTORY_API UE_DECLARE_GAMEPLAY_TAG_TYPED_EXTERN(FFaerieInventoryTag, RemovalDeletion)
+		FAERIEINVENTORY_API UE_DECLARE_GAMEPLAY_TAG_TYPED_EXTERN(FFaerieInventoryTag, RemovalMoving)
+
+		FAERIEINVENTORY_API const TSet<FFaerieInventoryTag>& RemovalTagsAllowedByDefault();
+	}
+
 	// Logs that record data about additions to and removals from an item container.
 	class FAERIEINVENTORY_API FEventLog
 	{
@@ -68,11 +39,11 @@ namespace Faerie::Inventory
 	public:
 		static FEventLog AdditionFailed(const FString& Message)
 		{
-			return CreateFailureEvent_Internal(FFaerieItemStorageEvents::Get().Addition, Message);
+			return CreateFailureEvent_Internal(Tags::Addition, Message);
 		}
 
-		const FDateTime& GetTimestamp() const { return Timestamp; }
 		const FGuid& GetEventID() const { return EventID; }
+		const FDateTime& GetTimestamp() const { return Timestamp; }
 
 		friend bool operator==(const FEventLog& Lhs, const FEventLog& Rhs)
 		{

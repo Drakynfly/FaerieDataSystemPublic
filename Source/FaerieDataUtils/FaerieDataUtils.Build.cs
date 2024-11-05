@@ -11,7 +11,8 @@ public class FaerieDataUtils : ModuleRules
         PublicDependencyModuleNames.AddRange(
             new []
             {
-                "Core"
+                "Core",
+                "GameplayTags"
             }
         );
 

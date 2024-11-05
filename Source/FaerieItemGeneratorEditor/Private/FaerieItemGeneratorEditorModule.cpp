@@ -26,15 +26,15 @@ void FFaerieItemGeneratorEditorModule::StartupModule()
 	FOnGetDetailCustomizationInstance::CreateStatic(&FItemGenerationConfigCustomization::MakeInstance));
 
 	StructCustomizations.Add(FTableDrop::StaticStruct()->GetFName(),
-	FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FTableDropCustomization::MakeInstance));
+		FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FTableDropCustomization::MakeInstance));
 	StructCustomizations.Add(FWeightedDrop::StaticStruct()->GetFName(),
-	FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FWeightedDropCustomization::MakeInstance));
+		FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FWeightedDropCustomization::MakeInstance));
 	StructCustomizations.Add(FOnTheFlyItemCraftingConfig::StaticStruct()->GetFName(),
-	FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FOnTheFlyConfigCustomization::MakeInstance));
+		FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FOnTheFlyConfigCustomization::MakeInstance));
 	StructCustomizations.Add(FOnTheFlyItemUpgradeConfig::StaticStruct()->GetFName(),
-	FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FOnTheFlyConfigCustomization::MakeInstance));
+		FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FOnTheFlyConfigCustomization::MakeInstance));
 	StructCustomizations.Add(FFaerieWeightedDropPool::StaticStruct()->GetFName(),
-	FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FItemsArrayCustomization::MakeInstance));
+		FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FItemsArrayCustomization::MakeInstance));
 
 	RegisterDetailCustomizations(ClassCustomizations);
 	RegisterPropertyCustomizations(StructCustomizations);

@@ -10,12 +10,16 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(InventoryEjectionHandlerExtension)
 
-FFaerieEjectionEvent FFaerieEjectionEvent::FaerieEjectionEvent;
+namespace Faerie::Inventory::Tags
+{
+	UE_DEFINE_GAMEPLAY_TAG_TYPED_COMMENT(FFaerieInventoryTag, RemovalEject,
+		"Fae.Inventory.Removal.Ejection", "Remove an item and eject it from the inventory as a pickup/visual")
+}
 
 EEventExtensionResponse UInventoryEjectionHandlerExtension::AllowsRemoval(const UFaerieItemContainerBase* Container, const FEntryKey Key,
                                                                           const FFaerieInventoryTag Reason) const
 {
-	if (Reason == FFaerieEjectionEvent::Get().Removal_Ejection)
+	if (Reason == Faerie::Inventory::Tags::RemovalEject)
 	{
 		return EEventExtensionResponse::Allowed;
 	}
@@ -26,7 +30,7 @@ EEventExtensionResponse UInventoryEjectionHandlerExtension::AllowsRemoval(const 
 void UInventoryEjectionHandlerExtension::PostRemoval(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event)
 {
 	// This extension only listens to Ejection removals
-	if (Event.Type != FFaerieEjectionEvent::Get().Removal_Ejection) return;
+	if (Event.Type != Faerie::Inventory::Tags::RemovalEject) return;
 
 	// Cannot eject null item
 	if (!Event.Item.IsValid()) return;

@@ -14,11 +14,11 @@ void FFaerieInventoryEditorModule::StartupModule()
 	TMap<FName, FOnGetPropertyTypeCustomizationInstance> StructCustomizations;
 
 	StructCustomizations.Add(FEntryKey::StaticStruct()->GetFName(),
-	FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FSimpleInlineHeaderStructCustomization::MakeInstance));
+		FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FSimpleInlineHeaderStructCustomization::MakeInstance));
 	StructCustomizations.Add(FStackKey::StaticStruct()->GetFName(),
-	FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FSimpleInlineHeaderStructCustomization::MakeInstance));
+		FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FSimpleInlineHeaderStructCustomization::MakeInstance));
 	StructCustomizations.Add(FFaerieInventoryTag::StaticStruct()->GetFName(),
-	FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FGameplayTagCustomizationPublic::MakeInstance));
+		FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FGameplayTagCustomizationPublic::MakeInstance));
 
 	RegisterPropertyCustomizations(StructCustomizations);
 }

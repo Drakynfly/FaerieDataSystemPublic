@@ -4,26 +4,14 @@
 
 #include "ItemContainerExtensionBase.h"
 #include "FaerieItemStack.h"
+#include "TypedGameplayTags.h"
 
 #include "InventoryEjectionHandlerExtension.generated.h"
 
-struct FAERIEINVENTORYCONTENT_API FFaerieEjectionEvent : public FGameplayTagNativeAdder
+namespace Faerie::Inventory::Tags
 {
-	FORCEINLINE static const FFaerieEjectionEvent& Get() { return FaerieEjectionEvent; }
-
-	FFaerieInventoryTag Removal_Ejection;
-
-protected:
-	virtual void AddTags() override
-	{
-		Removal_Ejection = FFaerieInventoryTag::AddNativeTag(TEXT("Removal.Ejection"),
-						"Remove an item and eject it from the inventory as a pickup/visual");
-	}
-
-private:
-	// Private static object for the global tags. Use the Get() function to access externally.
-	static FFaerieEjectionEvent FaerieEjectionEvent;
-};
+	FAERIEINVENTORYCONTENT_API UE_DECLARE_GAMEPLAY_TAG_TYPED_EXTERN(FFaerieInventoryTag, RemovalEject)
+}
 
 class AItemRepresentationActor;
 

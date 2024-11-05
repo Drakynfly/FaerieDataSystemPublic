@@ -5,6 +5,7 @@
 #include "GameplayTagContainer.h"
 #include "ItemContainerExtensionBase.h"
 #include "InventoryReplicatedDataExtensionBase.h"
+#include "TypedGameplayTags.h"
 #include "ActorClasses/FaerieInventoryClient.h"
 #include "InventoryUserdataExtension.generated.h"
 
@@ -18,23 +19,10 @@ struct FAERIEINVENTORYCONTENT_API FFaerieInventoryUserTag : public FFaerieInvent
 	END_TAG_DECL2(FFaerieInventoryUserTag, TEXT("Fae.Inventory.Public"))
 };
 
-struct FAERIEINVENTORYCONTENT_API FFaerieInventoryUserTags : public FGameplayTagNativeAdder
+namespace Faerie::Inventory::Tags
 {
-	FORCEINLINE static const FFaerieInventoryUserTags& Get() { return FaerieInventoryUserTags; }
-
-	FFaerieInventoryUserTag Favorite;
-
-protected:
-	virtual void AddTags() override
-	{
-		Favorite = FFaerieInventoryUserTag::AddNativeTag(TEXT("Favorite"),
-							"Marks an item to show up in player favorites / quick access.");
-	}
-
-private:
-	// Private static object for the global tags. Use the Get() function to access externally.
-	static FFaerieInventoryUserTags FaerieInventoryUserTags;
-};
+	FAERIEINVENTORYCONTENT_API UE_DECLARE_GAMEPLAY_TAG_TYPED_EXTERN(FFaerieInventoryUserTag, Favorite)
+}
 
 USTRUCT()
 struct FInventoryEntryUserdata
@@ -75,14 +63,14 @@ protected:
 
 public:
 	UFUNCTION(BlueprintCallable, Category = "Faerie|UserdataExtension")
-	bool DoesStackHaveTag(UFaerieItemContainerBase* Container, FEntryKey Key, FFaerieInventoryUserTag Tag) const;
+	bool DoesStackHaveTag(const UFaerieItemContainerBase* Container, FEntryKey Key, FFaerieInventoryUserTag Tag) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Faerie|UserdataExtension")
-	bool CanSetStackTag(UFaerieItemContainerBase* Container, FEntryKey Key, FFaerieInventoryUserTag Tag, const bool StateToSetTo) const;
+	bool CanSetStackTag(const UFaerieItemContainerBase* Container, FEntryKey Key, FFaerieInventoryUserTag Tag, const bool StateToSetTo) const;
 
-	bool MarkStackWithTag(UFaerieItemContainerBase* Container, FEntryKey Key, FFaerieInventoryUserTag Tag);
+	bool MarkStackWithTag(const UFaerieItemContainerBase* Container, FEntryKey Key, FFaerieInventoryUserTag Tag);
 
-	bool ClearTagFromStack(UFaerieItemContainerBase* Container, FEntryKey Key, FFaerieInventoryUserTag Tag);
+	bool ClearTagFromStack(const UFaerieItemContainerBase* Container, FEntryKey Key, FFaerieInventoryUserTag Tag);
 };
 
 USTRUCT(BlueprintType)

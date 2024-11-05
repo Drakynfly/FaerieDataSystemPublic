@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include "EquipmentHashTypes.h"
 #include "GameplayTagContainer.h"
 #include "Engine/DataAsset.h"
 #include "EquipmentHashAsset.generated.h"

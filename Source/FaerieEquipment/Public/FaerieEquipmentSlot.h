@@ -9,32 +9,13 @@
 
 struct FFaerieAssetInfo;
 
-struct FAERIEEQUIPMENT_API FFaerieEquipmentSlotEvents : public FGameplayTagNativeAdder
-{
-	FORCEINLINE static const FFaerieEquipmentSlotEvents& Get() { return FaerieEquipmentSlotEvents; }
-
-	// Tag for events where an item is set into a slot
-	FFaerieInventoryTag Set;
-
-	// Tag for events where an item is removed from a slot
-	FFaerieInventoryTag Take;
-
-protected:
-	virtual void AddTags() override
-	{
-		Set = FFaerieInventoryTag::AddNativeTag(TEXT("Set"),
-				"Inventory item data added event");
-
-		Take = FFaerieInventoryTag::AddNativeTag(TEXT("Take"),
-				"Inventory item data removed event");
-	}
-
-private:
-	// Private static object for the global tags. Use the Get() function to access externally.
-	static FFaerieEquipmentSlotEvents FaerieEquipmentSlotEvents;
-};
-
 DECLARE_LOG_CATEGORY_EXTERN(LogFaerieEquipmentSlot, Log, All)
+
+namespace Faerie::Equipment::Tags
+{
+	FAERIEEQUIPMENT_API UE_DECLARE_GAMEPLAY_TAG_TYPED_EXTERN(FFaerieInventoryTag, SlotSet)
+	FAERIEEQUIPMENT_API UE_DECLARE_GAMEPLAY_TAG_TYPED_EXTERN(FFaerieInventoryTag, SlotTake)
+}
 
 class UFaerieEquipmentSlotDescription;
 class UFaerieItem;

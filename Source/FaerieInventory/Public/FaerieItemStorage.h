@@ -191,7 +191,7 @@ public:
 	bool CanAddStack(FFaerieItemStackView Stack) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Storage")
-	bool CanEditEntry(FEntryKey EntryKey);
+	bool CanEditEntry(FEntryKey EntryKey) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Storage")
 	bool CanRemoveEntry(FEntryKey Key, FFaerieInventoryTag Reason) const;
@@ -218,7 +218,7 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Storage", BlueprintAuthorityOnly)
 	bool RemoveEntry(FEntryKey Key,
-		UPARAM(meta = (Categories = "Fae.Inventory.Removal")) FGameplayTag RemovalTag, const int32 Amount = -1);
+		UPARAM(meta = (Categories = "Fae.Inventory.Removal")) FFaerieInventoryTag RemovalTag, const int32 Amount = -1);
 
 	/**
 	 * Removes the entry with this key if it exists.
@@ -226,7 +226,7 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Storage", BlueprintAuthorityOnly)
 	bool RemoveStack(FInventoryKey Key,
-		UPARAM(meta = (Categories = "Fae.Inventory.Removal")) FGameplayTag RemovalTag, const int32 Amount = -1);
+		UPARAM(meta = (Categories = "Fae.Inventory.Removal")) FFaerieInventoryTag RemovalTag, const int32 Amount = -1);
 
 	/**
 	 * Removes and returns the entry with this key if it exists.
@@ -234,7 +234,7 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Storage", BlueprintAuthorityOnly)
 	bool TakeEntry(FEntryKey Key, FFaerieItemStack& OutStack,
-		UPARAM(meta = (Categories = "Fae.Inventory.Removal")) FGameplayTag RemovalTag, const int32 Amount = -1);
+		UPARAM(meta = (Categories = "Fae.Inventory.Removal")) FFaerieInventoryTag RemovalTag, const int32 Amount = -1);
 
 	/**
 	 * Removes and returns the entry with this key if it exists.
@@ -242,13 +242,13 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Storage", BlueprintAuthorityOnly)
 	bool TakeStack(FInventoryKey Key, FFaerieItemStack& OutStack,
-		UPARAM(meta = (Categories = "Fae.Inventory.Removal")) FGameplayTag RemovalTag, const int32 Amount = -1);
+		UPARAM(meta = (Categories = "Fae.Inventory.Removal")) FFaerieInventoryTag RemovalTag, const int32 Amount = -1);
 
 	/**
 	 * Clear out the entire contents of the storage.
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Storage", BlueprintAuthorityOnly)
-    void Clear(UPARAM(meta = (Categories = "Fae.Inventory.Removal")) FGameplayTag RemovalTag);
+    void Clear(UPARAM(meta = (Categories = "Fae.Inventory.Removal")) FFaerieInventoryTag RemovalTag);
 
 	/**
 	 * Add an entry from this storage to another, then remove it from this one, optionally move only part of a stack.

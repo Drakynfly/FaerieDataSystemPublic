@@ -14,9 +14,13 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FaerieEquipmentSlot)
 
-FFaerieEquipmentSlotEvents FFaerieEquipmentSlotEvents::FaerieEquipmentSlotEvents;
-
 DEFINE_LOG_CATEGORY(LogFaerieEquipmentSlot)
+
+namespace Faerie::Equipment::Tags
+{
+	UE_DEFINE_GAMEPLAY_TAG_TYPED_COMMENT(FFaerieInventoryTag, SlotSet, "Fae.Inventory.Set", "Event tag when item data is added to a slot")
+	UE_DEFINE_GAMEPLAY_TAG_TYPED_COMMENT(FFaerieInventoryTag, SlotTake, "Fae.Inventory.Take", "Event tag when item data is removed from a slot")
+}
 
 UFaerieEquipmentSlot::UFaerieEquipmentSlot()
 {
@@ -219,7 +223,7 @@ bool UFaerieEquipmentSlot::CanTakeFromSlot(const int32 Copies) const
 		return false;
 	}
 
-	if (Extensions->AllowsRemoval(this, StoredKey, FFaerieEquipmentSlotEvents::Get().Take) == EEventExtensionResponse::Disallowed)
+	if (Extensions->AllowsRemoval(this, StoredKey, Faerie::Equipment::Tags::SlotTake) == EEventExtensionResponse::Disallowed)
 	{
 		return false;
 	}
@@ -261,7 +265,7 @@ void UFaerieEquipmentSlot::SetItemInSlot(const FFaerieItemStack Stack)
 	Event.Item = ItemStack.Item;
 	Event.Amount = 1;
 	Event.Success = true;
-	Event.Type = FFaerieEquipmentSlotEvents::Get().Set;
+	Event.Type = Faerie::Equipment::Tags::SlotSet;
 	Event.EntryTouched = StoredKey;
 	Extensions->PostAddition(this, Event);
 
@@ -316,7 +320,7 @@ FFaerieItemStack UFaerieEquipmentSlot::TakeItemFromSlot(int32 Copies)
 	Event.Item = OutStack.Item;
 	Event.Amount = OutStack.Copies;
 	Event.Success = true;
-	Event.Type = FFaerieEquipmentSlotEvents::Get().Take;
+	Event.Type = Faerie::Equipment::Tags::SlotTake;
 	Event.EntryTouched = StoredKey;
 
 	Extensions->PostRemoval(this, Event);

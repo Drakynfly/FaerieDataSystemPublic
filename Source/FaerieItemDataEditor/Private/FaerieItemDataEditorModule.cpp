@@ -19,7 +19,7 @@ void FFaerieItemDataEditorModule::StartupModule()
 	StructCustomizations.Add(FFaerieItemSourceObject::StaticStruct()->GetFName(),
 		FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FFaerieItemSourceObjectCustomization::MakeInstance));
 	StructCustomizations.Add(FInlineFaerieItemDataFilter::StaticStruct()->GetFName(),
-	FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FOnTheFlyConfigCustomization::MakeInstance));
+		FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FOnTheFlyConfigCustomization::MakeInstance));
 
 	RegisterPropertyCustomizations(StructCustomizations);
 }

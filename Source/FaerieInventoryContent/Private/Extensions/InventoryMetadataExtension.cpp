@@ -6,7 +6,19 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(InventoryMetadataExtension)
 
-FFaerieInventoryMetaTags FFaerieInventoryMetaTags::FaerieInventoryMetaTags;
+namespace Faerie::Inventory::Tags
+{
+	UE_DEFINE_GAMEPLAY_TAG_TYPED_COMMENT(FFaerieInventoryMetaTag, CannotRemove,
+		"Fae.Inventory.Meta.CannotRemove", "Denies permission for the user to remove this entry. Typically used to mark required quest items.")
+	UE_DEFINE_GAMEPLAY_TAG_TYPED_COMMENT(FFaerieInventoryMetaTag, CannotDelete,
+		"Fae.Inventory.Meta.CannotDelete", "Denies permission for the user to delete this entry. Can still be otherwise removed!")
+	UE_DEFINE_GAMEPLAY_TAG_TYPED_COMMENT(FFaerieInventoryMetaTag, CannotMove,
+		"Fae.Inventory.Meta.CannotMove", "Denies permission for the user to move this entry.")
+	UE_DEFINE_GAMEPLAY_TAG_TYPED_COMMENT(FFaerieInventoryMetaTag, CannotEject,
+		"Fae.Inventory.Meta.CannotEject", "Denies permission for the user to eject this entry.")
+	UE_DEFINE_GAMEPLAY_TAG_TYPED_COMMENT(FFaerieInventoryMetaTag, CannotSplit,
+		"Fae.Inventory.Meta.CannotSplit", "Denies permission to split a stack. Typically used to mark required quest item stacks.")
+}
 
 EEventExtensionResponse UInventoryMetadataExtension::AllowsRemoval(const UFaerieItemContainerBase* Container,
 	const FEntryKey Key, const FFaerieInventoryTag Reason) const
@@ -14,14 +26,14 @@ EEventExtensionResponse UInventoryMetadataExtension::AllowsRemoval(const UFaerie
 	// Tags that always deny removal.
 	static FGameplayTagContainer RemovalDenyingTags = FGameplayTagContainer::CreateFromArray(
 		TArray<FGameplayTag>{
-			FFaerieInventoryMetaTags::Get().CannotRemove
+			Faerie::Inventory::Tags::CannotRemove
 		});
 
 	// Tags that deny a specific reason
 	static TMap<FFaerieInventoryTag, FFaerieInventoryTag> OtherDenialTags = {
-		{ FFaerieItemStorageEvents::Get().Removal_Deletion, FFaerieInventoryMetaTags::Get().CannotDelete },
-		{ FFaerieItemStorageEvents::Get().Removal_Moving, FFaerieInventoryMetaTags::Get().CannotMove },
-		{ FFaerieEjectionEvent::Get().Removal_Ejection, FFaerieInventoryMetaTags::Get().CannotEject }
+		{ Faerie::Inventory::Tags::RemovalDeletion, Faerie::Inventory::Tags::CannotDelete },
+		{Faerie::Inventory::Tags::RemovalMoving, Faerie::Inventory::Tags::CannotMove },
+		{ Faerie::Inventory::Tags::RemovalEject, Faerie::Inventory::Tags::CannotEject }
 	};
 
 	FGameplayTagContainer ThisEventTags = RemovalDenyingTags;

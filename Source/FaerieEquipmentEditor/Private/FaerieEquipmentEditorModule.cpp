@@ -13,7 +13,7 @@ void FFaerieEquipmentEditorModule::StartupModule()
 	TMap<FName, FOnGetPropertyTypeCustomizationInstance> StructCustomizations;
 
 	StructCustomizations.Add(FFaerieSlotTag::StaticStruct()->GetFName(),
-	FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FGameplayTagCustomizationPublic::MakeInstance));
+		FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FGameplayTagCustomizationPublic::MakeInstance));
 
 	RegisterPropertyCustomizations(StructCustomizations);
 }
