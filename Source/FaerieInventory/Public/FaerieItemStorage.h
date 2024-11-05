@@ -194,10 +194,12 @@ public:
 	bool CanEditEntry(FEntryKey EntryKey) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Storage")
-	bool CanRemoveEntry(FEntryKey Key, FFaerieInventoryTag Reason) const;
+	bool CanRemoveEntry(FEntryKey Key,
+		UPARAM(meta = (Categories = "Fae.Inventory.Removal")) FFaerieInventoryTag Reason) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Storage")
-	bool CanRemoveStack(FInventoryKey Key, FFaerieInventoryTag Reason) const;
+	bool CanRemoveStack(FInventoryKey Key,
+		UPARAM(meta = (Categories = "Fae.Inventory.Removal")) FFaerieInventoryTag Reason) const;
 
 
 	/**---------------------------------*/
