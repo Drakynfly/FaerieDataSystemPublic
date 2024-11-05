@@ -32,7 +32,7 @@ bool FSpatialContent::EditItem(const FInventoryKey Key, const TFunctionRef<void(
 		FSpatialKeyedEntry& Entry = Items[Index];
 		Func(Entry.Value);
 		MarkItemDirty(Entry);
-		ChangeListener->PostEntryReplicatedChange(Entry);
+		PostEntryReplicatedChange(Entry);
 		return true;
 	}
 	return false;
@@ -40,18 +40,27 @@ bool FSpatialContent::EditItem(const FInventoryKey Key, const TFunctionRef<void(
 
 void FSpatialContent::PreEntryReplicatedRemove(const FSpatialKeyedEntry& Entry) const
 {
-	ChangeListener->PreEntryReplicatedRemove(Entry);
+	if (ChangeListener.IsValid())
+	{
+		ChangeListener->PreEntryReplicatedRemove(Entry);
+	}
 }
 
 void FSpatialContent::PostEntryReplicatedAdd(const FSpatialKeyedEntry& Entry)
 {
-	ChangeListener->PostEntryReplicatedAdd(Entry);
+	if (ChangeListener.IsValid())
+	{
+		ChangeListener->PostEntryReplicatedAdd(Entry);
+	}
 	Sort();
 }
 
 void FSpatialContent::PostEntryReplicatedChange(const FSpatialKeyedEntry& Entry) const
 {
-	ChangeListener->PostEntryReplicatedChange(Entry);
+	if (ChangeListener.IsValid())
+	{
+		ChangeListener->PostEntryReplicatedChange(Entry);
+	}
 }
 
 void FSpatialContent::Insert(FInventoryKey Key, const FSpatialItemPlacement& Value)
@@ -60,7 +69,7 @@ void FSpatialContent::Insert(FInventoryKey Key, const FSpatialItemPlacement& Val
 
 	FSpatialKeyedEntry& NewEntry = BSOA::Insert({Key, Value});
 
-	ChangeListener->PostEntryReplicatedAdd(NewEntry);
+	PostEntryReplicatedAdd(NewEntry);
 	MarkItemDirty(NewEntry);
 }
 
@@ -70,7 +79,7 @@ void FSpatialContent::Remove(const FInventoryKey Key)
 		[this](const FSpatialKeyedEntry& Entry)
 		{
 			// Notify owning server of this removal.
-			ChangeListener->PreEntryReplicatedRemove(Entry);
+			PreEntryReplicatedRemove(Entry);
 		}))
 	{
 		// Notify clients of this removal.

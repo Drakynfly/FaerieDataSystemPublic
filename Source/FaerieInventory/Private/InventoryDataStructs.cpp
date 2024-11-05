@@ -233,7 +233,7 @@ FKeyedInventoryEntry& FInventoryContent::Append(const FEntryKey Key, const FInve
 
 	FKeyedInventoryEntry& NewItemRef = Entries.Add_GetRef({Key, Entry});
 	MarkItemDirty(NewItemRef);
-	ChangeListener->PostContentAdded(NewItemRef);
+	PostEntryReplicatedAdd(NewItemRef);
 	return NewItemRef;
 }
 
@@ -245,7 +245,7 @@ FKeyedInventoryEntry& FInventoryContent::AppendUnsafe(FEntryKey Key, const FInve
 
 	FKeyedInventoryEntry& NewItemRef = Entries.Add_GetRef({Key, Entry});
 	MarkItemDirty(NewItemRef);
-	ChangeListener->PostContentAdded(NewItemRef);
+	PostEntryReplicatedAdd(NewItemRef);
 	return NewItemRef;
 }
 
@@ -257,7 +257,7 @@ void FInventoryContent::Insert(const FEntryKey Key, const FInventoryEntry& Entry
 
 	FKeyedInventoryEntry& NewEntry = BSOA::Insert({Key, Entry});
 
-	ChangeListener->PostContentAdded(NewEntry);
+	PostEntryReplicatedAdd(NewEntry);
 	MarkItemDirty(NewEntry);
 }
 
@@ -267,7 +267,7 @@ void FInventoryContent::Remove(const FEntryKey Key)
 		[this](const FKeyedInventoryEntry& Entry)
 		{
 			// Notify owning server of this removal.
-			ChangeListener->PreContentRemoved(Entry);
+			PreEntryReplicatedRemove(Entry);
 		}))
 	{
 		// Notify clients of this removal.
@@ -281,7 +281,7 @@ FInventoryContent::FScopedItemHandle::~FScopedItemHandle()
 	Source.MarkItemDirty(Handle);
 
 	// Notify clients of this change.
-	Source.ChangeListener->PostContentChanged(Handle);
+	Source.PostEntryReplicatedChange(Handle);
 }
 
 void FInventoryContent::PreEntryReplicatedRemove(const FKeyedInventoryEntry& Entry) const

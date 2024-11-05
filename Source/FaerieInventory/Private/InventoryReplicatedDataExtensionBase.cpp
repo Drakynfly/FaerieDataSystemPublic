@@ -28,7 +28,7 @@ void FRepDataFastArray::RemoveDataForEntry(const FEntryKey Key)
 		[this](const FRepDataPerEntryBase& Entry)
 		{
 			// Notify server of this removal.
-			OwningWrapper->PreContentRemoved(Entry);
+			PreDataReplicatedRemove(Entry);
 		}))
 	{
 		// Notify clients of this removal.
@@ -46,7 +46,7 @@ void FRepDataFastArray::SetDataForEntry(const FEntryKey Key, const FInstancedStr
 		MarkItemDirty(EntryData);
 
 		// Notify server of this change.
-		OwningWrapper->PostContentChanged(EntryData);
+		PostDataReplicatedChange(EntryData);
 	}
 	else
 	{
@@ -54,7 +54,7 @@ void FRepDataFastArray::SetDataForEntry(const FEntryKey Key, const FInstancedStr
 		MarkItemDirty(NewEntry);
 
 		// Notify server of this change.
-		OwningWrapper->PostContentAdded(NewEntry);
+		PostDataReplicatedAdd(NewEntry);
 	}
 }
 
