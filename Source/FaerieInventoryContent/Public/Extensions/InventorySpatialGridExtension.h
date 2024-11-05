@@ -15,8 +15,25 @@ enum class ESpatialItemRotation : uint8
 	None = 0,
 	Ninety = 1,
 	One_Eighty = 2,
-	Two_Seventy = 3
+	Two_Seventy = 3,
 };
+
+FORCEINLINE ESpatialItemRotation GetNextRotation(const ESpatialItemRotation CurrentRotation)
+{
+	switch (CurrentRotation)
+	{
+	case ESpatialItemRotation::None:
+		return ESpatialItemRotation::Ninety;
+	case ESpatialItemRotation::Ninety:
+		return ESpatialItemRotation::One_Eighty;
+	case ESpatialItemRotation::One_Eighty:
+		return ESpatialItemRotation::Two_Seventy;
+	case ESpatialItemRotation::Two_Seventy:
+		return ESpatialItemRotation::None;
+	default:
+		return ESpatialItemRotation::None;
+	}
+}
 
 USTRUCT(BlueprintType)
 struct FSpatialItemPlacement
@@ -173,7 +190,7 @@ public:
 	                ESpatialItemRotation Rotation = ESpatialItemRotation::None,
 	                TConstArrayView<FInventoryKey> ExcludedKeys = {}) const;
 
-	TOptional<FIntPoint> GetFirstEmptyLocation(const FFaerieGridShape& InShape) const;
+	TOptional<TTuple<FIntPoint, ESpatialItemRotation>> GetFirstEmptyLocation(const FFaerieGridShape& InShape) const;
 
 	FSpatialEntryChangedNative& GetOnSpatialEntryChanged() { return SpatialEntryChangedDelegateNative; }
 	FGridSizeChangedNative& GetOnGridSizeChanged() { return GridSizeChangedDelegateNative; }

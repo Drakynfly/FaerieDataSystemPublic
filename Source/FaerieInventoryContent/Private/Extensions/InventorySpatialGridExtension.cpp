@@ -181,11 +181,17 @@ void UInventorySpatialGridExtension::PostRemoval(const UFaerieItemContainerBase*
 
 	FInventoryKey Key;
 	Key.EntryKey = Event.EntryTouched;
-
-	for (const FStackKey& StackKey : Event.StackKeys)
+	if(const UFaerieItemStorage* ItemStorage = Cast<UFaerieItemStorage>(Container))
 	{
-		Key.StackKey = StackKey;
-		RemoveItem(Key);
+		const TArray<FInventoryKey> InvKeys = ItemStorage->GetInvKeysForEntry(Key.EntryKey);
+		for (const FStackKey& StackKey : Event.StackKeys)
+		{
+			Key.StackKey = StackKey;
+			if(!ItemStorage->IsValidKey(InvKeys[InvKeys.IndexOfByKey(Key)]))
+			{
+				RemoveItem(Key);
+			}
+		}
 	}
 }
 
@@ -217,7 +223,19 @@ bool UInventorySpatialGridExtension::CanAddItemToGrid(const UFaerieShapeToken* S
 													  const FIntPoint& Position) const
 {
 	if (!ShapeToken) return false;
-	return FitsInGrid(ShapeToken->GetShape(), Position);
+	bool RetVal = false;
+	ESpatialItemRotation Rotation = ESpatialItemRotation::None;
+	const int32 RotationsToCheck = ShapeToken->GetShape().bIsSymmetrical ? 1 : 4;
+	for (int i = 0; i < RotationsToCheck; i++)
+	{
+		if (FitsInGrid(ShapeToken->GetShape(), Position, Rotation))
+		{
+			RetVal = true;
+			break;
+		}
+		Rotation = GetNextRotation(Rotation);
+	}
+	return RetVal;
 }
 
 bool UInventorySpatialGridExtension::CanAddItemToGrid(const UFaerieShapeToken* ShapeToken) const
@@ -258,15 +276,15 @@ bool UInventorySpatialGridExtension::AddItemToGrid(const FInventoryKey& Key, con
 	}
 
 	// @todo this should check for possible rotations! (but only if the shape is different when its rotated)
-	TOptional<FIntPoint> FoundPosition = GetFirstEmptyLocation(Shape);
+	TOptional<TTuple<FIntPoint, ESpatialItemRotation>> FoundPosition = GetFirstEmptyLocation(Shape);
 
 	if (!FoundPosition.IsSet()) return false;
 
 	FSpatialItemPlacement Placement;
-	Placement.Origin = FoundPosition.GetValue();
+	Placement.Origin = FoundPosition.GetValue().Key;
 	Placement.ItemShape = Shape;
-	Placement.PivotPoint = Shape.GetShapeCenter() + FoundPosition.GetValue();
-	Placement.Rotation = ESpatialItemRotation::None;
+	Placement.PivotPoint = Shape.GetShapeCenter() + FoundPosition.GetValue().Key;
+	Placement.Rotation = FoundPosition.GetValue().Value;
 
 	OccupiedSlots.Insert(Key, Placement);
 	return true;
@@ -323,12 +341,14 @@ FFaerieGridShape UInventorySpatialGridExtension::RotateShape(FFaerieGridShape In
 }
 
 bool UInventorySpatialGridExtension::FitsInGrid(const FFaerieGridShape& Shape, const FIntPoint& Position,
-                                                ESpatialItemRotation Rotation,
-                                                const TConstArrayView<FInventoryKey> ExcludedKeys) const
+												ESpatialItemRotation Rotation,
+												const TConstArrayView<FInventoryKey> ExcludedKeys) const
 {
-	// Create a copy of the shape for rotation and rotate around pivot point
+	// Create rotated copy of input shape
 	FFaerieGridShape RotatedShape = Shape;
 	RotatedShape.RotateAboutAngle(static_cast<float>(Rotation) * 90.f);
+
+	// Check rotated shape points
 	for (const FIntPoint& Coord : RotatedShape.Points)
 	{
 		const FIntPoint AbsolutePosition = Position + Coord;
@@ -349,10 +369,7 @@ bool UInventorySpatialGridExtension::FitsInGrid(const FFaerieGridShape& Shape, c
 				continue;
 			}
 
-			// Create rotated copy of shape we are comparing against
-			FFaerieGridShape LocalRotatedShape = Entry.Value.ItemShape;
-			LocalRotatedShape.RotateAboutAngle(static_cast<float>(Entry.Value.Rotation) * 90.f);
-			for (const FIntPoint& ExistingPoint : LocalRotatedShape.Points)
+			for (const FFaerieGridShape& ExistingShape = Entry.Value.ItemShape; const FIntPoint& ExistingPoint : ExistingShape.Points)
 			{
 				if (AbsolutePosition == (Entry.Value.Origin + ExistingPoint))
 				{
@@ -361,20 +378,25 @@ bool UInventorySpatialGridExtension::FitsInGrid(const FFaerieGridShape& Shape, c
 			}
 		}
 	}
-
 	return true;
 }
 
-
-TOptional<FIntPoint> UInventorySpatialGridExtension::GetFirstEmptyLocation(const FFaerieGridShape& InShape) const
+TOptional<TTuple<FIntPoint, ESpatialItemRotation>> UInventorySpatialGridExtension::GetFirstEmptyLocation(const FFaerieGridShape& InShape) const
 {
-	for (FIntPoint TestPosition = FIntPoint::ZeroValue; TestPosition.Y < GridSize.Y; TestPosition.Y++)
+	// Try each rotation
+	const int32 RotationsToCheck = InShape.bIsSymmetrical ? 1 : 4;
+	for (int32 RotIndex = 0; RotIndex < RotationsToCheck; RotIndex++)
 	{
-		for (; TestPosition.X < GridSize.X; TestPosition.X++)
+		ESpatialItemRotation Rotation = static_cast<ESpatialItemRotation>(RotIndex);
+		// Check each grid position at each rotation
+		for (int32 Y = 0; Y < GridSize.Y; Y++)
 		{
-			if (FitsInGrid(InShape, TestPosition))
+			for (int32 X = 0; X < GridSize.X; X++)
 			{
-				return TestPosition;
+				if (FIntPoint TestPosition(X, Y); FitsInGrid(InShape, TestPosition, Rotation))
+				{
+					return MakeTuple(TestPosition, Rotation);
+				}
 			}
 		}
 	}
@@ -538,23 +560,6 @@ void UInventorySpatialGridExtension::UpdateItemPosition(FSpatialKeyedEntry& Item
 	Item.Value.Origin = Item.Value.Origin + Offset;
 	Item.Value.PivotPoint = Item.Value.PivotPoint + Offset;
 	OccupiedSlots.MarkItemDirty(Item);
-}
-
-ESpatialItemRotation GetNextRotation(const ESpatialItemRotation CurrentRotation)
-{
-	switch (CurrentRotation)
-	{
-	case ESpatialItemRotation::None:
-		return ESpatialItemRotation::Ninety;
-	case ESpatialItemRotation::Ninety:
-		return ESpatialItemRotation::One_Eighty;
-	case ESpatialItemRotation::One_Eighty:
-		return ESpatialItemRotation::Two_Seventy;
-	case ESpatialItemRotation::Two_Seventy:
-		return ESpatialItemRotation::None;
-	default:
-		return ESpatialItemRotation::None;
-	}
 }
 
 bool UInventorySpatialGridExtension::RotateItem(const FInventoryKey& Key)

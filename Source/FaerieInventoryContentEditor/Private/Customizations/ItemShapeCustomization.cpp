@@ -27,6 +27,33 @@ void FItemShapeCustomization::CustomizeChildren(const TSharedRef<IPropertyHandle
     StructHandle = PropertyHandle;
     StructHandle->SetOnPropertyValueChanged(FSimpleDelegate::CreateSP(this, &FItemShapeCustomization::UpdateGridPanel));
 
+    // Add symmetry toggle
+    TSharedPtr<IPropertyHandle> SymmetryHandle = StructHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FFaerieGridShape, bIsSymmetrical));
+    if (SymmetryHandle.IsValid())
+    {
+        ChildBuilder.AddCustomRow(LOCTEXT("SymmetryRow", "Symmetry"))
+        .NameContent()
+        [
+            SNew(STextBlock)
+            .Text(LOCTEXT("Symmetrical", "Symmetrical"))
+        ]
+        .ValueContent()
+        [
+            SNew(SCheckBox)
+            .IsChecked_Lambda([SymmetryHandle]()
+            {
+                bool bIsChecked = false;
+                SymmetryHandle->GetValue(bIsChecked);
+                return bIsChecked ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+            })
+            .OnCheckStateChanged_Lambda([SymmetryHandle](ECheckBoxState NewState)
+            {
+                const bool bNewValue = NewState == ECheckBoxState::Checked;
+                SymmetryHandle->SetValue(bNewValue);
+            })
+        ];
+    }
+
     GridPanel = SNew(SUniformGridPanel)
         .SlotPadding(FMargin(1.f));
 
