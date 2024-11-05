@@ -71,6 +71,7 @@ void UFaerieItemContainerBase::TakeOwnership(UFaerieItem* Item)
 
 	if (Item->IsDataMutable())
 	{
+		checkfSlow(!Item->GetNotifyOwnerOfSelfMutation().IsBound(), TEXT("This should always have been unbound by the previous owner!"))
 		Item->GetNotifyOwnerOfSelfMutation().BindUObject(this, &ThisClass::OnItemMutated);
 	}
 

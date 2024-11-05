@@ -22,8 +22,8 @@ class FAERIEITEMDATA_API IFaerieItemOwnerInterface
 	GENERATED_BODY()
 
 public:
-	// Call this function to request release of ownership of a UFaerieItem stack. If the release is granted the returned
-	// stack will contain a valid pointer and the amount of released copies. The returned stack size is guaranteed to be
+	// Call this function to request release of ownership of a UFaerieItem stack. If the release is granted, the returned
+	// stack will contain a valid pointer and the number of released copies. The returned stack size is guaranteed to be
 	// only *up to* the amount requested. Partial release behavior is up to the implementing class.
 	virtual FFaerieItemStack Release(FFaerieItemStackView Stack) PURE_VIRTUAL(IFaerieItemOwnerInterface::Release, return FFaerieItemStack(); )
 

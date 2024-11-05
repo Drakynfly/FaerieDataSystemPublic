@@ -145,7 +145,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "FaerieItem")
 	bool IsInstanceMutable() const;
 
-	// Can the data in the tokens of this item change at runtime. Only true if also instance mutable.
+	// Can the data in the tokens of this item change at runtime? Only true if also instance mutable.
 	UFUNCTION(BlueprintCallable, Category = "FaerieItem")
 	bool IsDataMutable() const;
 
@@ -162,11 +162,13 @@ protected:
 	TArray<TObjectPtr<UFaerieItemToken>> Tokens;
 
 	// Keeps track of the last time this item was modified. Allows, for example, sorting items by recently touched.
+	// Only intended to be useful for mutable and dynamically-generated items. Asset-derived instances will be set
+	// to the time that they were cooked (at runtime) or last edited (at dev-time).
 	UPROPERTY(Replicated, VisibleInstanceOnly, Category = "FaerieItem")
 	FDateTime LastModified = FDateTime();
 
-	// Mutability flags. In order for an item instance to be changed at runtime it must have no mutually exclusive
-	// flags.
+	// Mutability flags.
+	// In order for an item instance to be changed at runtime, it must have no mutually exclusive flags.
 	UPROPERTY(Replicated, VisibleInstanceOnly, Category = "FaerieItem")
 	EFaerieItemMutabilityFlags MutabilityFlags;
 

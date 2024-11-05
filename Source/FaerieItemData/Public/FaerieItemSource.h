@@ -51,6 +51,7 @@ public:
 
 /**
  * A wrapper struct that can container a pointer to any object that implements IFaerieItemSource
+ * Held reference is soft.
  */
 USTRUCT(BlueprintType)
 struct FAERIEITEMDATA_API FFaerieItemSourceObject
