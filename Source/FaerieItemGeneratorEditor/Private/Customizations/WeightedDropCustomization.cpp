@@ -58,24 +58,7 @@ void FWeightedDropCustomization::CustomizeHeader(const TSharedRef<IPropertyHandl
                         {
                             float Percentage;
                             PercentageHandle->GetValue(Percentage);
-
-                            // Split percentage into whole value and fractional
-                            float Whole;
-                            float Decimal = FMath::Modf(Percentage, &Whole);
-                            const int32 IntWhole = static_cast<int32>(Whole);
-
-                            // "Bit-shift" fraction part into a whole number, to cut off all but two places.
-                            Decimal *= 100;
-                            const int32 RemainderInt = static_cast<int32>(Decimal);
-
-                            const FString WholeStr = FString::FromInt(IntWhole);
-                            FString RemainderString = FString::FromInt(RemainderInt);
-
-                            // Enforce two fractional digits.
-                            if (RemainderString.Len() == 1) RemainderString += "0";
-
-                            // Combine and return as percentage text.
-                            return FText::FromString(WholeStr + "." + RemainderString + "%");
+                            return FText::FromString(FString::Printf(TEXT("%.2f"), Percentage));
                         })
                     ]
                 ]

@@ -48,9 +48,9 @@ bool UInventoryUserdataExtension::MarkStackWithTag(UFaerieItemContainerBase* Con
 	}
 
 	return EditDataForEntry(Container, Key,
-		[Tag](FInstancedStruct& Data)
+		[Tag](const FStructView Data)
 		{
-			Data.GetMutable<FInventoryEntryUserdata>().Tags.AddTag(Tag);
+			Data.Get<FInventoryEntryUserdata>().Tags.AddTag(Tag);
 		});
 }
 
@@ -67,9 +67,9 @@ bool UInventoryUserdataExtension::ClearTagFromStack(UFaerieItemContainerBase* Co
 	}
 
 	return EditDataForEntry(Container, Key,
-		[Tag](FInstancedStruct& Data)
+		[Tag](const FStructView Data)
 		{
-			Data.GetMutable<FInventoryEntryUserdata>().Tags.RemoveTag(Tag);
+			Data.Get<FInventoryEntryUserdata>().Tags.RemoveTag(Tag);
 		});
 }
 

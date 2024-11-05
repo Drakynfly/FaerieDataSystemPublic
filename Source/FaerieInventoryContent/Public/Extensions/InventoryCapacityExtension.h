@@ -82,7 +82,8 @@ struct FCapacityExtensionState
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FInventoryCapacityEvent);
 
 /**
- * This class is the parser for extracting a Capacity out from Item Data.
+ * This class parses the Capacity out from Item Data and maintains an aggregated capacity of all items across each
+ * registered container. This allows for keeping track of a maximum
  */
 UCLASS()
 class FAERIEINVENTORYCONTENT_API UInventoryCapacityExtension : public UItemContainerExtensionBase

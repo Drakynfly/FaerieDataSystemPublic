@@ -137,7 +137,7 @@ public:
 	virtual void DeinitializeExtension(const UFaerieItemContainerBase* Container) override;
 	virtual void PreRemoval(const UFaerieItemContainerBase* Container, const FEntryKey Key, const int32 Removal) override;
 
-	// This must be implemented by children. It gives the struct type instanced per item.
+	// Children must implement this. It gives the struct type instanced per item.
 	virtual UScriptStruct* GetDataScriptStruct() const PURE_VIRTUAL(UInventoryReplicatedDataExtensionBase::GetDataScriptStruct, return nullptr; )
 
 private:
@@ -148,7 +148,7 @@ private:
 protected:
 	FConstStructView GetDataForEntry(const UFaerieItemContainerBase* Container, const FEntryKey Key) const;
 
-	bool EditDataForEntry(const UFaerieItemContainerBase* Container, const FEntryKey Key, const TFunctionRef<void(FInstancedStruct&)>& Edit);
+	bool EditDataForEntry(const UFaerieItemContainerBase* Container, const FEntryKey Key, const TFunctionRef<void(FStructView)>& Edit);
 
 private:
 	FStructView FindFastArrayForContainer(const UFaerieItemContainerBase* Container);

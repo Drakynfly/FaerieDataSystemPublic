@@ -145,7 +145,7 @@ void FItemCapacityCustomization::UpdateInfo()
 
         for (const FString& Str : CompareStrings)
         {
-            InfoString += "\n";
+            InfoString += LINE_TERMINATOR;
             InfoString += Str;
         }
 

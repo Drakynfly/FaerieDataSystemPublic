@@ -8,7 +8,7 @@
 class UBenchBehaviorBase;
 
 /**
- * Minimal example class to demonstrate creation a Bench Behavior instance
+ * Minimal example class to demonstrate creating a Bench Behavior instance
  */
 UCLASS(Abstract, PrioritizeCategories = "Bench Logic")
 class FAERIEINVENTORYCONTENT_API ABenchVisualBase : public AActor

@@ -84,7 +84,7 @@ public:
 	bool CanSetEntryTag(const UFaerieItemContainerBase* Container, const FEntryKey Key, const FFaerieInventoryMetaTag Tag, const bool StateToSetTo) const;
 
 	bool MarkStackWithTag(const UFaerieItemContainerBase* Container, const FEntryKey Key, FFaerieInventoryMetaTag Tag);
-	void TrySetTags(const UFaerieItemContainerBase* Container, const FEntryKey Key, FGameplayTagContainer Tags);
+	void TrySetTags(const UFaerieItemContainerBase* Container, const FEntryKey Key, const FGameplayTagContainer& Tags);
 
 	bool ClearTagFromStack(const UFaerieItemContainerBase* Container, const FEntryKey Key, FFaerieInventoryMetaTag Tag);
 };

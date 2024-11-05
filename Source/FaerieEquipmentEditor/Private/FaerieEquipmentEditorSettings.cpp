@@ -10,6 +10,7 @@ FName UFaerieEquipmentEditorSettings::GetCategoryName() const
 	return FApp::GetProjectName();
 }
 
+#if WITH_EDITOR
 TArray<FString> UFaerieEquipmentEditorSettings::GetDebugInfoForCCM(const float CCM) const
 {
 	TArray<FString> InfoStrings;
@@ -20,9 +21,10 @@ TArray<FString> UFaerieEquipmentEditorSettings::GetDebugInfoForCCM(const float C
 
 		const float WeightForGrade = GradePtr->DefaultWeightPerCCM * CCM;
 
-		InfoStrings.Add(GradePtr->GetName() + ": " + FString::SanitizeFloat(GradePtr->DefaultWeightPerCCM)
-							+ " (" + FString::FromInt(static_cast<int32>(WeightForGrade)) + ")");
+		InfoStrings.Add(FString::Printf(TEXT("%s: %f (%i)"),
+			*GradePtr->GetName(), GradePtr->DefaultWeightPerCCM, static_cast<int32>(WeightForGrade)));
 	}
 
 	return InfoStrings;
 }
+#endif

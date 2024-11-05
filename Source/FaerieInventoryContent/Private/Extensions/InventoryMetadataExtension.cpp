@@ -84,16 +84,41 @@ bool UInventoryMetadataExtension::MarkStackWithTag(const UFaerieItemContainerBas
 	}
 
 	return EditDataForEntry(Container, Key,
-		[Tag](FInstancedStruct& Data)
+		[Tag](const FStructView Data)
 		{
-			Data.GetMutable<FInventoryEntryMetadata>().Tags.AddTag(Tag);
+			Data.Get<FInventoryEntryMetadata>().Tags.AddTag(Tag);
 		});
 }
 
-void UInventoryMetadataExtension::TrySetTags(const UFaerieItemContainerBase* Container, const FEntryKey Key, const FGameplayTagContainer Tags)
+void UInventoryMetadataExtension::TrySetTags(const UFaerieItemContainerBase* Container, const FEntryKey Key, const FGameplayTagContainer& Tags)
 {
-	// @todo implement
-	unimplemented();
+	if (!Container->IsValidKey(Key))
+	{
+		return;
+	}
+
+	EditDataForEntry(Container, Key,
+		[Tags, this, Container, Key](const FStructView Data)
+		{
+			auto& Metadata = Data.Get<FInventoryEntryMetadata>().Tags;
+
+			for (auto&& Tag : Tags)
+			{
+				if (!Tag.IsValid())
+				{
+					continue;
+				}
+
+				const FFaerieInventoryMetaTag MetaTag = FFaerieInventoryMetaTag::ConvertChecked(Tag);
+
+				if (!CanSetEntryTag(Container, Key, MetaTag, true))
+				{
+					continue;
+				}
+
+				Metadata.AddTag(MetaTag);
+			}
+		});
 }
 
 bool UInventoryMetadataExtension::ClearTagFromStack(const UFaerieItemContainerBase* Container, const FEntryKey Key, const FFaerieInventoryMetaTag Tag)
@@ -109,8 +134,8 @@ bool UInventoryMetadataExtension::ClearTagFromStack(const UFaerieItemContainerBa
 	}
 
 	return EditDataForEntry(Container, Key,
-		[Tag](FInstancedStruct& Data)
+		[Tag](const FStructView Data)
 		{
-			Data.GetMutable<FInventoryEntryMetadata>().Tags.RemoveTag(Tag);
+			Data.Get<FInventoryEntryMetadata>().Tags.RemoveTag(Tag);
 		});
 }

@@ -95,7 +95,7 @@ int32 FInventoryEntry::AddToAnyStack(int32 Stack, TArray<FStackKey>* OutAddedKey
 
 	if (Limit == Faerie::ItemData::UnlimitedStack)
 	{
-		const FStackKey NewKey = AddedStacks.Add_GetRef(StackCount++);
+		const FStackKey NewKey = AddedStacks.Add_GetRef(FStackKey(StackCount++));
 		Stacks.Add({NewKey, Stack});
 	}
 	else
@@ -103,7 +103,7 @@ int32 FInventoryEntry::AddToAnyStack(int32 Stack, TArray<FStackKey>* OutAddedKey
 		// Split the incoming stack into as many more as are required
 		while (Stack > 0)
 		{
-			const FStackKey NewKey = AddedStacks.Add_GetRef(StackCount++);
+			const FStackKey NewKey = AddedStacks.Add_GetRef(FStackKey(StackCount++));
 			const int32 NewStack = FMath::Min(Stack, Limit);
 			Stack -= NewStack;
 			Stacks.Add({NewKey, NewStack});

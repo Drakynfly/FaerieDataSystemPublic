@@ -855,7 +855,7 @@ FEntryKey UFaerieItemStorage::MoveStack(UFaerieItemStorage* ToStorage, const FIn
 	const FConstStructView EntryView = GetEntryView(Key.EntryKey);
 	if (!ensure(EntryView.IsValid()))
 	{
-		return false;
+		return FEntryKey::InvalidKey;
 	}
 
 	const FInventoryEntry& Entry = EntryView.Get<const FInventoryEntry>();
@@ -893,7 +893,7 @@ FEntryKey UFaerieItemStorage::MoveEntry(UFaerieItemStorage* ToStorage, const FEn
 	const FConstStructView EntryView = GetEntryView(Key);
 	if (!ensure(EntryView.IsValid()))
 	{
-		return false;
+		return FEntryKey::InvalidKey;
 	}
 
 	if (!ToStorage->CanAddStack(EntryView.Get<const FInventoryEntry>().ToItemStackView()))

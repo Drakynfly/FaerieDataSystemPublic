@@ -50,7 +50,7 @@ struct FFaerieItemKeyBase
 		KeyValue = INDEX_NONE;
 	}
 
-	FFaerieItemKeyBase(const int32 Value)
+	explicit FFaerieItemKeyBase(const int32 Value)
 	{
 		KeyValue = Value;
 	}
@@ -173,7 +173,7 @@ struct FInventoryKey
 
 	FString ToString() const
 	{
-		return EntryKey.ToString() + ":" + StackKey.ToString();
+		return EntryKey.ToString() + TEXT(":") + StackKey.ToString();
 	}
 
 	friend bool operator==(const FInventoryKey Lhs, const FInventoryKey Rhs)
@@ -227,6 +227,7 @@ struct FAERIEINVENTORY_API FInventoryEntry
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "InventoryEntry")
 	TArray<FKeyedStack> Stacks;
 
+	// Cached here for convenience, but this value is determined by UFaerieStackLimiterToken::GetItemStackLimit.
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "InventoryEntry")
 	int32 Limit = 0;
 

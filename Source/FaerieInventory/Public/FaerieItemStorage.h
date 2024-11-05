@@ -150,7 +150,7 @@ public:
 
 	/**
 	 * Full version
-	 * @return Whether or not an entry was found.
+	 * @return Whether an entry was found.
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Storage|Entry")
 	bool GetEntry(FEntryKey Key, FInventoryEntry& Entry) const;

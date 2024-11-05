@@ -18,7 +18,9 @@ class FAERIEEQUIPMENTEDITOR_API UFaerieEquipmentEditorSettings : public UDevelop
 public:
 	virtual FName GetCategoryName() const override;
 
+#if WITH_EDITOR
 	TArray<FString> GetDebugInfoForCCM(const float CCM) const;
+#endif
 
 protected:
 	UPROPERTY(EditAnywhere, Config, Category = "Durability Info")

@@ -199,10 +199,10 @@ void UInventoryCapacityExtension::CheckCapacityLimit()
 
 bool UInventoryCapacityExtension::CanContainToken(const UFaerieCapacityToken* Token, const int32 Stack) const
 {
-	// We can always contain items with no capacity requirement.
+	// If the token is invalid, return true if we don't require tokens.
 	if (!IsValid(Token))
 	{
-		return true;
+		return !Config.HasCheck(ECapacityChecks::Token);
 	}
 
 	// Determine if the entry cannot physically fit inside the dimensions of this container.
@@ -265,15 +265,12 @@ void UInventoryCapacityExtension::HandleStateChanged()
 
 bool UInventoryCapacityExtension::CanContain(const FFaerieItemStackView Stack) const
 {
-	auto&& CapacityToken = Stack.Item->GetToken<UFaerieCapacityToken>();
-
-	if (!IsValid(CapacityToken) &&
-		Config.HasCheck(ECapacityChecks::Token))
+	if (!Stack.Item.IsValid())
 	{
 		return false;
 	}
 
-	return CanContainToken(CapacityToken, Stack.Copies);
+	return CanContainToken(Stack.Item->GetToken<UFaerieCapacityToken>(), Stack.Copies);
 }
 
 bool UInventoryCapacityExtension::CanContainProxy(const FFaerieItemProxy Proxy) const
@@ -290,14 +287,6 @@ bool UInventoryCapacityExtension::CanContainProxy(const FFaerieItemProxy Proxy) 
 		return false;
 	}
 
-	auto&& CapacityToken = ItemObject->GetToken<UFaerieCapacityToken>();
-
-	if (!IsValid(CapacityToken) &&
-		Config.HasCheck(ECapacityChecks::Token))
-	{
-		return false;
-	}
-
 	const int32 Stack = Proxy->GetCopies();
 
 	if (!Faerie::ItemData::IsValidStack(Stack))
@@ -305,7 +294,7 @@ bool UInventoryCapacityExtension::CanContainProxy(const FFaerieItemProxy Proxy) 
 		return false;
 	}
 
-	return CanContainToken(CapacityToken, Stack);
+	return CanContainToken(ItemObject->GetToken<UFaerieCapacityToken>(), Stack);
 }
 
 FWeightAndVolume UInventoryCapacityExtension::GetCurrentCapacity() const
