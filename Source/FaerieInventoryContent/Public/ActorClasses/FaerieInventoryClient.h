@@ -203,15 +203,15 @@ struct FFaerieClientAction_RequestMoveItemBetweenSpatialSlots : public FFaerieCl
 
 	UPROPERTY(BlueprintReadWrite, Category = "RequestRotateSpatialEntry")
 	TObjectPtr<UFaerieItemStorage> Storage = nullptr;
-	
+
 	UPROPERTY(BlueprintReadWrite, Category = "RequestMoveSpatialEntry")
 	FInventoryKey TargetKey;
 
 	UPROPERTY(BlueprintReadWrite, Category = "RequestMoveSpatialEntry")
-	FIntPoint DragStart;
+	FIntPoint DragStart = FIntPoint::ZeroValue;
 
 	UPROPERTY(BlueprintReadWrite, Category = "RequestMoveSpatialEntry")
-	FIntPoint DragEnd;
+	FIntPoint DragEnd = FIntPoint::ZeroValue;
 };
 
 USTRUCT(BlueprintType)
