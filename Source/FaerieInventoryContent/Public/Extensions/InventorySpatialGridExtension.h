@@ -15,7 +15,7 @@ enum class ESpatialItemRotation : uint8
 	None = 0,
 	Ninety = 1,
 	One_Eighty = 2,
-	Two_Seventy = 3,
+	Two_Seventy = 3
 };
 
 FORCEINLINE ESpatialItemRotation GetNextRotation(const ESpatialItemRotation CurrentRotation)
