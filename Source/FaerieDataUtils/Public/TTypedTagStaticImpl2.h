@@ -11,7 +11,6 @@
  * Implementation utility for typed subclasses of FGameplayTag.
  * Implemented here instead of directly within the macro to make debugging possible.
  */
-
 template <typename TagT>
 class TTypedTagStaticImpl2
 {
@@ -106,6 +105,10 @@ struct TStructOpsTypeTraits<TagType> : public TStructOpsTypeTraitsBase2<TagType>
 {	\
 	enum	\
 	{	\
+		WithNetSerializer = true,	\
+		WithNetSharedSerialization = true,	\
+		WithPostSerialize = true,	\
+		WithStructuredSerializeFromMismatchedTag = true,	\
 		WithExportTextItem = true,	\
 		WithImportTextItem = true	\
 	};

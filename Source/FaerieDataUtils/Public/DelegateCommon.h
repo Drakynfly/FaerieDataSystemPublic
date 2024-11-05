@@ -22,5 +22,5 @@ struct TAutoDelegate
 // Convert a Blueprint delegate to a native delegate
 #define DYNAMIC_TO_NATIVE(Function) [Dynamic_Delegate = Function](auto... Args)\
 	{\
-	return Dynamic_Delegate.Execute(Args...);\
+		return Dynamic_Delegate.Execute(Args...);\
 	}
