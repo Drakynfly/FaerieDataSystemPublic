@@ -161,7 +161,7 @@ public:
 	// @todo probably split into two functions. one with rotation check, one without. public API probably doesn't need to see the rotation check!
 	bool FitsInGrid(const FFaerieGridShape& Shape, const FIntPoint& Position,
 	                ESpatialItemRotation Rotation = ESpatialItemRotation::None,
-	                const TArray<FInventoryKey>& ExcludedKey = TArray<FInventoryKey>()) const;
+	                TConstArrayView<FInventoryKey> ExcludedKeys = {}) const;
 
 	TOptional<FIntPoint> GetFirstEmptyLocation(const FFaerieGridShape& InShape) const;
 
@@ -188,9 +188,9 @@ protected:
 
 	// @todo Drakyn: look at these
 	FSpatialKeyedEntry* FindOverlappingItem(const FFaerieGridShape& Shape, const FIntPoint& Offset, const FInventoryKey& ExcludeKey);
-	bool TrySwapItems(FSpatialKeyedEntry* MovingItem, FSpatialKeyedEntry* OverlappingItem, const FIntPoint& Offset);
-	bool MoveSingleItem(FSpatialKeyedEntry* Item, const FIntPoint& Offset);
-	void UpdateItemPosition(FSpatialKeyedEntry* Item, const FIntPoint& Offset);
+	bool TrySwapItems(FSpatialKeyedEntry& MovingItem, FSpatialKeyedEntry& OverlappingItem, const FIntPoint& Offset);
+	bool MoveSingleItem(FSpatialKeyedEntry& Item, const FIntPoint& Offset);
+	void UpdateItemPosition(FSpatialKeyedEntry& Item, const FIntPoint& Offset);
 
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FSpatialEntryChanged SpatialEntryChangedDelegate;

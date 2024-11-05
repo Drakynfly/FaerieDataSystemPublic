@@ -83,7 +83,7 @@ EEventExtensionResponse UInventorySpatialGridExtension::AllowsAddition(const UFa
 void UInventorySpatialGridExtension::PostAddition(const UFaerieItemContainerBase* Container,
                                                   const Faerie::Inventory::FEventLog& Event)
 {
-	for(const FFaerieItemKeyBase BaseKey : Event.OtherKeysTouched)
+	for (const FFaerieItemKeyBase BaseKey : Event.OtherKeysTouched)
 	{
 		const FStackKey CurrentStackKey(BaseKey.Value());
 		FInventoryKey NewKey;
@@ -159,7 +159,7 @@ bool UInventorySpatialGridExtension::AddItemToGrid(const FInventoryKey& Key, con
 {
 	if (!Key.IsValid()) return false;
 
-	if(OccupiedSlots.Find(Key) != nullptr)
+	if (OccupiedSlots.Find(Key) != nullptr)
 	{
 		return true;
 	}
@@ -231,7 +231,7 @@ FFaerieGridShape UInventorySpatialGridExtension::RotateShape(FFaerieGridShape In
 
 bool UInventorySpatialGridExtension::FitsInGrid(const FFaerieGridShape& Shape, const FIntPoint& Position,
                                                 ESpatialItemRotation Rotation,
-                                                const TArray<FInventoryKey>& ExcludedKeys) const
+                                                const TConstArrayView<FInventoryKey> ExcludedKeys) const
 {
 	// Create a copy of the shape for rotation and rotate around pivot point
 	FFaerieGridShape RotatedShape = Shape;
@@ -314,10 +314,10 @@ bool UInventorySpatialGridExtension::MoveItem(const FInventoryKey& Key, const FI
 	if (FSpatialKeyedEntry* OverlappingItem =
 		FindOverlappingItem(RotatedShape, Offset + MatchingEntry->Value.Origin, Key))
 	{
-		return TrySwapItems(MatchingEntry, OverlappingItem, Offset);
+		return TrySwapItems(*MatchingEntry, *OverlappingItem, Offset);
 	}
 
-	return MoveSingleItem(MatchingEntry, Offset);
+	return MoveSingleItem(*MatchingEntry, Offset);
 }
 
 FSpatialKeyedEntry* UInventorySpatialGridExtension::FindItemByKey(const FInventoryKey& Key)
@@ -368,31 +368,29 @@ FSpatialKeyedEntry* UInventorySpatialGridExtension::FindOverlappingItem(
 		});
 }
 
-bool UInventorySpatialGridExtension::TrySwapItems(
-	FSpatialKeyedEntry* MovingItem,
-	FSpatialKeyedEntry* OverlappingItem,
-	const FIntPoint& Offset)
+bool UInventorySpatialGridExtension::TrySwapItems(FSpatialKeyedEntry& MovingItem, FSpatialKeyedEntry& OverlappingItem,
+												  const FIntPoint& Offset)
 {
 	const FIntPoint ReverseOffset = FIntPoint(-Offset.X, -Offset.Y);
 
 	// Store original positions incase validations fail and we need to reverse
-	const FIntPoint OriginalMovingOrigin = MovingItem->Value.Origin;
-	const FIntPoint OriginalOverlappingOrigin = OverlappingItem->Value.Origin;
+	const FIntPoint OriginalMovingOrigin = MovingItem.Value.Origin;
+	const FIntPoint OriginalOverlappingOrigin = OverlappingItem.Value.Origin;
 
 	// Get rotated shapes for both items
-	FFaerieGridShape MovingRotatedShape = MovingItem->Value.ItemShape;
-	MovingRotatedShape.RotateAboutAngle(static_cast<float>(MovingItem->Value.Rotation) * 90.f);
+	FFaerieGridShape MovingRotatedShape = MovingItem.Value.ItemShape;
+	MovingRotatedShape.RotateAboutAngle(static_cast<float>(MovingItem.Value.Rotation) * 90.f);
 
-	FFaerieGridShape OverlappingRotatedShape = OverlappingItem->Value.ItemShape;
-	OverlappingRotatedShape.RotateAboutAngle(static_cast<float>(OverlappingItem->Value.Rotation) * 90.f);
+	FFaerieGridShape OverlappingRotatedShape = OverlappingItem.Value.ItemShape;
+	OverlappingRotatedShape.RotateAboutAngle(static_cast<float>(OverlappingItem.Value.Rotation) * 90.f);
 
 	// Check if both items would fit in their new positions
 	const FIntPoint NewMovingOrigin = OriginalMovingOrigin + Offset;
 	const FIntPoint NewOverlappingOrigin = OriginalOverlappingOrigin + ReverseOffset;
 	// This is a first check mainly to see if the item would fit inside the grids bounds
-	if (!FitsInGrid(MovingRotatedShape, NewMovingOrigin, MovingItem->Value.Rotation, TArray{OverlappingItem->Key}) ||
-		!FitsInGrid(OverlappingRotatedShape, NewOverlappingOrigin, OverlappingItem->Value.Rotation,
-		            TArray{MovingItem->Key}))
+	if (!FitsInGrid(MovingRotatedShape, NewMovingOrigin, MovingItem.Value.Rotation, MakeArrayView(&OverlappingItem.Key, 1)) ||
+		!FitsInGrid(OverlappingRotatedShape, NewOverlappingOrigin, OverlappingItem.Value.Rotation,
+		            MakeArrayView(&MovingItem.Key, 1)))
 	{
 		return false;
 	}
@@ -406,7 +404,7 @@ bool UInventorySpatialGridExtension::TrySwapItems(
 	{
 		for (const FIntPoint& OtherPoint : OverlappingRotatedShape.Points)
 		{
-			if ((Point + MovingItem->Value.Origin) == (OtherPoint + OverlappingItem->Value.Origin))
+			if ((Point + MovingItem.Value.Origin) == (OtherPoint + OverlappingItem.Value.Origin))
 			{
 				bValidSwap = false;
 				break;
@@ -418,21 +416,21 @@ bool UInventorySpatialGridExtension::TrySwapItems(
 	// Revert to original positions if validation fails
 	if (!bValidSwap)
 	{
-		MovingItem->Value.Origin = OriginalMovingOrigin;
-		OverlappingItem->Value.Origin = OriginalOverlappingOrigin;
+		MovingItem.Value.Origin = OriginalMovingOrigin;
+		OverlappingItem.Value.Origin = OriginalOverlappingOrigin;
 		return false;
 	}
 
-	OccupiedSlots.MarkItemDirty(*MovingItem);
-	OccupiedSlots.MarkItemDirty(*OverlappingItem);
+	OccupiedSlots.MarkItemDirty(MovingItem);
+	OccupiedSlots.MarkItemDirty(OverlappingItem);
 
 	return true;
 }
 
 
-bool UInventorySpatialGridExtension::MoveSingleItem(FSpatialKeyedEntry* Item, const FIntPoint& Offset)
+bool UInventorySpatialGridExtension::MoveSingleItem(FSpatialKeyedEntry& Item, const FIntPoint& Offset)
 {
-	if (!FitsInGrid(Item->Value.ItemShape, Item->Value.Origin + Offset, Item->Value.Rotation, TArray{Item->Key}))
+	if (!FitsInGrid(Item.Value.ItemShape, Item.Value.Origin + Offset, Item.Value.Rotation, TArray{Item.Key}))
 	{
 		return false;
 	}
@@ -441,15 +439,15 @@ bool UInventorySpatialGridExtension::MoveSingleItem(FSpatialKeyedEntry* Item, co
 	return true;
 }
 
-void UInventorySpatialGridExtension::UpdateItemPosition(FSpatialKeyedEntry* Item, const FIntPoint& Offset)
+void UInventorySpatialGridExtension::UpdateItemPosition(FSpatialKeyedEntry& Item, const FIntPoint& Offset)
 {
 	// @todo Drakyn: look at this
-	Item->Value.Origin = Item->Value.Origin + Offset;
-	Item->Value.PivotPoint = Item->Value.PivotPoint + Offset;
-	OccupiedSlots.MarkItemDirty(*Item);
+	Item.Value.Origin = Item.Value.Origin + Offset;
+	Item.Value.PivotPoint = Item.Value.PivotPoint + Offset;
+	OccupiedSlots.MarkItemDirty(Item);
 }
 
-ESpatialItemRotation GetNextRotation(ESpatialItemRotation CurrentRotation)
+ESpatialItemRotation GetNextRotation(const ESpatialItemRotation CurrentRotation)
 {
 	switch (CurrentRotation)
 	{
