@@ -48,8 +48,11 @@ FIntPoint FFaerieGridShape::GetShapeCenter()
 		Sum += Point;
 	}
 
-	// Calculate average and return
-	return Sum / Points.Num();
+	// Add half the divisor before dividing to effectively round
+	return FIntPoint(
+		(Sum.X + Points.Num() / 2) / Points.Num(),
+		(Sum.Y + Points.Num() / 2) / Points.Num()
+	);
 }
 
 bool FFaerieGridShape::CanRotate() const
