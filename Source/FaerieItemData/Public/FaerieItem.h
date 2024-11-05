@@ -30,7 +30,7 @@ using FNotifyOwnerOfSelfMutation = TDelegate<void(const class UFaerieItem*, cons
  * A runtime instance of an item.
  */
 UCLASS(DefaultToInstanced, EditInlineNew, BlueprintType)
-class FAERIEITEMDATA_API UFaerieItem : public UObject
+class FAERIEITEMDATA_API UFaerieItem : public UNetSupportedObject
 {
 	GENERATED_BODY()
 
@@ -40,7 +40,6 @@ class FAERIEITEMDATA_API UFaerieItem : public UObject
 public:
 	virtual void PreSave(FObjectPreSaveContext SaveContext) override;
 	virtual void PostLoad() override;
-	virtual bool IsSupportedForNetworking() const override { return true; }
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	// Iterates over each contained token. Return true in the delegate to continue iterating.

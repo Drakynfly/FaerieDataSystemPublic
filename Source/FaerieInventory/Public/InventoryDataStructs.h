@@ -45,19 +45,14 @@ struct FFaerieItemKeyBase
 {
 	GENERATED_BODY()
 
-	FFaerieItemKeyBase()
-	{
-		KeyValue = INDEX_NONE;
-	}
+	FFaerieItemKeyBase() = default;
 
 	explicit FFaerieItemKeyBase(const int32 Value)
-	{
-		KeyValue = Value;
-	}
+	  : KeyValue(Value) {}
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = "FaerieItemKeyBase")
-	int32 KeyValue;
+	int32 KeyValue = INDEX_NONE;
 
 public:
 	bool IsValid() const
