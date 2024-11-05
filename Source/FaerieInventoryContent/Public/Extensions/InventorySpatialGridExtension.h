@@ -136,8 +136,16 @@ struct TStructOpsTypeTraits<FSpatialContent> : public TStructOpsTypeTraitsBase2<
 	};
 };
 
-using FSpatialEntryChangedNative = TMulticastDelegate<void(FInventoryKey)>;
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSpatialEntryChanged, FInventoryKey, EntryKey);
+UENUM(BlueprintType)
+enum ESpatialEventType
+{
+	ItemAdded,
+	ItemChanged,
+	ItemRemoved
+};
+
+using FSpatialEntryChangedNative = TMulticastDelegate<void(const FInventoryKey&, ESpatialEventType)>;
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FSpatialEntryChanged, FInventoryKey, EntryKey, ESpatialEventType, EventType);
 
 using FGridSizeChangedNative = TMulticastDelegate<void(FIntPoint)>;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FGridSizeChanged, FIntPoint, newGridSize);

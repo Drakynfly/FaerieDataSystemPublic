@@ -187,7 +187,7 @@ void UInventorySpatialGridExtension::PostRemoval(const UFaerieItemContainerBase*
 		for (const FStackKey& StackKey : Event.StackKeys)
 		{
 			Key.StackKey = StackKey;
-			if (!ItemStorage->IsValidKey(InvKeys[InvKeys.IndexOfByKey(Key)]))
+			if (InvKeys.IndexOfByKey(Key) == INDEX_NONE)
 			{
 				RemoveItem(Key);
 			}
@@ -197,20 +197,20 @@ void UInventorySpatialGridExtension::PostRemoval(const UFaerieItemContainerBase*
 
 void UInventorySpatialGridExtension::PreEntryReplicatedRemove(const FSpatialKeyedEntry& Entry)
 {
-	SpatialEntryChangedDelegateNative.Broadcast(Entry.Key);
-	SpatialEntryChangedDelegate.Broadcast(Entry.Key);
+	SpatialEntryChangedDelegateNative.Broadcast(Entry.Key, ESpatialEventType::ItemRemoved);
+	SpatialEntryChangedDelegate.Broadcast(Entry.Key, ESpatialEventType::ItemRemoved);
 }
 
 void UInventorySpatialGridExtension::PostEntryReplicatedAdd(const FSpatialKeyedEntry& Entry)
 {
-	SpatialEntryChangedDelegateNative.Broadcast(Entry.Key);
-	SpatialEntryChangedDelegate.Broadcast(Entry.Key);
+	SpatialEntryChangedDelegateNative.Broadcast(Entry.Key, ESpatialEventType::ItemAdded);
+	SpatialEntryChangedDelegate.Broadcast(Entry.Key, ESpatialEventType::ItemAdded);
 }
 
 void UInventorySpatialGridExtension::PostEntryReplicatedChange(const FSpatialKeyedEntry& Entry)
 {
-	SpatialEntryChangedDelegateNative.Broadcast(Entry.Key);
-	SpatialEntryChangedDelegate.Broadcast(Entry.Key);
+	SpatialEntryChangedDelegateNative.Broadcast(Entry.Key, ESpatialEventType::ItemChanged);
+	SpatialEntryChangedDelegate.Broadcast(Entry.Key, ESpatialEventType::ItemChanged);
 }
 
 void UInventorySpatialGridExtension::OnRep_GridSize()
