@@ -3,6 +3,7 @@
 #include "Extensions/InventorySpatialGridExtension.h"
 
 #include "FaerieItemContainerBase.h"
+#include "FaerieItemStorage.h"
 #include "ItemContainerEvent.h"
 #include "Net/UnrealNetwork.h"
 #include "Tokens/FaerieShapeToken.h"
@@ -104,8 +105,44 @@ void UInventorySpatialGridExtension::PostInitProperties()
 	OccupiedSlots.ChangeListener = this;
 }
 
+void UInventorySpatialGridExtension::InitializeExtension(const UFaerieItemContainerBase* Container)
+{
+	// Add all existing items to the grid on startup.
+	// This is dumb, and just adds them in order, it doesn't space pack them. To do that, we would want to sort items by size, and add largest first.
+	// This is also skipping possible serialization of grid data.
+	// @todo handle serialization loading
+	// @todo handle items that are too large to fix / too many items (log error?)
+
+	if (const UFaerieItemStorage* ItemStorage = Cast<UFaerieItemStorage>(Container))
+	{
+		ItemStorage->ForEachKey(
+			[this, ItemStorage](const FEntryKey Key)
+			{
+				const FFaerieItemStackView View = ItemStorage->View(Key);
+				const UFaerieShapeToken* Token = View.Item->GetToken<UFaerieShapeToken>();
+
+				const TArray<FInventoryKey> InvKeys = ItemStorage->GetInvKeysForEntry(Key);
+
+				for (auto&& InvKey : InvKeys)
+				{
+					AddItemToGrid(InvKey, Token);
+				}
+			});
+	}
+}
+
+void UInventorySpatialGridExtension::DeinitializeExtension(const UFaerieItemContainerBase* Container)
+{
+	// Remove all entries for this container on shutdown.
+	Container->ForEachKey(
+		[this](const FEntryKey Key)
+		{
+			RemoveItemsForEntry(Key);
+		});
+}
+
 EEventExtensionResponse UInventorySpatialGridExtension::AllowsAddition(const UFaerieItemContainerBase* Container,
-                                                                       const FFaerieItemStackView Stack)
+																	   const FFaerieItemStackView Stack)
 {
 	if (!CanAddItemToGrid(Stack.Item->GetToken<UFaerieShapeToken>()))
 	{
@@ -148,7 +185,7 @@ void UInventorySpatialGridExtension::PostRemoval(const UFaerieItemContainerBase*
 	for (const FStackKey& StackKey : Event.StackKeys)
 	{
 		Key.StackKey = StackKey;
-		RemoveItemFromGrid(Key);
+		RemoveItem(Key);
 	}
 }
 
@@ -177,7 +214,7 @@ void UInventorySpatialGridExtension::OnRep_GridSize()
 }
 
 bool UInventorySpatialGridExtension::CanAddItemToGrid(const UFaerieShapeToken* ShapeToken,
-                                                      const FIntPoint& Position) const
+													  const FIntPoint& Position) const
 {
 	if (!ShapeToken) return false;
 	return FitsInGrid(ShapeToken->GetShape(), Position);
@@ -235,9 +272,26 @@ bool UInventorySpatialGridExtension::AddItemToGrid(const FInventoryKey& Key, con
 	return true;
 }
 
-void UInventorySpatialGridExtension::RemoveItemFromGrid(const FInventoryKey& Key)
+void UInventorySpatialGridExtension::RemoveItem(const FInventoryKey& Key)
 {
 	OccupiedSlots.Remove(Key);
+}
+
+void UInventorySpatialGridExtension::RemoveItemsForEntry(const FEntryKey& Key)
+{
+	TArray<FInventoryKey> Keys;
+	for (auto&& Element : OccupiedSlots)
+	{
+		if (Element.Key.EntryKey == Key)
+		{
+			Keys.Add(Element.Key);
+		}
+	}
+
+	for (auto&& InvKey : Keys)
+	{
+		RemoveItem(InvKey);
+	}
 }
 
 FFaerieGridShape UInventorySpatialGridExtension::GetEntryShape(const FInventoryKey& Key) const

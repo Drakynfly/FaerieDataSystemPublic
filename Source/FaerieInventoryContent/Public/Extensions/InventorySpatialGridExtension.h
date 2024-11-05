@@ -141,6 +141,8 @@ public:
 
 protected:
 	//~ UItemContainerExtensionBase
+	virtual void InitializeExtension(const UFaerieItemContainerBase* Container) override;
+	virtual void DeinitializeExtension(const UFaerieItemContainerBase* Container) override;
 	virtual EEventExtensionResponse AllowsAddition(const UFaerieItemContainerBase* Container, FFaerieItemStackView Stack) override;
 	virtual void PostAddition(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) override;
 	virtual void PostRemoval(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) override;
@@ -153,6 +155,11 @@ protected:
 	UFUNCTION(/* Replication */)
 	virtual void OnRep_GridSize();
 
+private:
+	bool AddItemToGrid(const FInventoryKey& Key, const UFaerieShapeToken* ShapeToken);
+	void RemoveItem(const FInventoryKey& Key);
+	void RemoveItemsForEntry(const FEntryKey& Key);
+
 public:
 	bool CanAddItemToGrid(const UFaerieShapeToken* ShapeToken, const FIntPoint& Position) const;
 	bool CanAddItemToGrid(const UFaerieShapeToken* ShapeToken) const;
@@ -160,8 +167,6 @@ public:
 	bool MoveItem(const FInventoryKey& Key, const FIntPoint& SourcePoint, const FIntPoint& TargetPoint);
 	bool RotateItem(const FInventoryKey& Key);
 
-	bool AddItemToGrid(const FInventoryKey& Key, const UFaerieShapeToken* ShapeToken);
-	void RemoveItemFromGrid(const FInventoryKey& Key);
 
 	// @todo probably split into two functions. one with rotation check, one without. public API probably doesn't need to see the rotation check!
 	bool FitsInGrid(const FFaerieGridShape& Shape, const FIntPoint& Position,
