@@ -8,3 +8,10 @@ namespace Faerie::Equipment::Tags
 	UE_DEFINE_GAMEPLAY_TAG_TYPED(FFaerieSlotTag, SlotHandRight, "Fae.Slot.Hand.Right")
 	UE_DEFINE_GAMEPLAY_TAG_TYPED(FFaerieSlotTag, SlotHandLeft, "Fae.Slot.Hand.Left")
 }
+
+namespace Faerie::Slot::Tags
+{
+	UE_DEFINE_GAMEPLAY_TAG_TYPED(FFaerieSlotTag, Slot1, "Fae.Slot.1")
+	UE_DEFINE_GAMEPLAY_TAG_TYPED(FFaerieSlotTag, Slot2, "Fae.Slot.2")
+	UE_DEFINE_GAMEPLAY_TAG_TYPED(FFaerieSlotTag, Slot3, "Fae.Slot.3")
+}

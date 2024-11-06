@@ -48,21 +48,24 @@ FIntPoint FFaerieGridShape::GetShapeCenter()
 		Sum += Point;
 	}
 
-	// Calculate average and return
-	return Sum / Points.Num();
+	return FIntPoint(
+		(Sum.X + Points.Num()) / Points.Num(),
+		(Sum.Y + Points.Num()) / Points.Num()
+	);
 }
 
-bool FFaerieGridShape::CanRotate() const
+bool FFaerieGridShape::IsSymmetrical() const
 {
-	const FIntPoint Size = GetSize();
+	if (Points.IsEmpty())
+	{
+		return true;
+	}
 
-	// If our dimensions are dissimilar, we can be rotated
-	if (Size.X != Size.Y) return true;
-
-	// If we are a square of our dimension, we cannot rotate
-	return MakeSquare(Size.X) != *this;
-
-	// @todo there are other shapes that cannot rotate! any shape that is radially symmetrical at 90 degree angles is un-rotatable.
+	//create shape copy to compare against
+	FFaerieGridShape ShapeCopy = *this;
+	ShapeCopy.RotateInline(ShapeCopy.GetShapeCenter());
+	// Compare the shapes
+	return ShapeCopy == *this;
 }
 
 void FFaerieGridShape::TranslateInline(const FIntPoint& Position)

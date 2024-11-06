@@ -21,7 +21,7 @@ struct FAERIEINVENTORYCONTENT_API FFaerieGridShape
 
 	FIntPoint GetSize() const;
 	FIntPoint GetShapeCenter();
-	bool CanRotate() const;
+	bool IsSymmetrical() const;
 
 	void TranslateInline(const FIntPoint& Position);
 	[[nodiscard]] FFaerieGridShape Translate(const FIntPoint& Position) const;

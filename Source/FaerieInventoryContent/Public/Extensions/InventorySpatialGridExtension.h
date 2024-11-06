@@ -18,6 +18,23 @@ enum class ESpatialItemRotation : uint8
 	Two_Seventy = 3
 };
 
+FORCEINLINE ESpatialItemRotation GetNextRotation(const ESpatialItemRotation CurrentRotation)
+{
+	switch (CurrentRotation)
+	{
+	case ESpatialItemRotation::None:
+		return ESpatialItemRotation::Ninety;
+	case ESpatialItemRotation::Ninety:
+		return ESpatialItemRotation::One_Eighty;
+	case ESpatialItemRotation::One_Eighty:
+		return ESpatialItemRotation::Two_Seventy;
+	case ESpatialItemRotation::Two_Seventy:
+		return ESpatialItemRotation::None;
+	default:
+		return ESpatialItemRotation::None;
+	}
+}
+
 USTRUCT(BlueprintType)
 struct FSpatialItemPlacement
 {
@@ -56,7 +73,9 @@ struct FSpatialKeyedEntry : public FFastArraySerializerItem
 	FSpatialKeyedEntry() = default;
 
 	FSpatialKeyedEntry(const FInventoryKey Key, const FSpatialItemPlacement& Value)
-	  : Key(Key), Value(Value) {}
+		: Key(Key), Value(Value)
+	{
+	}
 
 	UPROPERTY(VisibleInstanceOnly, Category = "SpatialKeyedEntry")
 	FInventoryKey Key;
@@ -71,7 +90,7 @@ struct FSpatialKeyedEntry : public FFastArraySerializerItem
 
 USTRUCT(BlueprintType)
 struct FSpatialContent : public FFastArraySerializer,
-                         public TBinarySearchOptimizedArray<FSpatialContent, FSpatialKeyedEntry>
+						public TBinarySearchOptimizedArray<FSpatialContent, FSpatialKeyedEntry>
 {
 	GENERATED_BODY()
 
@@ -111,7 +130,7 @@ public:
 };
 
 template <>
-struct TStructOpsTypeTraits<FSpatialContent> : public TStructOpsTypeTraitsBase2<FSpatialContent>
+struct TStructOpsTypeTraits<FSpatialContent> : TStructOpsTypeTraitsBase2<FSpatialContent>
 {
 	enum
 	{
@@ -119,8 +138,17 @@ struct TStructOpsTypeTraits<FSpatialContent> : public TStructOpsTypeTraitsBase2<
 	};
 };
 
-using FSpatialEntryChangedNative = TMulticastDelegate<void(FInventoryKey)>;
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSpatialEntryChanged, FInventoryKey, EntryKey);
+UENUM(BlueprintType)
+enum ESpatialEventType : uint8
+{
+	ItemAdded,
+	ItemChanged,
+	ItemRemoved
+};
+
+using FSpatialEntryChangedNative = TMulticastDelegate<void(const FInventoryKey&, ESpatialEventType)>;
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FSpatialEntryChanged, FInventoryKey, EntryKey, ESpatialEventType,
+											EventType);
 
 using FGridSizeChangedNative = TMulticastDelegate<void(FIntPoint)>;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FGridSizeChanged, FIntPoint, newGridSize);
@@ -143,9 +171,12 @@ protected:
 	//~ UItemContainerExtensionBase
 	virtual void InitializeExtension(const UFaerieItemContainerBase* Container) override;
 	virtual void DeinitializeExtension(const UFaerieItemContainerBase* Container) override;
-	virtual EEventExtensionResponse AllowsAddition(const UFaerieItemContainerBase* Container, FFaerieItemStackView Stack) override;
-	virtual void PostAddition(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) override;
-	virtual void PostRemoval(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) override;
+	virtual EEventExtensionResponse AllowsAddition(const UFaerieItemContainerBase* Container,
+													FFaerieItemStackView Stack) override;
+	virtual void PostAddition(const UFaerieItemContainerBase* Container,
+							const Faerie::Inventory::FEventLog& Event) override;
+	virtual void PostRemoval(const UFaerieItemContainerBase* Container,
+							const Faerie::Inventory::FEventLog& Event) override;
 	//~ UItemContainerExtensionBase
 
 	void PreEntryReplicatedRemove(const FSpatialKeyedEntry& Entry);
@@ -170,10 +201,10 @@ public:
 
 	// @todo probably split into two functions. one with rotation check, one without. public API probably doesn't need to see the rotation check!
 	bool FitsInGrid(const FFaerieGridShape& Shape, const FIntPoint& Position,
-	                ESpatialItemRotation Rotation = ESpatialItemRotation::None,
-	                TConstArrayView<FInventoryKey> ExcludedKeys = {}) const;
+					ESpatialItemRotation Rotation = ESpatialItemRotation::None,
+					TConstArrayView<FInventoryKey> ExcludedKeys = {}) const;
 
-	TOptional<FIntPoint> GetFirstEmptyLocation(const FFaerieGridShape& InShape) const;
+	TOptional<TTuple<FIntPoint, ESpatialItemRotation>> GetFirstEmptyLocation(const FFaerieGridShape& InShape) const;
 
 	FSpatialEntryChangedNative& GetOnSpatialEntryChanged() { return SpatialEntryChangedDelegateNative; }
 	FGridSizeChangedNative& GetOnGridSizeChanged() { return GridSizeChangedDelegateNative; }
@@ -197,7 +228,8 @@ protected:
 	static bool ValidateSourcePoint(const FSpatialKeyedEntry* Entry, const FIntPoint& SourcePoint);
 
 	// @todo Drakyn: look at these
-	FSpatialKeyedEntry* FindOverlappingItem(const FFaerieGridShape& Shape, const FIntPoint& Offset, const FInventoryKey& ExcludeKey);
+	FSpatialKeyedEntry* FindOverlappingItem(const FFaerieGridShape& Shape, const FIntPoint& Offset,
+											const FInventoryKey& ExcludeKey);
 	bool TrySwapItems(FSpatialKeyedEntry& MovingItem, FSpatialKeyedEntry& OverlappingItem, const FIntPoint& Offset);
 	bool MoveSingleItem(FSpatialKeyedEntry& Item, const FIntPoint& Offset);
 	void UpdateItemPosition(FSpatialKeyedEntry& Item, const FIntPoint& Offset);
