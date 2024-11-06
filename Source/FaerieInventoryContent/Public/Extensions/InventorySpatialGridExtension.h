@@ -15,8 +15,10 @@ enum class ESpatialItemRotation : uint8
 	None = 0,
 	Ninety = 1,
 	One_Eighty = 2,
-	Two_Seventy = 3
+	Two_Seventy = 3,
+	MAX UMETA(Hidden)
 };
+ENUM_RANGE_BY_COUNT(ESpatialItemRotation, ESpatialItemRotation::MAX)
 
 FORCEINLINE ESpatialItemRotation GetNextRotation(const ESpatialItemRotation CurrentRotation)
 {
@@ -73,9 +75,7 @@ struct FSpatialKeyedEntry : public FFastArraySerializerItem
 	FSpatialKeyedEntry() = default;
 
 	FSpatialKeyedEntry(const FInventoryKey Key, const FSpatialItemPlacement& Value)
-		: Key(Key), Value(Value)
-	{
-	}
+	  : Key(Key), Value(Value) {}
 
 	UPROPERTY(VisibleInstanceOnly, Category = "SpatialKeyedEntry")
 	FInventoryKey Key;
@@ -139,7 +139,7 @@ struct TStructOpsTypeTraits<FSpatialContent> : TStructOpsTypeTraitsBase2<FSpatia
 };
 
 UENUM(BlueprintType)
-enum ESpatialEventType : uint8
+enum class ESpatialEventType : uint8
 {
 	ItemAdded,
 	ItemChanged,
@@ -147,8 +147,7 @@ enum ESpatialEventType : uint8
 };
 
 using FSpatialEntryChangedNative = TMulticastDelegate<void(const FInventoryKey&, ESpatialEventType)>;
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FSpatialEntryChanged, FInventoryKey, EntryKey, ESpatialEventType,
-											EventType);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FSpatialEntryChanged, FInventoryKey, EntryKey, ESpatialEventType, EventType);
 
 using FGridSizeChangedNative = TMulticastDelegate<void(FIntPoint)>;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FGridSizeChanged, FIntPoint, newGridSize);
@@ -171,12 +170,9 @@ protected:
 	//~ UItemContainerExtensionBase
 	virtual void InitializeExtension(const UFaerieItemContainerBase* Container) override;
 	virtual void DeinitializeExtension(const UFaerieItemContainerBase* Container) override;
-	virtual EEventExtensionResponse AllowsAddition(const UFaerieItemContainerBase* Container,
-													FFaerieItemStackView Stack) override;
-	virtual void PostAddition(const UFaerieItemContainerBase* Container,
-							const Faerie::Inventory::FEventLog& Event) override;
-	virtual void PostRemoval(const UFaerieItemContainerBase* Container,
-							const Faerie::Inventory::FEventLog& Event) override;
+	virtual EEventExtensionResponse AllowsAddition(const UFaerieItemContainerBase* Container, FFaerieItemStackView Stack) override;
+	virtual void PostAddition(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) override;
+	virtual void PostRemoval(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) override;
 	//~ UItemContainerExtensionBase
 
 	void PreEntryReplicatedRemove(const FSpatialKeyedEntry& Entry);

@@ -42,16 +42,15 @@ FIntPoint FFaerieGridShape::GetShapeCenter()
 		return FIntPoint::ZeroValue;
 	}
 
-	FIntPoint Sum = FIntPoint::ZeroValue;
+	// To offset for 0-indexed points, initialize Sum with Points Num.
+	// This is equivalent to adding 1,1 to every point.
+	FIntPoint Sum(Points.Num());
 	for (const FIntPoint& Point : Points)
 	{
 		Sum += Point;
 	}
 
-	return FIntPoint(
-		(Sum.X + Points.Num()) / Points.Num(),
-		(Sum.Y + Points.Num()) / Points.Num()
-	);
+	return Sum / Points.Num();
 }
 
 bool FFaerieGridShape::IsSymmetrical() const
