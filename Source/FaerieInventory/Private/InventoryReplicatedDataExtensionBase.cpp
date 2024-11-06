@@ -167,12 +167,12 @@ void UInventoryReplicatedDataExtensionBase::PreRemoval(const UFaerieItemContaine
 	if (const FStructView ContainerData = FindFastArrayForContainer(Container);
 		ContainerData.IsValid())
 	{
-		FRepDataFastArray& Ptr = ContainerData.Get<FRepDataFastArray>();
+		FRepDataFastArray& Ref = ContainerData.Get<FRepDataFastArray>();
 
 		// If the whole stack is being removed, auto-delete any data we have for the entry
 		if (Container->GetStack(Key) == Removal || Removal == Faerie::ItemData::UnlimitedStack)
 		{
-			Ptr.RemoveDataForEntry(Key);
+			Ref.RemoveDataForEntry(Key);
 		}
 	}
 }
@@ -183,11 +183,11 @@ FConstStructView UInventoryReplicatedDataExtensionBase::GetDataForEntry(const UF
 	if (const FConstStructView ContainerData = FindFastArrayForContainer(Container);
 		ContainerData.IsValid())
 	{
-		const FRepDataFastArray& Ptr = ContainerData.Get<const FRepDataFastArray>();
+		const FRepDataFastArray& Ref = ContainerData.Get<const FRepDataFastArray>();
 
-		if (Ptr.Contains(Key))
+		if (Ref.Contains(Key))
 		{
-			return Ptr[Key];
+			return Ref[Key];
 		}
 	}
 	return FConstStructView(GetDataScriptStruct());
@@ -202,19 +202,19 @@ bool UInventoryReplicatedDataExtensionBase::EditDataForEntry(const UFaerieItemCo
 		return false;
 	}
 
-	FRepDataFastArray& Ptr = ContainerData.Get<FRepDataFastArray>();
+	FRepDataFastArray& Ref = ContainerData.Get<FRepDataFastArray>();
 
-	if (Ptr.Contains(Key))
+	if (Ref.Contains(Key))
 	{
 		// Edit existing data entry
-		Edit(Ptr[Key]);
+		Edit(Ref[Key]);
 	}
 	else
 	{
 		// Make new data entry
 		FInstancedStruct Data(GetDataScriptStruct());
 		Edit(Data);
-		Ptr.SetDataForEntry(Key, Data);
+		Ref.SetDataForEntry(Key, Data);
 	}
 
 	return true;

@@ -9,20 +9,20 @@
 
 TArray<FKeyedStack> UInventoryEntryProxyBase::GetAllStacks() const
 {
-	if (auto&& Entry = GetInventoryEntry();
+	if (const FInventoryEntryView& Entry = GetInventoryEntry();
 		ensure(Entry.IsValid()))
 	{
-		return Entry.Stacks;
+		return Entry.Get<const FInventoryEntry>().Stacks;
 	}
 	return {};
 }
 
 int32 UInventoryEntryProxyBase::GetStackLimit() const
 {
-	if (auto&& Entry = GetInventoryEntry();
+	if (const FInventoryEntryView& Entry = GetInventoryEntry();
 		ensure(Entry.IsValid()))
 	{
-		return Entry.Limit;
+		return Entry.Get<const FInventoryEntry>().Limit;
 	}
 	return 0;
 }
@@ -34,7 +34,7 @@ const UFaerieItem* UInventoryEntryStorageProxy::GetItemObject() const
 		return nullptr;
 	}
 
-	const FConstStructView EntryView = GetStorage()->GetEntryView(GetKey());
+	const FInventoryEntryView EntryView = GetStorage()->GetEntryView(GetKey());
 	if (!ensure(EntryView.IsValid()))
 	{
 		return nullptr;
@@ -50,7 +50,7 @@ int32 UInventoryEntryStorageProxy::GetCopies() const
 		return 0;
 	}
 
-	const FConstStructView EntryView = GetStorage()->GetEntryView(GetKey());
+	const FInventoryEntryView EntryView = GetStorage()->GetEntryView(GetKey());
 	if (!ensure(EntryView.IsValid()))
 	{
 		return 0;
@@ -74,16 +74,14 @@ TScriptInterface<IFaerieItemOwnerInterface> UInventoryEntryStorageProxy::GetOwne
 	return GetStorage();
 }
 
-FInventoryEntry UInventoryEntryStorageProxy::GetInventoryEntry() const
+FInventoryEntryView UInventoryEntryStorageProxy::GetInventoryEntry() const
 {
 	if (!VerifyStatus())
 	{
-		return FInventoryEntry();
+		return FInventoryEntryView();
 	}
 
-	FInventoryEntry Entry;
-	GetStorage()->GetEntry(GetKey(), Entry);
-	return Entry;
+	return GetStorage()->GetEntryView(GetKey());
 }
 
 void UInventoryEntryStorageProxy::NotifyCreation()
@@ -135,7 +133,7 @@ int32 UInventoryStackProxy::GetCopies() const
 		return 0;
 	}
 
-	const FConstStructView EntryView = ItemStorage->GetEntryView(Key.EntryKey);
+	const FInventoryEntryView EntryView = ItemStorage->GetEntryView(Key.EntryKey);
 	if (!ensure(EntryView.IsValid()))
 	{
 		return 0;

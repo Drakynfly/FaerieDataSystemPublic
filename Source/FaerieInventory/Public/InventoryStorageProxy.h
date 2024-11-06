@@ -25,7 +25,7 @@ public:
 	int32 GetStackLimit() const;
 
 protected:
-	virtual FInventoryEntry GetInventoryEntry() const PURE_VIRTUAL(UInventoryEntryProxyBase::GetInventoryEntry, return FInventoryEntry(); )
+	virtual FInventoryEntryView GetInventoryEntry() const PURE_VIRTUAL(UInventoryEntryProxyBase::GetInventoryEntry, return FInventoryEntryView(); )
 };
 
 UCLASS(Abstract)
@@ -42,7 +42,7 @@ public:
 	//~ IFaerieItemDataProxy
 
 	//~ UInventoryEntryProxyBase
-	virtual FInventoryEntry GetInventoryEntry() const override final;
+	virtual FInventoryEntryView GetInventoryEntry() const override final;
 	//~ UInventoryEntryProxyBase
 
 	UFaerieItemStorage* GetStorage() const { return ItemStorage.Get(); }

@@ -8,8 +8,8 @@
 #include "FaerieItemStackView.generated.h"
 
 /**
- * A simple stack of items. Item pointer is both const and weak, as it's assumed to be owned elsewhere and should
- * neither allow mutation or keep
+ * A simple stack of items.
+ * Item pointer is both const and weak, as it's assumed to be owned elsewhere.
  */
 USTRUCT(BlueprintType)
 struct FAERIEITEMDATA_API FFaerieItemStackView

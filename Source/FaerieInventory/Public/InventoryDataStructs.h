@@ -7,6 +7,7 @@
 #include "GameplayTagContainer.h"
 #include "TTypedTagStaticImpl2.h"
 #include "Net/Serialization/FastArraySerializer.h"
+#include "StructView.h"
 #include "InventoryDataStructs.generated.h"
 
 /**
@@ -255,6 +256,8 @@ public:
 	static bool IsEqualTo(const FInventoryEntry& A, const FInventoryEntry& B, EEntryEquivalencyFlags CheckFlags);
 };
 
+// @todo 5.5: change to TConstStructView<FInventoryEntry>
+using FInventoryEntryView = FConstStructView;
 
 struct FInventoryContent;
 

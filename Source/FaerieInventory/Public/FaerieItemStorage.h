@@ -6,7 +6,6 @@
 #include "ItemContainerEvent.h"
 #include "FaerieItemStack.h"
 #include "InventoryDataStructs.h"
-#include "StructView.h"
 
 #include "FaerieItemStorage.generated.h"
 
@@ -89,7 +88,7 @@ public:
 	/*	  INTERNAL IMPLEMENTATIONS	 */
 	/**------------------------------*/
 private:
-	FConstStructView GetEntryViewImpl(FEntryKey Key) const;
+	FInventoryEntryView GetEntryViewImpl(FEntryKey Key) const;
 
 	UInventoryEntryProxy* GetEntryProxyImpl(FEntryKey Key) const;
 
@@ -118,7 +117,7 @@ public:
 	FEntryKeyEventNative& GetOnKeyUpdated() { return OnKeyUpdatedCallback; }
 	FEntryKeyEventNative& GetOnKeyRemoved() { return OnKeyRemovedCallback; }
 
-	FConstStructView GetEntryView(FEntryKey Key) const;
+	FInventoryEntryView GetEntryView(FEntryKey Key) const;
 
 	// Convert an entry key into an array of Inventory Keys.
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Storage|Key")

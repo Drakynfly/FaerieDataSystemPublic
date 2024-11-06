@@ -22,7 +22,7 @@ void UCraftingLibrary::GetCraftingSlots(const TScriptInterface<IFaerieItemSlotIn
 
     if (Interface.GetInterface())
     {
-        if (const FConstStructView SlotsView = Interface->GetCraftingSlots();
+        if (const FFaerieCraftingSlotsView SlotsView = Interface->GetCraftingSlots();
             SlotsView.IsValid())
         {
             Slots = SlotsView.Get<const FFaerieItemCraftingSlots>();

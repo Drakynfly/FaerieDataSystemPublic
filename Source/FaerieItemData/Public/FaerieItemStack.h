@@ -17,7 +17,8 @@ namespace Faerie::ItemData
 }
 
 /**
- * A simple stack of items. The Item pointer is non-const and assumed to not be owned by anyone.
+ * A simple stack of items.
+ * The Item pointer is non-const and assumed to not be owned by anyone.
  */
 USTRUCT(BlueprintType)
 struct FAERIEITEMDATA_API FFaerieItemStack
