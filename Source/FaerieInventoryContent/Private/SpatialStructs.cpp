@@ -54,19 +54,6 @@ FIntPoint FFaerieGridShape::GetShapeCenter()
 	);
 }
 
-bool FFaerieGridShape::CanRotate() const
-{
-	const FIntPoint Size = GetSize();
-
-	// If our dimensions are dissimilar, we can be rotated
-	if (Size.X != Size.Y) return true;
-
-	// If we are a square of our dimension, we cannot rotate
-	return MakeSquare(Size.X) != *this;
-
-	// @todo there are other shapes that cannot rotate! any shape that is radially symmetrical at 90 degree angles is un-rotatable.
-}
-
 bool FFaerieGridShape::IsSymmetrical() const
 {
 	if (Points.IsEmpty())

@@ -139,7 +139,7 @@ struct TStructOpsTypeTraits<FSpatialContent> : public TStructOpsTypeTraitsBase2<
 };
 
 UENUM(BlueprintType)
-enum ESpatialEventType
+enum ESpatialEventType : uint8
 {
 	ItemAdded,
 	ItemChanged,
