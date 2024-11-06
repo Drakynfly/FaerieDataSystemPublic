@@ -15,8 +15,8 @@ TSharedRef<IPropertyTypeCustomization> FItemShapeCustomization::MakeInstance()
 }
 
 void FItemShapeCustomization::CustomizeHeader(const TSharedRef<IPropertyHandle> PropertyHandle,
-                                              FDetailWidgetRow& HeaderRow,
-                                              IPropertyTypeCustomizationUtils& CustomizationUtils)
+											FDetailWidgetRow& HeaderRow,
+											IPropertyTypeCustomizationUtils& CustomizationUtils)
 {
 	HeaderRow.NameContent()
 	[
@@ -25,8 +25,8 @@ void FItemShapeCustomization::CustomizeHeader(const TSharedRef<IPropertyHandle> 
 }
 
 void FItemShapeCustomization::CustomizeChildren(const TSharedRef<IPropertyHandle> PropertyHandle,
-                                                IDetailChildrenBuilder& ChildBuilder,
-                                                IPropertyTypeCustomizationUtils& CustomizationUtils)
+												IDetailChildrenBuilder& ChildBuilder,
+												IPropertyTypeCustomizationUtils& CustomizationUtils)
 {
 	StructHandle = PropertyHandle;
 	StructHandle->SetOnPropertyValueChanged(FSimpleDelegate::CreateSP(this, &FItemShapeCustomization::UpdateGridPanel));
@@ -37,7 +37,7 @@ void FItemShapeCustomization::CustomizeChildren(const TSharedRef<IPropertyHandle
 	UpdateGridPanel();
 
 	ChildBuilder.AddCustomRow(LOCTEXT("GridRow", "Grid"))
-	            .WholeRowContent()
+				.WholeRowContent()
 	[
 		SNew(SBox)
 		.Padding(FMargin(0.f, 5.f))
@@ -105,8 +105,8 @@ void FItemShapeCustomization::UpdateGridPanel()
 						.ButtonColorAndOpacity_Lambda([this, CellCoord]()
 						{
 							return IsCellSelected(CellCoord)
-								       ? FLinearColor(0.2f, 0.8f, 0.3f)
-								       : FLinearColor(0.15f, 0.15f, 0.15f);
+										? FLinearColor(0.2f, 0.8f, 0.3f)
+										: FLinearColor(0.15f, 0.15f, 0.15f);
 						})
 						.HAlign(HAlign_Fill)
 						.VAlign(VAlign_Fill)

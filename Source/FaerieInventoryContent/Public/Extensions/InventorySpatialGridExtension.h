@@ -90,7 +90,7 @@ struct FSpatialKeyedEntry : public FFastArraySerializerItem
 
 USTRUCT(BlueprintType)
 struct FSpatialContent : public FFastArraySerializer,
-                         public TBinarySearchOptimizedArray<FSpatialContent, FSpatialKeyedEntry>
+						public TBinarySearchOptimizedArray<FSpatialContent, FSpatialKeyedEntry>
 {
 	GENERATED_BODY()
 
@@ -130,7 +130,7 @@ public:
 };
 
 template <>
-struct TStructOpsTypeTraits<FSpatialContent> : public TStructOpsTypeTraitsBase2<FSpatialContent>
+struct TStructOpsTypeTraits<FSpatialContent> : TStructOpsTypeTraitsBase2<FSpatialContent>
 {
 	enum
 	{
@@ -148,7 +148,7 @@ enum ESpatialEventType : uint8
 
 using FSpatialEntryChangedNative = TMulticastDelegate<void(const FInventoryKey&, ESpatialEventType)>;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FSpatialEntryChanged, FInventoryKey, EntryKey, ESpatialEventType,
-                                             EventType);
+											EventType);
 
 using FGridSizeChangedNative = TMulticastDelegate<void(FIntPoint)>;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FGridSizeChanged, FIntPoint, newGridSize);
@@ -172,11 +172,11 @@ protected:
 	virtual void InitializeExtension(const UFaerieItemContainerBase* Container) override;
 	virtual void DeinitializeExtension(const UFaerieItemContainerBase* Container) override;
 	virtual EEventExtensionResponse AllowsAddition(const UFaerieItemContainerBase* Container,
-	                                               FFaerieItemStackView Stack) override;
+													FFaerieItemStackView Stack) override;
 	virtual void PostAddition(const UFaerieItemContainerBase* Container,
-	                          const Faerie::Inventory::FEventLog& Event) override;
+							const Faerie::Inventory::FEventLog& Event) override;
 	virtual void PostRemoval(const UFaerieItemContainerBase* Container,
-	                         const Faerie::Inventory::FEventLog& Event) override;
+							const Faerie::Inventory::FEventLog& Event) override;
 	//~ UItemContainerExtensionBase
 
 	void PreEntryReplicatedRemove(const FSpatialKeyedEntry& Entry);
@@ -201,8 +201,8 @@ public:
 
 	// @todo probably split into two functions. one with rotation check, one without. public API probably doesn't need to see the rotation check!
 	bool FitsInGrid(const FFaerieGridShape& Shape, const FIntPoint& Position,
-	                ESpatialItemRotation Rotation = ESpatialItemRotation::None,
-	                TConstArrayView<FInventoryKey> ExcludedKeys = {}) const;
+					ESpatialItemRotation Rotation = ESpatialItemRotation::None,
+					TConstArrayView<FInventoryKey> ExcludedKeys = {}) const;
 
 	TOptional<TTuple<FIntPoint, ESpatialItemRotation>> GetFirstEmptyLocation(const FFaerieGridShape& InShape) const;
 
@@ -229,7 +229,7 @@ protected:
 
 	// @todo Drakyn: look at these
 	FSpatialKeyedEntry* FindOverlappingItem(const FFaerieGridShape& Shape, const FIntPoint& Offset,
-	                                        const FInventoryKey& ExcludeKey);
+											const FInventoryKey& ExcludeKey);
 	bool TrySwapItems(FSpatialKeyedEntry& MovingItem, FSpatialKeyedEntry& OverlappingItem, const FIntPoint& Offset);
 	bool MoveSingleItem(FSpatialKeyedEntry& Item, const FIntPoint& Offset);
 	void UpdateItemPosition(FSpatialKeyedEntry& Item, const FIntPoint& Offset);
