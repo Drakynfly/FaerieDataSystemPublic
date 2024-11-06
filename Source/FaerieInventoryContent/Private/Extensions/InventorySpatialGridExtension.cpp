@@ -226,7 +226,7 @@ bool UInventorySpatialGridExtension::CanAddItemToGrid(const UFaerieShapeToken* S
 	}
 	bool RetVal = false;
 	ESpatialItemRotation Rotation = ESpatialItemRotation::None;
-	const int32 RotationsToCheck = ShapeToken->GetShape().bIsSymmetrical ? 1 : 4;
+	const int32 RotationsToCheck = ShapeToken->GetShape().IsSymmetrical() ? 1 : 4;
 	for (int i = 0; i < RotationsToCheck; i++)
 	{
 		if (FitsInGrid(ShapeToken->GetShape(), Position, Rotation))
@@ -397,7 +397,7 @@ TOptional<TTuple<FIntPoint, ESpatialItemRotation>> UInventorySpatialGridExtensio
 	const FFaerieGridShape& InShape) const
 {
 	// Try each rotation
-	const int32 RotationsToCheck = InShape.bIsSymmetrical ? 1 : 4;
+	const int32 RotationsToCheck = InShape.IsSymmetrical() ? 1 : 4;
 	for (int32 RotIndex = 0; RotIndex < RotationsToCheck; RotIndex++)
 	{
 		ESpatialItemRotation Rotation = static_cast<ESpatialItemRotation>(RotIndex);
