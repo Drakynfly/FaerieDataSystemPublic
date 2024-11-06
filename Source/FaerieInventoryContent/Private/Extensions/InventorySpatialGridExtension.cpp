@@ -185,7 +185,7 @@ void UInventorySpatialGridExtension::PostRemoval(const UFaerieItemContainerBase*
 		for (const FStackKey& StackKey : Event.StackKeys)
 		{
 			Key.StackKey = StackKey;
-			if (ItemStorage->IsValidKey(Key))
+			if (!ItemStorage->IsValidKey(Key))
 			{
 				RemoveItem(Key);
 			}
