@@ -589,7 +589,7 @@ bool UInventorySpatialGridExtension::RotateItem(const FInventoryKey& Key)
 	                              {
 		                              const ESpatialItemRotation NextRotation = GetNextRotation(Entry.Rotation);
 		                              if (!FitsInGrid(Entry.ItemShape, Entry.Origin, NextRotation,
-		                                              MakeArrayView(&Key, 1)) || Entry.ItemShape.bIsSymmetrical)
+		                                              MakeArrayView(&Key, 1)) || Entry.ItemShape.IsSymmetrical())
 		                              {
 			                              return;
 		                              }
