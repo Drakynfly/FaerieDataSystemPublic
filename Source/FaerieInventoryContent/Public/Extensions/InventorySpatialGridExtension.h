@@ -73,7 +73,9 @@ struct FSpatialKeyedEntry : public FFastArraySerializerItem
 	FSpatialKeyedEntry() = default;
 
 	FSpatialKeyedEntry(const FInventoryKey Key, const FSpatialItemPlacement& Value)
-	  : Key(Key), Value(Value) {}
+		: Key(Key), Value(Value)
+	{
+	}
 
 	UPROPERTY(VisibleInstanceOnly, Category = "SpatialKeyedEntry")
 	FInventoryKey Key;
@@ -145,7 +147,8 @@ enum ESpatialEventType
 };
 
 using FSpatialEntryChangedNative = TMulticastDelegate<void(const FInventoryKey&, ESpatialEventType)>;
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FSpatialEntryChanged, FInventoryKey, EntryKey, ESpatialEventType, EventType);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FSpatialEntryChanged, FInventoryKey, EntryKey, ESpatialEventType,
+                                             EventType);
 
 using FGridSizeChangedNative = TMulticastDelegate<void(FIntPoint)>;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FGridSizeChanged, FIntPoint, newGridSize);
@@ -168,9 +171,12 @@ protected:
 	//~ UItemContainerExtensionBase
 	virtual void InitializeExtension(const UFaerieItemContainerBase* Container) override;
 	virtual void DeinitializeExtension(const UFaerieItemContainerBase* Container) override;
-	virtual EEventExtensionResponse AllowsAddition(const UFaerieItemContainerBase* Container, FFaerieItemStackView Stack) override;
-	virtual void PostAddition(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) override;
-	virtual void PostRemoval(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) override;
+	virtual EEventExtensionResponse AllowsAddition(const UFaerieItemContainerBase* Container,
+	                                               FFaerieItemStackView Stack) override;
+	virtual void PostAddition(const UFaerieItemContainerBase* Container,
+	                          const Faerie::Inventory::FEventLog& Event) override;
+	virtual void PostRemoval(const UFaerieItemContainerBase* Container,
+	                         const Faerie::Inventory::FEventLog& Event) override;
 	//~ UItemContainerExtensionBase
 
 	void PreEntryReplicatedRemove(const FSpatialKeyedEntry& Entry);
@@ -222,7 +228,8 @@ protected:
 	static bool ValidateSourcePoint(const FSpatialKeyedEntry* Entry, const FIntPoint& SourcePoint);
 
 	// @todo Drakyn: look at these
-	FSpatialKeyedEntry* FindOverlappingItem(const FFaerieGridShape& Shape, const FIntPoint& Offset, const FInventoryKey& ExcludeKey);
+	FSpatialKeyedEntry* FindOverlappingItem(const FFaerieGridShape& Shape, const FIntPoint& Offset,
+	                                        const FInventoryKey& ExcludeKey);
 	bool TrySwapItems(FSpatialKeyedEntry& MovingItem, FSpatialKeyedEntry& OverlappingItem, const FIntPoint& Offset);
 	bool MoveSingleItem(FSpatialKeyedEntry& Item, const FIntPoint& Offset);
 	void UpdateItemPosition(FSpatialKeyedEntry& Item, const FIntPoint& Offset);

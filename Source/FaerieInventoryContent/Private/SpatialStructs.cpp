@@ -48,10 +48,9 @@ FIntPoint FFaerieGridShape::GetShapeCenter()
 		Sum += Point;
 	}
 
-	// Add half the divisor before dividing to effectively round
 	return FIntPoint(
-		(Sum.X + Points.Num() / 2) / Points.Num(),
-		(Sum.Y + Points.Num() / 2) / Points.Num()
+		(Sum.X + Points.Num()) / Points.Num(),
+		(Sum.Y + Points.Num()) / Points.Num()
 	);
 }
 
@@ -66,6 +65,20 @@ bool FFaerieGridShape::CanRotate() const
 	return MakeSquare(Size.X) != *this;
 
 	// @todo there are other shapes that cannot rotate! any shape that is radially symmetrical at 90 degree angles is un-rotatable.
+}
+
+bool FFaerieGridShape::IsSymmetrical() const
+{
+	if (Points.IsEmpty())
+	{
+		return true;
+	}
+
+	//create shape copy to compare against
+	FFaerieGridShape ShapeCopy = *this;
+	ShapeCopy.RotateInline(ShapeCopy.GetShapeCenter());
+	// Compare the shapes
+	return ShapeCopy == *this;
 }
 
 void FFaerieGridShape::TranslateInline(const FIntPoint& Position)

@@ -15,9 +15,6 @@ struct FAERIEINVENTORYCONTENT_API FFaerieGridShape
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Grid")
 	TArray<FIntPoint> Points;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Grid")
-	bool bIsSymmetrical = false;
-
 	// Make a rectangular shape
 	static FFaerieGridShape MakeSquare(int32 Size);
 	static FFaerieGridShape MakeRect(int32 Height, int32 Width);
@@ -25,7 +22,8 @@ struct FAERIEINVENTORYCONTENT_API FFaerieGridShape
 	FIntPoint GetSize() const;
 	FIntPoint GetShapeCenter();
 	bool CanRotate() const;
-
+	bool IsSymmetrical() const;
+	
 	void TranslateInline(const FIntPoint& Position);
 	[[nodiscard]] FFaerieGridShape Translate(const FIntPoint& Position) const;
 

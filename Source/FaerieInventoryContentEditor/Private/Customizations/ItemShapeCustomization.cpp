@@ -31,34 +31,6 @@ void FItemShapeCustomization::CustomizeChildren(const TSharedRef<IPropertyHandle
 	StructHandle = PropertyHandle;
 	StructHandle->SetOnPropertyValueChanged(FSimpleDelegate::CreateSP(this, &FItemShapeCustomization::UpdateGridPanel));
 
-	// Add symmetry toggle
-	TSharedPtr<IPropertyHandle> SymmetryHandle = StructHandle->GetChildHandle(
-		GET_MEMBER_NAME_CHECKED(FFaerieGridShape, bIsSymmetrical));
-	if (SymmetryHandle.IsValid())
-	{
-		ChildBuilder.AddCustomRow(LOCTEXT("SymmetryRow", "Symmetry"))
-		            .NameContent()
-			[
-				SNew(STextBlock)
-				.Text(LOCTEXT("Symmetrical", "Symmetrical"))
-			]
-			.ValueContent()
-			[
-				SNew(SCheckBox)
-				.IsChecked_Lambda([SymmetryHandle]()
-				{
-					bool bIsChecked = false;
-					SymmetryHandle->GetValue(bIsChecked);
-					return bIsChecked ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
-				})
-				.OnCheckStateChanged_Lambda([SymmetryHandle](ECheckBoxState NewState)
-				{
-					const bool bNewValue = NewState == ECheckBoxState::Checked;
-					SymmetryHandle->SetValue(bNewValue);
-				})
-			];
-	}
-
 	GridPanel = SNew(SUniformGridPanel)
 		.SlotPadding(FMargin(1.f));
 
@@ -154,7 +126,10 @@ void FItemShapeCustomization::OnGridSizeChanged(const int32 NewValue, ETextCommi
 		UpdateGridPanel();
 	};
 
-	if (!StructHandle.IsValid()) return;
+	if (!StructHandle.IsValid())
+	{
+		return;
+	}
 
 	void* StructPtr = nullptr;
 	const FPropertyAccess::Result Result = StructHandle->GetValueData(StructPtr);
@@ -175,7 +150,10 @@ void FItemShapeCustomization::OnGridSizeChanged(const int32 NewValue, ETextCommi
 
 void FItemShapeCustomization::OnCellClicked(const FIntPoint CellCoord)
 {
-	if (!StructHandle.IsValid()) return;
+	if (!StructHandle.IsValid())
+	{
+		return;
+	}
 
 	void* StructPtr = nullptr;
 	const FPropertyAccess::Result Result = StructHandle->GetValueData(StructPtr);
@@ -209,7 +187,10 @@ void FItemShapeCustomization::OnCellClicked(const FIntPoint CellCoord)
 
 bool FItemShapeCustomization::IsCellSelected(const FIntPoint CellCoord) const
 {
-	if (!StructHandle.IsValid()) return false;
+	if (!StructHandle.IsValid())
+	{
+		return false;
+	}
 
 	void* StructPtr = nullptr;
 	const FPropertyAccess::Result Result = StructHandle->GetValueData(StructPtr);
