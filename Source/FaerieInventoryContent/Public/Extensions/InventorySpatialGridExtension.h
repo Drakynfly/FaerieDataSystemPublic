@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "FaerieFastArraySerializerHack.h"
 #include "ItemContainerExtensionBase.h"
 #include "SpatialStructs.h"
 #include "InventorySpatialGridExtension.generated.h"
@@ -116,13 +117,7 @@ public:
 
 	bool NetDeltaSerialize(FNetDeltaSerializeInfo& DeltaParms)
 	{
-		const bool Success = FastArrayDeltaSerialize<FSpatialKeyedEntry, FSpatialContent>(Items, DeltaParms, *this);
-		if (DeltaParms.Writer)
-		{
-			// Clients need to resort their array, because FastArrayDeltaSerialize uses a RemoveAtSwap internally :(
-			Sort();
-		}
-		return Success;
+		return Faerie::Hacks::FastArrayDeltaSerialize<FSpatialKeyedEntry, FSpatialContent>(Items, DeltaParms, *this);
 	}
 
 	void Insert(FInventoryKey Key, const FSpatialItemPlacement& Value);

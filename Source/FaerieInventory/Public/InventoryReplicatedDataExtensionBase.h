@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "FaerieFastArraySerializerHack.h"
 #include "InstancedStruct.h"
 #include "ItemContainerExtensionBase.h"
 #include "StructView.h"
@@ -61,13 +62,7 @@ public:
 
 	bool NetDeltaSerialize(FNetDeltaSerializeInfo& DeltaParms)
 	{
-		const bool Success = FastArrayDeltaSerialize<FRepDataPerEntryBase, FRepDataFastArray>(Entries, DeltaParms, *this);
-		if (DeltaParms.Writer)
-		{
-			// Clients need to resort their array, because FastArrayDeltaSerialize uses a RemoveAtSwap internally :(
-			Sort();
-		}
-		return Success;
+		return Faerie::Hacks::FastArrayDeltaSerialize<FRepDataPerEntryBase, FRepDataFastArray>(Entries, DeltaParms, *this);
 	}
 
 	/*

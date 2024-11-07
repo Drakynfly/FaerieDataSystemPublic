@@ -3,6 +3,7 @@
 #pragma once
 
 #include "BinarySearchOptimizedArray.h"
+#include "FaerieFastArraySerializerHack.h"
 #include "FaerieItemStackView.h"
 #include "GameplayTagContainer.h"
 #include "TTypedTagStaticImpl2.h"
@@ -364,13 +365,7 @@ public:
 
 	bool NetDeltaSerialize(FNetDeltaSerializeInfo& DeltaParms)
 	{
-		const bool Success = FastArrayDeltaSerialize<FKeyedInventoryEntry, FInventoryContent>(Entries, DeltaParms, *this);
-		if (DeltaParms.Writer)
-		{
-			// Clients need to resort their array, because FastArrayDeltaSerialize uses a RemoveAtSwap internally :(
-			Sort();
-		}
-		return Success;
+		return Faerie::Hacks::FastArrayDeltaSerialize<FKeyedInventoryEntry, FInventoryContent>(Entries, DeltaParms, *this);
 	}
 
 	/*

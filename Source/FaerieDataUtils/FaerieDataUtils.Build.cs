@@ -20,7 +20,8 @@ public class FaerieDataUtils : ModuleRules
             new []
             {
                 "CoreUObject",
-                "Engine"
+                "Engine",
+                "NetCore"
             }
         );
     }
