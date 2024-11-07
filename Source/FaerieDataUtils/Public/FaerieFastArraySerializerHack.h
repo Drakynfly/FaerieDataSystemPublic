@@ -236,7 +236,7 @@ namespace Faerie::Hacks
 				// This will force the ItemMap to be rebuilt for the current Items array
 				ArraySerializer.ItemMap.Empty();
 			}
-			if (Items.Num() > 0 && !IsRunningDedicatedServer())
+			if (Items.Num() > 0)
 			{
 				// Sort using the key
 				Algo::SortBy(Items, &Type::Key);
