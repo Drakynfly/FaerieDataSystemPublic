@@ -240,12 +240,22 @@ namespace Faerie::Hacks
 			{
 				// Sort using the key
 				Algo::SortBy(Items, &Type::Key);
+				UE_LOG(LogNetFastTArray, Verbose, TEXT("FastArrayDeltaSerialize: Recreating Items map. Items.Num: %d Map.Num: %d"), Items.Num(), ArraySerializer.ItemMap.Num());
 
-				// Clear and rebuild the ItemMap to correctly map indices to their replication id
-				ArraySerializer.ItemMap.Empty();
-				for (int32 i = 0; i < Items.Num(); ++i)
+				// Reserve space in the map based on the number of items
+				ArraySerializer.ItemMap.Reset();
+				ArraySerializer.ItemMap.Reserve(Items.Num());
+
+				//copied logic from FFastArrayReplicationFragmentHelper
+				const Type* SrcItems = Items.GetData();
+				for (int32 It = 0, EndIt = Items.Num(); It != EndIt; ++It)
 				{
-					ArraySerializer.ItemMap.Add(Items[i].ReplicationID, i);
+					const Type& Item = SrcItems[It];
+					if (Item.ReplicationID == INDEX_NONE)
+					{
+						continue;
+					}
+					ArraySerializer.ItemMap.Add(Item.ReplicationID, It);
 				}
 			}
 		}
