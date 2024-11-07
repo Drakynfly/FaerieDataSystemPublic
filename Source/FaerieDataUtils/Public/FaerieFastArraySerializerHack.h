@@ -247,9 +247,6 @@ namespace Faerie::Hacks
 				{
 					ArraySerializer.ItemMap.Add(Items[i].ReplicationID, i);
 				}
-
-				// Increment the array replication key indicating we should replicate?
-				ArraySerializer.IncrementArrayReplicationKey();
 			}
 		}
 
