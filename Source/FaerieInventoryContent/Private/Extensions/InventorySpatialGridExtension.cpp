@@ -53,7 +53,6 @@ void FSpatialContent::PostEntryReplicatedAdd(const FSpatialKeyedEntry& Entry)
 	{
 		ChangeListener->PostEntryReplicatedAdd(Entry);
 	}
-	Sort();
 }
 
 void FSpatialContent::PostEntryReplicatedChange(const FSpatialKeyedEntry& Entry) const

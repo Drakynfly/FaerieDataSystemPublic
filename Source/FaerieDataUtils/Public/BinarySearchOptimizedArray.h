@@ -29,8 +29,8 @@ private:
 public:
 	int32 IndexOf(const KeyType Key) const
 	{
-		// Search for Key in the Items. Since those do not share Type, a projection is provided, in the form of the address
-		// of the appropriate member to compare against. Finally, the custom Predicate is provided.
+		checkf(IsSorted(), TEXT("Array got out of order. BinarySearch will not function. Determine why Array is not sorted!"));
+		// Search for Key in the Items. Since those do not share Type, we project by the element key.
 		return Algo::BinarySearchBy(GetArray_Internal(), Key, &TElementType::Key);
 	}
 
@@ -136,5 +136,11 @@ public:
 			return true;
 		}
 		return false;
+	}
+
+	// Debug function for checking if we are out of order
+	bool IsSorted() const
+	{
+		return Algo::IsSortedBy(GetArray_Internal(), &TElementType::Key);
 	}
 };

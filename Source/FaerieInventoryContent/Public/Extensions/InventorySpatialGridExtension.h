@@ -117,9 +117,9 @@ public:
 	bool NetDeltaSerialize(FNetDeltaSerializeInfo& DeltaParms)
 	{
 		const bool Success = FastArrayDeltaSerialize<FSpatialKeyedEntry, FSpatialContent>(Items, DeltaParms, *this);
-		if (DeltaParms.bIsWritingOnClient)
+		if (DeltaParms.Writer)
 		{
-			// Client's need to resort their array, because FastArrayDeltaSerialize uses a RemoveAtSwap internally :(
+			// Clients need to resort their array, because FastArrayDeltaSerialize uses a RemoveAtSwap internally :(
 			Sort();
 		}
 		return Success;

@@ -298,8 +298,6 @@ void FInventoryContent::PostEntryReplicatedAdd(const FKeyedInventoryEntry& Entry
 	{
 		ChangeListener->PostContentAdded(Entry);
 	}
-
-	Sort();
 }
 
 void FInventoryContent::PostEntryReplicatedChange(const FKeyedInventoryEntry& Entry) const
