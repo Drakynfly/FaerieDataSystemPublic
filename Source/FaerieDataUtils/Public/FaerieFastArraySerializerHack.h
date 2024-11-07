@@ -6,6 +6,17 @@
 
 namespace Faerie::Hacks
 {
+	// Does Templated Type have < Operator?
+	template <typename T, typename = void>
+	struct TAutoSortTrait : std::false_type
+	{
+	};
+
+	template <typename T>
+	struct TAutoSortTrait<T, std::void_t<decltype(std::declval<T>() < std::declval<T>())>> : std::true_type
+	{
+	};
+	
 	/** Struct containing common header data that is written / read when serializing Fast Arrays. */
 	struct FFaerieFastArraySerializerHeader
 	{
@@ -235,6 +246,24 @@ namespace Faerie::Hacks
 				// Clear the map now that the indices are all shifted around. This kind of sucks, we could use slightly better data structures here I think.
 				// This will force the ItemMap to be rebuilt for the current Items array
 				ArraySerializer.ItemMap.Empty();
+			}
+			if (Items.Num() > 0)
+			{
+				if constexpr (TAutoSortTrait<Type>{})
+				{
+					// Sort using the type's built-in operator, should just sort with <
+					Items.Sort();
+
+					// Clear and rebuild the ItemMap to correctly map indices to their replication id
+					ArraySerializer.ItemMap.Empty();
+					for (int32 i = 0; i < Items.Num(); ++i)
+					{
+						ArraySerializer.ItemMap.Add(Items[i].ReplicationID, i);
+					}
+
+					// Increment the array replication key indicating we should replicate?
+					ArraySerializer.IncrementArrayReplicationKey();
+				}
 			}
 		}
 
