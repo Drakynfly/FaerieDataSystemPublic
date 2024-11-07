@@ -6,17 +6,6 @@
 
 namespace Faerie::Hacks
 {
-	// Does Templated Type have < Operator?
-	template <typename T, typename = void>
-	struct TAutoSortTrait : std::false_type
-	{
-	};
-
-	template <typename T>
-	struct TAutoSortTrait<T, std::void_t<decltype(std::declval<T>() < std::declval<T>())>> : std::true_type
-	{
-	};
-	
 	/** Struct containing common header data that is written / read when serializing Fast Arrays. */
 	struct FFaerieFastArraySerializerHeader
 	{
@@ -247,23 +236,20 @@ namespace Faerie::Hacks
 				// This will force the ItemMap to be rebuilt for the current Items array
 				ArraySerializer.ItemMap.Empty();
 			}
-			if (Items.Num() > 0)
+			if (Items.Num() > 0 && !IsRunningDedicatedServer())
 			{
-				if constexpr (TAutoSortTrait<Type>{})
+				// Sort using the key
+				Algo::SortBy(Items, &Type::Key);
+
+				// Clear and rebuild the ItemMap to correctly map indices to their replication id
+				ArraySerializer.ItemMap.Empty();
+				for (int32 i = 0; i < Items.Num(); ++i)
 				{
-					// Sort using the type's built-in operator, should just sort with <
-					Items.Sort();
-
-					// Clear and rebuild the ItemMap to correctly map indices to their replication id
-					ArraySerializer.ItemMap.Empty();
-					for (int32 i = 0; i < Items.Num(); ++i)
-					{
-						ArraySerializer.ItemMap.Add(Items[i].ReplicationID, i);
-					}
-
-					// Increment the array replication key indicating we should replicate?
-					ArraySerializer.IncrementArrayReplicationKey();
+					ArraySerializer.ItemMap.Add(Items[i].ReplicationID, i);
 				}
+
+				// Increment the array replication key indicating we should replicate?
+				ArraySerializer.IncrementArrayReplicationKey();
 			}
 		}
 

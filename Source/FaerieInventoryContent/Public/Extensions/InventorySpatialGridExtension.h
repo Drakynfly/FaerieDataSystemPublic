@@ -87,11 +87,6 @@ struct FSpatialKeyedEntry : public FFastArraySerializerItem
 	void PreReplicatedRemove(const FSpatialContent& InArraySerializer);
 	void PostReplicatedAdd(FSpatialContent& InArraySerializer);
 	void PostReplicatedChange(const FSpatialContent& InArraySerializer);
-
-	friend bool operator<(const FSpatialKeyedEntry& A, const FSpatialKeyedEntry& B)
-	{
-		return A.Key < B.Key;
-	}
 };
 
 USTRUCT(BlueprintType)
