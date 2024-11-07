@@ -61,7 +61,13 @@ public:
 
 	bool NetDeltaSerialize(FNetDeltaSerializeInfo& DeltaParms)
 	{
-		return FastArrayDeltaSerialize<FRepDataPerEntryBase, FRepDataFastArray>(Entries, DeltaParms, *this);
+		const bool Success = FastArrayDeltaSerialize<FRepDataPerEntryBase, FRepDataFastArray>(Entries, DeltaParms, *this);
+		if (DeltaParms.bIsWritingOnClient)
+		{
+			// Client's need to resort their array, because FastArrayDeltaSerialize uses a RemoveAtSwap internally :(
+			Sort();
+		}
+		return Success;
 	}
 
 	/*

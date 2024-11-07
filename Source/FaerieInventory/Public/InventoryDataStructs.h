@@ -364,7 +364,13 @@ public:
 
 	bool NetDeltaSerialize(FNetDeltaSerializeInfo& DeltaParms)
 	{
-		return FastArrayDeltaSerialize<FKeyedInventoryEntry, FInventoryContent>(Entries, DeltaParms, *this);
+		const bool Success = FastArrayDeltaSerialize<FKeyedInventoryEntry, FInventoryContent>(Entries, DeltaParms, *this);
+		if (DeltaParms.bIsWritingOnClient)
+		{
+			// Client's need to resort their array, because FastArrayDeltaSerialize uses a RemoveAtSwap internally :(
+			Sort();
+		}
+		return Success;
 	}
 
 	/*

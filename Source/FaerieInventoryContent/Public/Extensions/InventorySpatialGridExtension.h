@@ -114,9 +114,15 @@ public:
 	void PostEntryReplicatedAdd(const FSpatialKeyedEntry& Entry);
 	void PostEntryReplicatedChange(const FSpatialKeyedEntry& Entry) const;
 
-	bool NetDeltaSerialize(FNetDeltaSerializeInfo& DeltaParams)
+	bool NetDeltaSerialize(FNetDeltaSerializeInfo& DeltaParms)
 	{
-		return FastArrayDeltaSerialize<FSpatialKeyedEntry, FSpatialContent>(Items, DeltaParams, *this);
+		const bool Success = FastArrayDeltaSerialize<FSpatialKeyedEntry, FSpatialContent>(Items, DeltaParms, *this);
+		if (DeltaParms.bIsWritingOnClient)
+		{
+			// Client's need to resort their array, because FastArrayDeltaSerialize uses a RemoveAtSwap internally :(
+			Sort();
+		}
+		return Success;
 	}
 
 	void Insert(FInventoryKey Key, const FSpatialItemPlacement& Value);
