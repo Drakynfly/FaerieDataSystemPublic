@@ -29,6 +29,7 @@ struct FAERIEINVENTORYCONTENT_API FFaerieGridShape
 	/* 90 degree rotation */
 	void RotateInline(const FIntPoint& PivotPoint);
 	[[nodiscard]] FFaerieGridShape Rotate(const FIntPoint& PivotPoint) const;
+	[[nodiscard]] FFaerieGridShape Rotate(const float AngleDegrees) const;
 
 	void RotateAroundCenterInline();
 	[[nodiscard]] FFaerieGridShape RotateAroundCenter() const;

@@ -43,6 +43,30 @@ struct FSpatialItemPlacement
 {
 	GENERATED_BODY()
 
+	FSpatialItemPlacement() : ItemShape(FFaerieGridShape::MakeSquare(1)) {}
+
+	explicit FSpatialItemPlacement(const FFaerieGridShape& InShape) 
+		: ItemShape(InShape) {}
+
+	FSpatialItemPlacement(const FFaerieGridShape& InShape,
+		const FIntPoint Origin,
+		const FIntPoint PivotPoint,
+		const ESpatialItemRotation Rotation)
+		: Origin(Origin)
+		, PivotPoint(PivotPoint)
+		, ItemShape(InShape)
+		, Rotation(Rotation) {}
+
+	FSpatialItemPlacement(const FFaerieGridShape& InShape,
+		const FIntPoint Origin,
+		const ESpatialItemRotation Rotation)
+		: Origin(Origin)
+		, ItemShape(InShape)
+		, Rotation(Rotation)
+	{
+		PivotPoint = ItemShape.GetShapeCenter() + Origin;
+	}
+
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "SpatialItemPlacement")
 	FIntPoint Origin = FIntPoint::ZeroValue;
 
@@ -57,7 +81,10 @@ struct FSpatialItemPlacement
 
 	friend bool operator==(const FSpatialItemPlacement& A, const FSpatialItemPlacement& B)
 	{
-		return A.Origin == B.Origin && A.Rotation == B.Rotation;
+		return A.Origin == B.Origin && 
+			   A.PivotPoint == B.PivotPoint && 
+			   A.ItemShape == B.ItemShape && 
+			   A.Rotation == B.Rotation;
 	}
 
 	friend bool operator<(const FSpatialItemPlacement& A, const FSpatialItemPlacement& B)
@@ -189,7 +216,6 @@ private:
 	void RemoveItemsForEntry(const FEntryKey& Key);
 
 public:
-	bool CanAddItemToGrid(const UFaerieShapeToken* ShapeToken, const FIntPoint& Position) const;
 	bool CanAddItemToGrid(const UFaerieShapeToken* ShapeToken) const;
 
 	bool MoveItem(const FInventoryKey& Key, const FIntPoint& SourcePoint, const FIntPoint& TargetPoint);
@@ -197,28 +223,17 @@ public:
 
 
 	// @todo probably split into two functions. one with rotation check, one without. public API probably doesn't need to see the rotation check!
-	bool FitsInGrid(const FFaerieGridShape& Shape, const FIntPoint& Position,
-					ESpatialItemRotation Rotation = ESpatialItemRotation::None,
-					TConstArrayView<FInventoryKey> ExcludedKeys = {}) const;
+	bool FitsInGrid(const FSpatialItemPlacement& PlacementData, TConstArrayView<FInventoryKey> ExcludedKeys = {}) const;
 
-	TOptional<TTuple<FIntPoint, ESpatialItemRotation>> GetFirstEmptyLocation(const FFaerieGridShape& InShape) const;
-
-	FSpatialEntryChangedNative& GetOnSpatialEntryChanged() { return SpatialEntryChangedDelegateNative; }
-	FGridSizeChangedNative& GetOnGridSizeChanged() { return GridSizeChangedDelegateNative; }
-
-	UFUNCTION(BlueprintCallable, Category = "Grid")
-	FFaerieGridShape GetEntryShape(const FInventoryKey& Key) const;
-
+	void FindFirstEmptyLocation(FSpatialItemPlacement& OutPlacementData) const;
 	UFUNCTION(BlueprintCallable, Category = "Grid")
 	FSpatialItemPlacement GetEntryPlacementData(const FInventoryKey& Key) const;
-
-	// @todo Drakyn: move static
-	UFUNCTION(BlueprintCallable, Category="Shape Manipulation")
-	static FFaerieGridShape RotateShape(FFaerieGridShape InShape, const ESpatialItemRotation Rotation);
-
+	
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Grid")
 	void SetGridSize(FIntPoint NewGridSize);
 
+	FSpatialEntryChangedNative& GetOnSpatialEntryChanged() { return SpatialEntryChangedDelegateNative; }
+	FGridSizeChangedNative& GetOnGridSizeChanged() { return GridSizeChangedDelegateNative; }
 protected:
 	FSpatialKeyedEntry* FindItemByKey(const FInventoryKey& Key);
 
@@ -233,17 +248,16 @@ protected:
 
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FSpatialEntryChanged SpatialEntryChangedDelegate;
-
+	
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FGridSizeChanged GridSizeChangedDelegate;
-
-	// @todo should default to 10, 10
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, ReplicatedUsing = "OnRep_GridSize", Category = "Config")
-	FIntPoint GridSize = FIntPoint(10, 40);
+	FIntPoint GridSize = FIntPoint(10, 10);
 
 	UPROPERTY(EditAnywhere, Replicated, Category = "Data")
-	FSpatialContent OccupiedSlots;
-
+	FSpatialContent SpatialEntries;
+	TBitArray<> OccupiedCells;
 private:
 	FSpatialEntryChangedNative SpatialEntryChangedDelegateNative;
 	FGridSizeChangedNative GridSizeChangedDelegateNative;
