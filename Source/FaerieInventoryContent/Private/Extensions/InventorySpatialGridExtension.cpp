@@ -431,7 +431,24 @@ void UInventorySpatialGridExtension::SetGridSize(const FIntPoint NewGridSize)
 {
 	if (GridSize != NewGridSize)
 	{
+		const FIntPoint OldSize = GridSize;
+		TBitArray<> OldOccupied = OccupiedCells;
+        
+		// Resize to new dimensions
 		GridSize = NewGridSize;
+		OccupiedCells.Init(false, GridSize.X * GridSize.Y);
+        
+		// Copy over existing data that's still in bounds
+		for(int32 y = 0; y < OldSize.Y; y++)
+		{
+			for(int32 x = 0; x < OldSize.X; x++)
+			{
+				const int32 OldIndex = x + y * OldSize.X;
+				const int32 NewIndex = x + y * NewGridSize.X;
+				OccupiedCells[NewIndex] = OldOccupied[OldIndex];
+			}
+		}
+        
 		MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, GridSize, this);
 	}
 }
