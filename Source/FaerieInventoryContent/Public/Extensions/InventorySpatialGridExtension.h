@@ -49,17 +49,17 @@ struct FSpatialItemPlacement
 		: ItemShape(InShape) {}
 
 	FSpatialItemPlacement(const FFaerieGridShape& InShape,
-		const FIntPoint Origin,
-		const FIntPoint PivotPoint,
-		const ESpatialItemRotation Rotation)
+						const FIntPoint Origin,
+						const FIntPoint PivotPoint,
+						const ESpatialItemRotation Rotation)
 		: Origin(Origin)
 		, PivotPoint(PivotPoint)
 		, ItemShape(InShape)
 		, Rotation(Rotation) {}
 
 	FSpatialItemPlacement(const FFaerieGridShape& InShape,
-		const FIntPoint Origin,
-		const ESpatialItemRotation Rotation)
+						const FIntPoint Origin,
+						const ESpatialItemRotation Rotation)
 		: Origin(Origin)
 		, ItemShape(InShape)
 		, Rotation(Rotation)
@@ -82,9 +82,9 @@ struct FSpatialItemPlacement
 	friend bool operator==(const FSpatialItemPlacement& A, const FSpatialItemPlacement& B)
 	{
 		return A.Origin == B.Origin && 
-			   A.PivotPoint == B.PivotPoint && 
-			   A.ItemShape == B.ItemShape && 
-			   A.Rotation == B.Rotation;
+			A.PivotPoint == B.PivotPoint && 
+			A.ItemShape == B.ItemShape && 
+			A.Rotation == B.Rotation;
 	}
 
 	friend bool operator<(const FSpatialItemPlacement& A, const FSpatialItemPlacement& B)
