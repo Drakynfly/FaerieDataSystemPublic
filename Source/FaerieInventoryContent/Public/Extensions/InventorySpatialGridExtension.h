@@ -248,10 +248,10 @@ protected:
 
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FSpatialEntryChanged SpatialEntryChangedDelegate;
-	
+
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FGridSizeChanged GridSizeChangedDelegate;
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, ReplicatedUsing = "OnRep_GridSize", Category = "Config")
 	FIntPoint GridSize = FIntPoint(10, 10);
 
