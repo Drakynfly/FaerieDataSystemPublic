@@ -4,6 +4,7 @@
 #include "InventoryDataStructs.h"
 #include "FaerieItemStorage.h"
 #include "HAL/LowLevelMemStats.h"
+#include "Tokens/FaerieStackLimiterToken.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(InventoryDataStructs)
 
@@ -277,10 +278,10 @@ void FInventoryContent::Remove(const FEntryKey Key)
 
 FInventoryContent::FScopedItemHandle::~FScopedItemHandle()
 {
-	// Notify owning server of this change.
+	// Propagate change to client
 	Source.MarkItemDirty(Handle);
 
-	// Notify clients of this change.
+	// Broadcast change on server
 	Source.PostEntryReplicatedChange(Handle);
 }
 

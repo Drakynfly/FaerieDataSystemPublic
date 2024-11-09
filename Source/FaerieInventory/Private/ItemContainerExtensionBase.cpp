@@ -3,14 +3,37 @@
 #include "ItemContainerExtensionBase.h"
 #include "FaerieItemContainerBase.h"
 #include "ItemContainerEvent.h"
+
 #if WITH_EDITOR
 #include "Misc/DataValidation.h"
 #endif
+
 #include "Net/UnrealNetwork.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(ItemContainerExtensionBase)
 
 #define LOCTEXT_NAMESPACE "ItemContainerExtensionGroup"
+
+void UItemContainerExtensionBase::PostDuplicate(const EDuplicateMode::Type DuplicateMode)
+{
+	Super::PostDuplicate(DuplicateMode);
+	if (DuplicateMode == EDuplicateMode::PIE) return;
+
+	// Make a new identifier when duplicated
+	SetIdentifier();
+}
+
+void UItemContainerExtensionBase::SetIdentifier(const FGuid* GuidToUse)
+{
+	if (GuidToUse)
+	{
+		Identifier = *GuidToUse;
+	}
+	else
+	{
+		Identifier = FGuid::NewGuid();
+	}
+}
 
 void UItemContainerExtensionGroup::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -93,7 +116,8 @@ EEventExtensionResponse UItemContainerExtensionGroup::AllowsAddition(const UFaer
 	{
 		if (!ensure(IsValid(Extension))) continue;
 
-		switch (Extension->AllowsAddition(Container, Stack)) {
+		switch (Extension->AllowsAddition(Container, Stack))
+		{
 		case EEventExtensionResponse::NoExplicitResponse:
 			break;
 		case EEventExtensionResponse::Allowed:
@@ -139,7 +163,8 @@ EEventExtensionResponse UItemContainerExtensionGroup::AllowsRemoval(const UFaeri
 	{
 		if (!ensure(IsValid(Extension))) continue;
 
-		switch (Extension->AllowsRemoval(Container, Key, Reason)) {
+		switch (Extension->AllowsRemoval(Container, Key, Reason))
+		{
 		case EEventExtensionResponse::NoExplicitResponse:
 			break;
 		case EEventExtensionResponse::Allowed:
@@ -188,14 +213,21 @@ void UItemContainerExtensionGroup::ForEachExtension(const TFunctionRef<void(UIte
 {
 	for (auto&& Extension : Extensions)
 	{
-		if (!ensure(IsValid(Extension))) continue;
+		if (!ensureMsgf(IsValid(Extension), TEXT("Invalid Extension while iterating. Investigate!"))) continue;
 		Func(Extension);
 	}
 }
 
 bool UItemContainerExtensionGroup::AddExtension(UItemContainerExtensionBase* Extension)
 {
+	checkf(Extension->GetIdentifier().IsValid(),
+		TEXT("Extension with invalid Identifier. Setup code-path with SetIdentifier called before AddExtension"))
 	if (!ensure(IsValid(Extension))) return false;
+
+	if (!ensureMsgf(!Extensions.Contains(Extension), TEXT("Trying to add Extension twice. This is bad. Track down why!")))
+	{
+		return false;
+	}
 
 	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, Extensions, this);
 	Extensions.Add(Extension);

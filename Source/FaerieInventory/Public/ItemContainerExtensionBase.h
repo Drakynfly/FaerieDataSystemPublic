@@ -39,6 +39,13 @@ class FAERIEINVENTORY_API UItemContainerExtensionBase : public UNetSupportedObje
 	friend class UFaerieItemContainerBase;
 
 protected:
+	//~ UObject
+	virtual void PostDuplicate(EDuplicateMode::Type DuplicateMode) override;
+	//~ UObject
+
+	virtual FInstancedStruct MakeSaveData(const UFaerieItemContainerBase* Container) { return {}; }
+	virtual void LoadSaveData(const UFaerieItemContainerBase* Container, const FInstancedStruct& SaveData) {}
+
 	/* Called at begin play or when the extension is created during runtime */
 	virtual void InitializeExtension(const UFaerieItemContainerBase* Container) {}
 	virtual void DeinitializeExtension(const UFaerieItemContainerBase* Container) {}
@@ -60,6 +67,15 @@ protected:
 	virtual void PostRemoval(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) {}
 
 	virtual void PostEntryChanged(const UFaerieItemContainerBase* Container, const FEntryKey Key) {}
+
+public:
+	void SetIdentifier(const FGuid* GuidToUse = nullptr);
+
+	FGuid GetIdentifier() const { return Identifier; }
+
+protected:
+	UPROPERTY(BlueprintReadOnly, Category = "Extension")
+	FGuid Identifier;
 };
 
 /*
@@ -69,6 +85,8 @@ UCLASS()
 class FAERIEINVENTORY_API UItemContainerExtensionGroup final : public UItemContainerExtensionBase
 {
 	GENERATED_BODY()
+
+	friend class UFaerieItemContainerBase;
 
 public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -121,10 +139,10 @@ public:
 
 private:
 	// Containers pointing to this group
-	UPROPERTY()
+	UPROPERTY(Transient)
 	TSet<TWeakObjectPtr<const UFaerieItemContainerBase>> Containers;
 
 	// Subobjects responsible for adding to or customizing container behavior.
-	UPROPERTY(EditAnywhere, Replicated, Instanced, NoClear, Category = "ExtensionGroup")
+	UPROPERTY(EditAnywhere, Replicated, Instanced, NoClear, Transient, Category = "ExtensionGroup")
 	TArray<TObjectPtr<UItemContainerExtensionBase>> Extensions;
 };

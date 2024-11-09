@@ -3,10 +3,7 @@
 #pragma once
 
 #include "FaerieItemToken.h"
-#include "InventoryDataStructs.h"
-
 #include "FaerieStackLimiterToken.generated.h"
-
 
 UCLASS()
 class FAERIEINVENTORY_API UFaerieStackLimiterToken : public UFaerieItemToken

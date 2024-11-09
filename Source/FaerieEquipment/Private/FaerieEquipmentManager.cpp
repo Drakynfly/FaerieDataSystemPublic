@@ -18,6 +18,7 @@ UFaerieEquipmentManager::UFaerieEquipmentManager()
 	SetIsReplicatedByDefault(true);
 	bReplicateUsingRegisteredSubObjectList = true;
 	ExtensionGroup = CreateDefaultSubobject<UItemContainerExtensionGroup>("ExtensionGroup");
+	ExtensionGroup->SetIdentifier();
 }
 
 void UFaerieEquipmentManager::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -225,8 +226,8 @@ UItemContainerExtensionBase* UFaerieEquipmentManager::AddExtension(const TSubcla
 		return nullptr;
 	}
 
-	UItemContainerExtensionBase* NewExtension = NewObject<UItemContainerExtensionBase>(this, ExtensionClass);
-
+	UItemContainerExtensionBase* NewExtension = NewObject<UItemContainerExtensionBase>(ExtensionGroup, ExtensionClass);
+	NewExtension->SetIdentifier();
 	ExtensionGroup->AddExtension(NewExtension);
 	AddReplicatedSubObject(NewExtension);
 
@@ -271,7 +272,7 @@ UItemContainerExtensionBase* UFaerieEquipmentManager::AddExtensionToSlot(const F
 		return nullptr;
 	}
 
-	UItemContainerExtensionBase* NewExtension = NewObject<UItemContainerExtensionBase>(this, ExtensionClass);
+	UItemContainerExtensionBase* NewExtension = NewObject<UItemContainerExtensionBase>(Slot, ExtensionClass);
 
 	AddReplicatedSubObject(NewExtension);
 	Slot->AddExtension(NewExtension);

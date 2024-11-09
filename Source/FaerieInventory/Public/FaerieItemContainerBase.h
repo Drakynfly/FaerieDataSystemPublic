@@ -28,11 +28,24 @@ public:
 	virtual bool Possess(FFaerieItemStack Stack) override;
 	//~ IFaerieItemOwnerInterface
 
+
+	/**------------------------------*/
+	/*		 SAVE DATA API			 */
+	/**------------------------------*/
 public:
+	virtual FFaerieContainerSaveData MakeSaveData() const PURE_VIRTUAL(UFaerieItemContainerBase::MakeSaveData, return {}; )
+	virtual void LoadSaveData(const FFaerieContainerSaveData& SaveData) PURE_VIRTUAL(UFaerieItemContainerBase::SaveData, )
+
+protected:
+	void RavelExtensionData(TMap<FGuid, FInstancedStruct>& Data) const;
+	void UnravelExtensionData(const TMap<FGuid, FInstancedStruct>& Data);
+
+	void TryApplyUnclaimedSaveData(UItemContainerExtensionBase* Extension);
+
 	/**------------------------------*/
 	/*		 ITEM ENTRY API			 */
 	/**------------------------------*/
-
+public:
 	virtual bool IsValidKey(FEntryKey Key) const PURE_VIRTUAL(UFaerieItemContainerBase::IsValidKey, return false; )
 
 	// Get a view of an entry
@@ -93,6 +106,10 @@ protected:
 	// Subobject responsible for adding to or customizing container behavior.
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated)
 	TObjectPtr<class UItemContainerExtensionGroup> Extensions;
+
+	// Save data for extensions that did not exist on us during unraveling.
+	UPROPERTY(Transient)
+	TMap<FGuid, FInstancedStruct> UnclaimedExtensionData;
 
 //private:
 	// Key tracking starts at 100.

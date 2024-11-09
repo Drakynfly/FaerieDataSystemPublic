@@ -148,7 +148,7 @@ struct FAERIEINVENTORY_API FKeyedStack
 
 
 /**
- * An entry key and stack key pair. This is a true "key" to a exact inventory stack as seen by an external interface.
+ * An entry key and stack key pair. This is a true "key" to an exact inventory stack as seen by an external interface.
  */
 USTRUCT(BlueprintType)
 struct FInventoryKey
@@ -215,8 +215,6 @@ struct FAERIEINVENTORY_API FInventoryEntry
 {
 	GENERATED_BODY()
 
-	FInventoryEntry() = default;
-
 	// Actual data for this entry.
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "InventoryEntry")
 	TObjectPtr<UFaerieItem> ItemObject;
@@ -230,6 +228,7 @@ struct FAERIEINVENTORY_API FInventoryEntry
 
 private:
 	// Internal count of how many stacks we've made. Used to track key creation. Only valid on the server.
+	UPROPERTY(NotReplicated)
 	int32 StackCount = 0;
 
 public:
@@ -308,7 +307,7 @@ private:
 	TArray<FKeyedInventoryEntry>& GetArray() { return Entries; }
 
 	/** Owning storage to send Fast Array callbacks to */
-	UPROPERTY()
+	UPROPERTY(Transient)
 	TWeakObjectPtr<UFaerieItemStorage> ChangeListener;
 
 public:
@@ -394,7 +393,7 @@ struct TStructOpsTypeTraits<FInventoryContent> : public TStructOpsTypeTraitsBase
 };
 
 /**
- * A item storage object and a key to an element inside.
+ * An item storage object and a key to an element inside.
  */
 USTRUCT(BlueprintType)
 struct FAERIEINVENTORY_API FInventoryKeyHandle
@@ -412,3 +411,18 @@ namespace Faerie::Inventory
 {
 	FAERIEINVENTORY_API void BreakKeyedEntriesIntoInventoryKeys(const TArray<FKeyedInventoryEntry>& Entries, TArray<FInventoryKey>& OutKeys);
 }
+
+/**
+ * Struct to hold the data to save/load an inventory state from.
+ */
+USTRUCT()
+struct FAERIEINVENTORY_API FFaerieContainerSaveData
+{
+	GENERATED_BODY()
+
+	UPROPERTY(SaveGame)
+	FInstancedStruct ItemData;
+
+	UPROPERTY(SaveGame)
+	TMap<FGuid, FInstancedStruct> ExtensionData;
+};

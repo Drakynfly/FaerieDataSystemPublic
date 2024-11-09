@@ -1,6 +1,7 @@
 ﻿// Copyright Guy (Drakynfly) Lundvall. All Rights Reserved.
 
 #include "FaerieItemStorage.h"
+#include "FaerieInventorySettings.h"
 
 #include "FaerieItem.h"
 #include "InventoryStorageProxy.h"
@@ -8,6 +9,8 @@
 #include "Net/UnrealNetwork.h"
 #include "Tokens/FaerieItemStorageToken.h"
 #include "Tokens/FaerieStackLimiterToken.h"
+
+#include "FlakesStructs.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FaerieItemStorage)
 
@@ -42,6 +45,32 @@ void UFaerieItemStorage::PostLoad()
 	// Determine the next valid key to use.
 	NextKeyInt = !EntryMap.IsEmpty() ? EntryMap.GetKeyAt(EntryMap.Num()-1).Value()+1 : 100;
 	// See Footnote1
+}
+
+FFaerieContainerSaveData UFaerieItemStorage::MakeSaveData() const
+{
+	ensureMsgf(GetDefault<UFaerieInventorySettings>()->ContainerMutableBehavior == EFDSContainerOwnershipBehavior::Rename,
+		TEXT("Flakes relies on ownership of sub-objects. Rename must be enabled! (ProjectSettings -> Faerie Inventory -> Container Mutable Behavior)"));
+
+	FFaerieContainerSaveData SaveData;
+	SaveData.ItemData = FInstancedStruct::Make(Flakes::CreateFlake(this));
+	RavelExtensionData(SaveData.ExtensionData);
+	return SaveData;
+}
+
+void UFaerieItemStorage::LoadSaveData(const FFaerieContainerSaveData& SaveData)
+{
+	Flakes::WriteObject(this, SaveData.ItemData.Get<FFlake>());
+
+	EntryMap.MarkArrayDirty();
+	EntryMap.ChangeListener = this;
+
+	// Determine the next valid key to use.
+	NextKeyInt = !EntryMap.IsEmpty() ? EntryMap.GetKeyAt(EntryMap.Num()-1).Value()+1 : 100;
+
+	//@todo broadcast full refresh event?
+
+	UnravelExtensionData(SaveData.ExtensionData);
 }
 
 bool UFaerieItemStorage::IsValidKey(const FEntryKey Key) const
@@ -172,6 +201,7 @@ void UFaerieItemStorage::PreContentRemoved(const FKeyedInventoryEntry& Entry)
 	OnKeyRemoved.Broadcast(this, Entry.Key);
 
 	// Cleanup local views.
+	EntryProxies.Remove(Entry.Key);
 	for (auto&& Stack : Entry.Value.Stacks)
 	{
 		TWeakObjectPtr<UInventoryStackProxy> Local;
@@ -912,6 +942,4 @@ void UFaerieItemStorage::Dump(UFaerieItemStorage* ToStorage)
  * and therefor no entries exist, making 100 a valid starting point again, *except* that other entities might still
  * be holding onto FEntryKeys, which could be cached in at some point later when potentially the entry is once more
  * valid, but with a completely different item. So during runtime, the Key must always increment.
- * The exception to this is a full shutdown & reload. FEntryKeys should not *ever* be serialized to disk, so during
- * PostLoad it is completely fine to reset the key to 100 if EntryMap is empty.
  */

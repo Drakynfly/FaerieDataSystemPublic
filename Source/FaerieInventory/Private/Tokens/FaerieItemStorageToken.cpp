@@ -61,6 +61,7 @@ UFaerieItemStorageToken::UFaerieItemStorageToken()
 {
 	ItemContainer = CreateDefaultSubobject<UFaerieItemStorage>(FName{TEXTVIEW("ItemContainer")});
 	Extensions = CreateDefaultSubobject<UItemContainerExtensionGroup>(FName{TEXTVIEW("Extensions")});
+	Extensions->SetIdentifier();
 	ItemContainer->AddExtension(Extensions);
 }
 

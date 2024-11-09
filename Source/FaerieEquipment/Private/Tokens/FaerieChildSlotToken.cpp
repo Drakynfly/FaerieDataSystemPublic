@@ -15,6 +15,7 @@ UFaerieChildSlotToken::UFaerieChildSlotToken()
 {
 	ItemContainer = CreateDefaultSubobject<UFaerieEquipmentSlot>(FName{TEXTVIEW("ItemContainer")});
 	Extensions = CreateDefaultSubobject<UItemContainerExtensionGroup>(FName{TEXTVIEW("Extensions")});
+	Extensions->SetIdentifier();
 	ItemContainer->AddExtension(Extensions);
 }
 

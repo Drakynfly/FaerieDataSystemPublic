@@ -33,6 +33,7 @@ struct FRepDataPerEntryBase : public FFastArraySerializerItem
 };
 
 class URepDataArrayWrapper;
+class UInventoryReplicatedDataExtensionBase;
 
 USTRUCT()
 struct FRepDataFastArray : public FFastArraySerializer,
@@ -42,6 +43,7 @@ struct FRepDataFastArray : public FFastArraySerializer,
 
 	friend TBinarySearchOptimizedArray;
 	friend URepDataArrayWrapper;
+	friend UInventoryReplicatedDataExtensionBase;
 
 private:
 	UPROPERTY()
@@ -90,8 +92,6 @@ struct TStructOpsTypeTraits<FRepDataFastArray> : public TStructOpsTypeTraitsBase
 	};
 };
 
-class UInventoryReplicatedDataExtensionBase;
-
 // A wrapper around a FRepDataFastArray allowing us to replicate it as a FastArray.
 UCLASS(Within = InventoryReplicatedDataExtensionBase)
 class URepDataArrayWrapper : public UNetSupportedObject
@@ -134,12 +134,17 @@ class FAERIEINVENTORY_API UInventoryReplicatedDataExtensionBase : public UItemCo
 public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
+	//~ UItemContainerExtensionBase
+	virtual FInstancedStruct MakeSaveData(const UFaerieItemContainerBase* Container) override;
+	virtual void LoadSaveData(const UFaerieItemContainerBase* Container, const FInstancedStruct& SaveData) override;
 	virtual void InitializeExtension(const UFaerieItemContainerBase* Container) override;
 	virtual void DeinitializeExtension(const UFaerieItemContainerBase* Container) override;
 	virtual void PreRemoval(const UFaerieItemContainerBase* Container, const FEntryKey Key, const int32 Removal) override;
+	//~ UItemContainerExtensionBase
 
 	// Children must implement this. It gives the struct type instanced per item.
 	virtual UScriptStruct* GetDataScriptStruct() const PURE_VIRTUAL(UInventoryReplicatedDataExtensionBase::GetDataScriptStruct, return nullptr; )
+	virtual bool SaveRepDataArray() const { return false; }
 
 private:
 	virtual void PreEntryDataRemoved(const UFaerieItemContainerBase* Container, const FRepDataPerEntryBase& Data) {}

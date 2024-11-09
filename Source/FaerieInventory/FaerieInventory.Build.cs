@@ -16,6 +16,7 @@ public class FaerieInventory : ModuleRules
             {
                 "Core",
                 "CoreUObject",
+                "DeveloperSettings",
                 "Engine",
                 "GameplayTags",
                 "NetCore",
@@ -29,7 +30,8 @@ public class FaerieInventory : ModuleRules
             new []
             {
                 "FaerieDataUtils",
-                "FaerieItemData"
+                "FaerieItemData",
+                "Flakes"
             });
     }
 }

@@ -52,6 +52,7 @@ protected:
 
 	//~ UInventoryReplicatedDataExtensionBase
 	virtual UScriptStruct* GetDataScriptStruct() const override;
+	virtual bool SaveRepDataArray() const override { return true; }
 	//~ UInventoryReplicatedDataExtensionBase
 
 public:

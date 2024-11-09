@@ -104,6 +104,10 @@
 			"Enabled": true
 		},
 		{
+			"Name": "Flakes",
+			"Enabled": true
+		},
+		{
 			"Name": "Squirrel",
 			"Enabled": true
 		}

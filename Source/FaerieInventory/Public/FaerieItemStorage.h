@@ -69,6 +69,8 @@ public:
 	//~ UObject
 
 	//~ UFaerieItemContainerBase
+	virtual FFaerieContainerSaveData MakeSaveData() const override;
+	virtual void LoadSaveData(const FFaerieContainerSaveData& SaveData) override;
 	virtual bool IsValidKey(FEntryKey Key) const override;
 	virtual FFaerieItemStackView View(FEntryKey Key) const override;
 	virtual FFaerieItemProxy Proxy(FEntryKey Key) const override;
@@ -292,7 +294,7 @@ protected:
 	/**-------------*/
 private:
 	// The internal map containing the contents of the storage.
-	UPROPERTY(Replicated, SaveGame)
+	UPROPERTY(Replicated)
 	FInventoryContent EntryMap;
 
 	// These properties are transient, mainly so that editor code that calls accesses them don't need to worry about Caches

@@ -131,6 +131,28 @@ void UInventoryReplicatedDataExtensionBase::GetLifetimeReplicatedProps(TArray<FL
 	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, PerContainerData, SharedParams);
 }
 
+FInstancedStruct UInventoryReplicatedDataExtensionBase::MakeSaveData(const UFaerieItemContainerBase* Container)
+{
+	if (SaveRepDataArray())
+	{
+		return FInstancedStruct(FindFastArrayForContainer(Container));
+	}
+
+	return FInstancedStruct();
+}
+
+void UInventoryReplicatedDataExtensionBase::LoadSaveData(const UFaerieItemContainerBase* Container,
+	const FInstancedStruct& SaveData)
+{
+	if (const FStructView ContainerData = FindFastArrayForContainer(Container);
+		ContainerData.IsValid())
+	{
+		FRepDataFastArray& Ref = ContainerData.Get<FRepDataFastArray>();
+		Ref.Entries = SaveData.Get<FRepDataFastArray>().Entries;
+		Ref.MarkArrayDirty();
+	}
+}
+
 void UInventoryReplicatedDataExtensionBase::InitializeExtension(const UFaerieItemContainerBase* Container)
 {
 	Super::InitializeExtension(Container);
