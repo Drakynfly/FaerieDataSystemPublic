@@ -201,6 +201,15 @@ void UInventorySpatialGridExtension::PostRemoval(const UFaerieItemContainerBase*
 
 void UInventorySpatialGridExtension::PreEntryReplicatedRemove(const FSpatialKeyedEntry& Entry)
 {
+	//This is to account for removals through proxies that dont directly interface with the grid
+	FFaerieGridShape Temp = Entry.Value.ItemShape;
+	Temp = Temp.Rotate(static_cast<float>(Entry.Value.Rotation) * 90.f);
+	for(auto& Point : Temp.Points)
+	{
+		const FIntPoint OldPoint = Entry.Value.Origin + Point;
+		const int32 OldBitGridIndex = OldPoint.Y * GridSize.X + OldPoint.X;
+		OccupiedCells[OldBitGridIndex] = false;
+	}
 	SpatialEntryChangedDelegateNative.Broadcast(Entry.Key, ESpatialEventType::ItemRemoved);
 	SpatialEntryChangedDelegate.Broadcast(Entry.Key, ESpatialEventType::ItemRemoved);
 }

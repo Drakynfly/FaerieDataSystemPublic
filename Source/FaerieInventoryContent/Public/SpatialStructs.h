@@ -20,7 +20,8 @@ struct FAERIEINVENTORYCONTENT_API FFaerieGridShape
 	static FFaerieGridShape MakeRect(int32 Height, int32 Width);
 
 	FIntPoint GetSize() const;
-	FIntPoint GetShapeCenter();
+	FIntPoint GetShapeCenter() const;
+	FIntPoint GetShapeAverageCenter() const;
 	bool IsSymmetrical() const;
 
 	void TranslateInline(const FIntPoint& Position);

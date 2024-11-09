@@ -35,7 +35,12 @@ FIntPoint FFaerieGridShape::GetSize() const
 	return Size;
 }
 
-FIntPoint FFaerieGridShape::GetShapeCenter()
+FIntPoint FFaerieGridShape::GetShapeCenter() const
+{
+	return GetSize() / 2;
+}
+
+FIntPoint FFaerieGridShape::GetShapeAverageCenter() const
 {
 	if (Points.IsEmpty())
 	{
