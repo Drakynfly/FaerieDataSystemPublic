@@ -106,7 +106,7 @@ protected:
  * An implementation of UInventoryEntryStorageProxy that reads from an inventory stack inside an item storage.
  */
 UCLASS(meta = (DontUseGenericSpawnObject = "true"))
-class UInventoryStackProxy : public UInventoryEntryStorageProxy
+class FAERIEINVENTORY_API UInventoryStackProxy : public UInventoryEntryStorageProxy
 {
 	GENERATED_BODY()
 

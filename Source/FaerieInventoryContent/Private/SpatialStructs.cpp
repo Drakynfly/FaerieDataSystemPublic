@@ -35,7 +35,12 @@ FIntPoint FFaerieGridShape::GetSize() const
 	return Size;
 }
 
-FIntPoint FFaerieGridShape::GetShapeCenter()
+FIntPoint FFaerieGridShape::GetShapeCenter() const
+{
+	return GetSize() / 2;
+}
+
+FIntPoint FFaerieGridShape::GetShapeAverageCenter() const
 {
 	if (Points.IsEmpty())
 	{
@@ -63,6 +68,7 @@ bool FFaerieGridShape::IsSymmetrical() const
 	//create shape copy to compare against
 	FFaerieGridShape ShapeCopy = *this;
 	ShapeCopy.RotateInline(ShapeCopy.GetShapeCenter());
+	ShapeCopy.NormalizeInline();
 	// Compare the shapes
 	return ShapeCopy == *this;
 }
@@ -104,6 +110,13 @@ FFaerieGridShape FFaerieGridShape::Rotate(const FIntPoint& PivotPoint) const
 {
 	FFaerieGridShape NewShape = *this;
 	NewShape.RotateInline(PivotPoint);
+	return NewShape;
+}
+
+FFaerieGridShape FFaerieGridShape::Rotate(const float AngleDegrees) const
+{
+	FFaerieGridShape NewShape = *this;
+	NewShape.RotateAboutAngle(AngleDegrees);
 	return NewShape;
 }
 
