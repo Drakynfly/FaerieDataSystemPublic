@@ -109,12 +109,6 @@ void UFaerieItemContainerBase::TryApplyUnclaimedSaveData(UItemContainerExtension
 	}
 }
 
-FEntryKey UFaerieItemContainerBase::NextKey()
-{
-	// Create a new key from each integer in order. Guarantees unique keys generated in a binary searchable order.
-	return FEntryKey(NextKeyInt++);
-}
-
 void UFaerieItemContainerBase::OnItemMutated(const UFaerieItem* Item, const UFaerieItemToken* Token)
 {
 }
@@ -153,7 +147,7 @@ void UFaerieItemContainerBase::TakeOwnership(UFaerieItem* Item)
 		checkfSlow(!Item->GetNotifyOwnerOfSelfMutation().IsBound(), TEXT("This should always have been unbound by the previous owner!"))
 		Item->GetNotifyOwnerOfSelfMutation().BindUObject(this, &ThisClass::OnItemMutated);
 
-		if (GetDefault<UFaerieInventorySettings>()->ContainerMutableBehavior == EFDSContainerOwnershipBehavior::Rename)
+		if (GetDefault<UFaerieInventorySettings>()->ContainerMutableBehavior == EFaerieContainerOwnershipBehavior::Rename)
 		{
 			Item->Rename(nullptr, this, REN_ForceNoResetLoaders | REN_DontCreateRedirectors);
 		}

@@ -143,6 +143,6 @@ private:
 	TSet<TWeakObjectPtr<const UFaerieItemContainerBase>> Containers;
 
 	// Subobjects responsible for adding to or customizing container behavior.
-	UPROPERTY(EditAnywhere, Replicated, Instanced, NoClear, Transient, Category = "ExtensionGroup")
+	UPROPERTY(EditAnywhere, Replicated, Instanced, NoClear, Category = "ExtensionGroup")
 	TArray<TObjectPtr<UItemContainerExtensionBase>> Extensions;
 };

@@ -38,8 +38,8 @@ void FWeightedDropCustomization::CustomizeHeader(const TSharedRef<IPropertyHandl
             SNew(SHorizontalBox)
             + SHorizontalBox::Slot()
                 .HAlign(HAlign_Fill).AutoWidth()
-                .MaxWidth(50)
-                .Padding(10)
+                .MaxWidth(60.f)
+                .Padding(10.f)
                 [
                     SNew(SVerticalBox)
                     + SVerticalBox::Slot()
@@ -54,17 +54,18 @@ void FWeightedDropCustomization::CustomizeHeader(const TSharedRef<IPropertyHandl
                     [
                         SNew(STextBlock)
                         .Justification(ETextJustify::Right)
+                        .ToolTipText(LOCTEXT("PercentageTooltip", "Chance percentage for this drop to be chosen"))
                         .Text_Lambda([PercentageHandle]
                         {
                             float Percentage;
                             PercentageHandle->GetValue(Percentage);
-                            return FText::FromString(FString::Printf(TEXT("%.2f"), Percentage));
+                            return FText::FromString(FString::Printf(TEXT("%.2f%%"), Percentage));
                         })
                     ]
                 ]
             + SHorizontalBox::Slot()
                 .HAlign(HAlign_Fill)
-                .MaxWidth(400)
+                .MaxWidth(400.f)
                 [
                     ObjectHandle->CreatePropertyValueWidget()
                 ]

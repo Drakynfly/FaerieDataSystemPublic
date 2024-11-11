@@ -61,7 +61,7 @@ struct FAERIEITEMDATA_API FFaerieItemProxy
 	FFaerieItemProxy(const IFaerieItemDataProxy* Interface)
 	  : Proxy(const_cast<IFaerieItemDataProxy*>(Interface)) {}
 
-	FFaerieItemProxy(const TScriptInterface<IFaerieItemDataProxy> Interface)
+	FFaerieItemProxy(const TScriptInterface<IFaerieItemDataProxy>& Interface)
 	  : Proxy(Interface.GetInterface()) {}
 
 private:

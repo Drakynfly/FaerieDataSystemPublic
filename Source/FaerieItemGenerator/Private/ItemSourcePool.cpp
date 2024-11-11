@@ -181,3 +181,9 @@ FTableDrop UItemSourcePool::GenerateDrop(const double RanWeight) const
 {
 	return DropPool.GenerateDrop(RanWeight);
 }
+
+FTableDrop UItemSourcePool::GenerateDrop_Seeded(USquirrel* Squirrel) const
+{
+	if (!ensure(IsValid(Squirrel))) return FTableDrop();
+	return DropPool.GenerateDrop(Squirrel->NextReal());
+}

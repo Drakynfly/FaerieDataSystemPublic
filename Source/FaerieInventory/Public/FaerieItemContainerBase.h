@@ -60,9 +60,6 @@ public:
 	// Get the stack for a key.
 	virtual int32 GetStack(FEntryKey Key) const PURE_VIRTUAL(UFaerieItemContainerBase::GetStack, return 0; )
 
-	// Creates the next unique key for an entry.
-	FEntryKey NextKey();
-
 protected:
 	virtual void OnItemMutated(const UFaerieItem* Item, const UFaerieItemToken* Token);
 
@@ -111,7 +108,5 @@ protected:
 	UPROPERTY(Transient)
 	TMap<FGuid, FInstancedStruct> UnclaimedExtensionData;
 
-//private:
-	// Key tracking starts at 100.
-	int32 NextKeyInt = 100;
+	Faerie::TKeyGen<FEntryKey> KeyGen;
 };

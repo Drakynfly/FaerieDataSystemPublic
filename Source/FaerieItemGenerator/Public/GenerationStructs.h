@@ -56,6 +56,7 @@ struct FAERIEITEMGENERATOR_API FWeightedDrop
 	GENERATED_BODY()
 
 #if WITH_EDITORONLY_DATA
+	// Weight value used in the editor to calculate AdjustedWeight. See FFaerieWeightedDropPool::CalculatePercentages
 	UPROPERTY(EditAnywhere, meta = (ClampMin = 1))
 	int32 Weight = 1;
 #endif

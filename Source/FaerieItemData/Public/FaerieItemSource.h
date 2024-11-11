@@ -33,7 +33,6 @@ class FAERIEITEMDATA_API IFaerieItemSource
 {
 	GENERATED_BODY()
 
-	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 	// Can this source create mutable items?
 	virtual bool CanBeMutable() const { return false; }
@@ -70,9 +69,9 @@ struct FAERIEITEMDATA_API FFaerieItemSourceObject
 	{
 		return !(Lhs == Rhs);
 	}
-};
 
-FORCEINLINE uint32 GetTypeHash(const FFaerieItemSourceObject& Value)
-{
-	return GetTypeHash(Value.Object);
-}
+	FORCEINLINE friend uint32 GetTypeHash(const FFaerieItemSourceObject& Value)
+	{
+		return GetTypeHash(Value.Object);
+	}
+};

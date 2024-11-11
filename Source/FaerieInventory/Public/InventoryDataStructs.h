@@ -97,6 +97,38 @@ public:
 	}
 };
 
+namespace Faerie
+{
+	// Create a new key from each integer in order. Guarantees unique keys are generated in a binary searchable order.
+	template <
+		typename TKey
+		UE_REQUIRES(TIsDerivedFrom<TKey, FFaerieItemKeyBase>::Value)
+	>
+	class TKeyGen
+	{
+	public:
+		// Creates the next unique key for an entry.
+		TKey NextKey()
+		{
+			return TKey(++PreviousKey);
+		}
+
+		void SetPosition(const TKey Key)
+		{
+			ensureMsgf(Key.Value() > PreviousKey, TEXT("SetPosition should not be called, if it reversed to key order. In case of a full reset, call Reset first!"));
+			PreviousKey = Key.Value();
+		}
+
+		void Reset()
+		{
+			PreviousKey = 100;
+		}
+
+	private:
+		int32 PreviousKey = 100;
+	};
+}
+
 // Typesafe wrapper around an FFaerieItemKeyBase used for keying entries.
 USTRUCT(BlueprintType)
 struct FAERIEINVENTORY_API FEntryKey : public FFaerieItemKeyBase
@@ -228,8 +260,7 @@ struct FAERIEINVENTORY_API FInventoryEntry
 
 private:
 	// Internal count of how many stacks we've made. Used to track key creation. Only valid on the server.
-	UPROPERTY(NotReplicated)
-	int32 StackCount = 0;
+	Faerie::TKeyGen<FStackKey> KeyGen;
 
 public:
 	int32 GetStack(const FStackKey& Key) const;
@@ -253,7 +284,18 @@ public:
 	// Gets a view of the item and stack
 	FFaerieItemStackView ToItemStackView() const;
 
+	void PostSerialize(const FArchive& Ar);
+
 	static bool IsEqualTo(const FInventoryEntry& A, const FInventoryEntry& B, EEntryEquivalencyFlags CheckFlags);
+};
+
+template<>
+struct TStructOpsTypeTraits<FInventoryEntry> : public TStructOpsTypeTraitsBase2<FInventoryEntry>
+{
+	enum
+	{
+		WithPostSerialize = true,
+	};
 };
 
 // @todo 5.5: change to TConstStructView<FInventoryEntry>
@@ -282,7 +324,7 @@ struct FKeyedInventoryEntry : public FFastArraySerializerItem
 	FInventoryEntry Value;
 
 	void PreReplicatedRemove(const FInventoryContent& InArraySerializer);
-	void PostReplicatedAdd(FInventoryContent& InArraySerializer);
+	void PostReplicatedAdd(const FInventoryContent& InArraySerializer);
 	void PostReplicatedChange(const FInventoryContent& InArraySerializer);
 };
 
@@ -374,7 +416,7 @@ public:
 	*/
 
 	void PreEntryReplicatedRemove(const FKeyedInventoryEntry& Entry) const;
-	void PostEntryReplicatedAdd(const FKeyedInventoryEntry& Entry);
+	void PostEntryReplicatedAdd(const FKeyedInventoryEntry& Entry) const;
 	void PostEntryReplicatedChange(const FKeyedInventoryEntry& Entry) const;
 
 	// Only const iteration is allowed.

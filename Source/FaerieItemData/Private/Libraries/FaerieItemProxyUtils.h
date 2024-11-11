@@ -24,7 +24,7 @@ public:
 	static bool CastProxy(FFaerieItemProxy Proxy, UPARAM(meta = (MustImplement = "/Script/FaerieItemData.FaerieItemDataProxy")) UClass* Class, UObject*& ProxyObject);
 
 	UFUNCTION(BlueprintPure, Category = "Faerie|ItemProxyUtils")
-	static FFaerieItemProxy ToWeakProxy(TScriptInterface<IFaerieItemDataProxy> ScriptProxy);
+	static FFaerieItemProxy ToWeakProxy(const TScriptInterface<IFaerieItemDataProxy>& ScriptProxy);
 
 	// Get the Object implementing the IFaerieItemDataProxy interface.
 	UFUNCTION(BlueprintPure, Category = "Faerie|ItemProxyUtils")

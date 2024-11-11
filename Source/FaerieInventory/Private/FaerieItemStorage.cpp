@@ -43,32 +43,51 @@ void UFaerieItemStorage::PostLoad()
 	Super::PostLoad();
 
 	// Determine the next valid key to use.
-	NextKeyInt = !EntryMap.IsEmpty() ? EntryMap.GetKeyAt(EntryMap.Num()-1).Value()+1 : 100;
+	if (!EntryMap.IsEmpty())
+	{
+		KeyGen.SetPosition(EntryMap.GetKeyAt(EntryMap.Num()-1));
+	}
 	// See Footnote1
 }
 
 FFaerieContainerSaveData UFaerieItemStorage::MakeSaveData() const
 {
-	ensureMsgf(GetDefault<UFaerieInventorySettings>()->ContainerMutableBehavior == EFDSContainerOwnershipBehavior::Rename,
+	ensureMsgf(GetDefault<UFaerieInventorySettings>()->ContainerMutableBehavior == EFaerieContainerOwnershipBehavior::Rename,
 		TEXT("Flakes relies on ownership of sub-objects. Rename must be enabled! (ProjectSettings -> Faerie Inventory -> Container Mutable Behavior)"));
 
 	FFaerieContainerSaveData SaveData;
-	SaveData.ItemData = FInstancedStruct::Make(Flakes::CreateFlake(this));
+	SaveData.ItemData = FInstancedStruct::Make(Flakes::MakeFlake<Flakes::Binary::Type>(FConstStructView::Make(EntryMap), this));
 	RavelExtensionData(SaveData.ExtensionData);
 	return SaveData;
 }
 
 void UFaerieItemStorage::LoadSaveData(const FFaerieContainerSaveData& SaveData)
 {
-	Flakes::WriteObject(this, SaveData.ItemData.Get<FFlake>());
+	// Clear out state
+
+	Clear(Faerie::Inventory::Tags::RemovalDeletion);
+	KeyGen.Reset();
+
+	Extensions->DeinitializeExtension(this);
+
+	// Load in save data
+
+	EntryMap = Flakes::CreateStruct<Flakes::Binary::Type, FInventoryContent>(SaveData.ItemData.Get<FFlake>(), this);
 
 	EntryMap.MarkArrayDirty();
 	EntryMap.ChangeListener = this;
 
 	// Determine the next valid key to use.
-	NextKeyInt = !EntryMap.IsEmpty() ? EntryMap.GetKeyAt(EntryMap.Num()-1).Value()+1 : 100;
+	if (!EntryMap.IsEmpty())
+	{
+		KeyGen.SetPosition(EntryMap.GetKeyAt(EntryMap.Num()-1));
+	}
+
+	// Rebuild extension state
 
 	//@todo broadcast full refresh event?
+
+	Extensions->InitializeExtension(this);
 
 	UnravelExtensionData(SaveData.ExtensionData);
 }
@@ -298,7 +317,7 @@ Faerie::Inventory::FEventLog UFaerieItemStorage::AddEntryImpl(const FInventoryEn
 	{
 		// NextKey() is guaranteed to have a greater value than all currently existing keys, so simply appending is fine, and
 		// will keep the EntryMap sorted.
-		Event.EntryTouched = NextKey();
+		Event.EntryTouched = KeyGen.NextKey();
 
 		TakeOwnership(InEntry.ItemObject);
 
@@ -847,10 +866,10 @@ void UFaerieItemStorage::Clear(FFaerieInventoryTag RemovalTag)
 	checkf(EntryMap.IsEmpty(), TEXT("Clear failed to empty EntryMap"));
 
 #if WITH_EDITOR
-	// The editor should reset NextKeyInt, so that clearing and generating new content doesn't rack up the key endlessly.
+	// The editor should reset the KeyGen, so that clearing and generating new content doesn't rack up the key endlessly.
 	if (GEngine->IsEditor())
 	{
-		NextKeyInt = 100;
+		KeyGen.Reset();
 	}
 
 	// See Footnote1

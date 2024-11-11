@@ -6,7 +6,7 @@
 #include "FaerieInventorySettings.generated.h"
 
 UENUM()
-enum class EFDSContainerOwnershipBehavior : uint8
+enum class EFaerieContainerOwnershipBehavior : uint8
 {
 	None,
 
@@ -31,5 +31,5 @@ public:
 	// If a system expects items to be outer'd to their container, set this to 'Rename'.
 	// Usage of the MakeSaveData/LoadSaveData functions' default implementations require this.
 	UPROPERTY(EditAnywhere, Config, Category = "Faerie|Inventory")
-	EFDSContainerOwnershipBehavior ContainerMutableBehavior = EFDSContainerOwnershipBehavior::None;
+	EFaerieContainerOwnershipBehavior ContainerMutableBehavior = EFaerieContainerOwnershipBehavior::None;
 };

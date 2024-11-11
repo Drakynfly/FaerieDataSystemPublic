@@ -96,7 +96,7 @@ int32 FInventoryEntry::AddToAnyStack(int32 Stack, TArray<FStackKey>* OutAddedKey
 
 	if (Limit == Faerie::ItemData::UnlimitedStack)
 	{
-		const FStackKey NewKey = AddedStacks.Add_GetRef(FStackKey(StackCount++));
+		const FStackKey NewKey = AddedStacks.Add_GetRef(KeyGen.NextKey());
 		Stacks.Add({NewKey, Stack});
 	}
 	else
@@ -104,7 +104,7 @@ int32 FInventoryEntry::AddToAnyStack(int32 Stack, TArray<FStackKey>* OutAddedKey
 		// Split the incoming stack into as many more as are required
 		while (Stack > 0)
 		{
-			const FStackKey NewKey = AddedStacks.Add_GetRef(FStackKey(StackCount++));
+			const FStackKey NewKey = AddedStacks.Add_GetRef(KeyGen.NextKey());
 			const int32 NewStack = FMath::Min(Stack, Limit);
 			Stack -= NewStack;
 			Stacks.Add({NewKey, NewStack});
@@ -190,6 +190,17 @@ FFaerieItemStackView FInventoryEntry::ToItemStackView() const
 	return Stack;
 }
 
+void FInventoryEntry::PostSerialize(const FArchive& Ar)
+{
+	if (Ar.IsLoading())
+	{
+		if (!Stacks.IsEmpty())
+		{
+			KeyGen.SetPosition(Stacks.Last().Key);
+		}
+	}
+}
+
 bool FInventoryEntry::IsEqualTo(const FInventoryEntry& A, const FInventoryEntry& B, const EEntryEquivalencyFlags CheckFlags)
 {
 #define TEST_FLAG(Flag, Test)\
@@ -209,7 +220,7 @@ void FKeyedInventoryEntry::PreReplicatedRemove(const FInventoryContent& InArrayS
 	InArraySerializer.PreEntryReplicatedRemove(*this);
 }
 
-void FKeyedInventoryEntry::PostReplicatedAdd(FInventoryContent& InArraySerializer)
+void FKeyedInventoryEntry::PostReplicatedAdd(const FInventoryContent& InArraySerializer)
 {
 	InArraySerializer.PostEntryReplicatedAdd(*this);
 }
@@ -293,7 +304,7 @@ void FInventoryContent::PreEntryReplicatedRemove(const FKeyedInventoryEntry& Ent
 	}
 }
 
-void FInventoryContent::PostEntryReplicatedAdd(const FKeyedInventoryEntry& Entry)
+void FInventoryContent::PostEntryReplicatedAdd(const FKeyedInventoryEntry& Entry) const
 {
 	if (ChangeListener.IsValid())
 	{

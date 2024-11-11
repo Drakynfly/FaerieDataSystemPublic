@@ -63,6 +63,9 @@ public:
 	UFUNCTION(Blueprintable, BlueprintPure = false, Category = "Faerie|ItemSourcePool")
 	FTableDrop GenerateDrop(double RanWeight) const;
 
+	UFUNCTION(Blueprintable, BlueprintPure = false, Category = "Faerie|ItemSourcePool", DisplayName = "Generate Drop (Seeded)")
+	FTableDrop GenerateDrop_Seeded(USquirrel* Squirrel) const;
+
 protected:
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Table", meta = (Pr))
 	FFaerieAssetInfo TableInfo;

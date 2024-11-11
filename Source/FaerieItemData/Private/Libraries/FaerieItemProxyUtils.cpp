@@ -11,7 +11,7 @@ bool UFaerieItemProxyUtils::CastProxy(const FFaerieItemProxy Proxy, UClass* Clas
 	return ProxyObject->IsA(Class);
 }
 
-FFaerieItemProxy UFaerieItemProxyUtils::ToWeakProxy(const TScriptInterface<IFaerieItemDataProxy> ScriptProxy)
+FFaerieItemProxy UFaerieItemProxyUtils::ToWeakProxy(const TScriptInterface<IFaerieItemDataProxy>& ScriptProxy)
 {
 	return FFaerieItemProxy(ScriptProxy);
 }
