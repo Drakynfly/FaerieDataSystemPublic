@@ -5,7 +5,7 @@
 #include "DetailWidgetRow.h"
 #include "Widgets/Layout/SUniformGridPanel.h"
 #include "IDetailChildrenBuilder.h"
-#include "SpatialStructs.h"
+#include "SpatialTypes.h"
 
 #define LOCTEXT_NAMESPACE "ItemShapeCustomization"
 

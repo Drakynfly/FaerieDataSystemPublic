@@ -3,7 +3,7 @@
 #pragma once
 
 #include "FaerieItemToken.h"
-#include "SpatialStructs.h"
+#include "SpatialTypes.h"
 #include "FaerieShapeToken.generated.h"
 
 /**

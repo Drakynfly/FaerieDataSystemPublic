@@ -3,7 +3,7 @@
 #include "FaerieInventoryContentEditorModule.h"
 #include "PropertyEditorModule.h"
 #include "GameplayTagsEditorModule.h"
-#include "SpatialStructs.h"
+#include "SpatialTypes.h"
 #include "Customizations/ItemCapacityCustomization.h"
 #include "Customizations/ItemShapeCustomization.h"
 #include "Extensions/InventoryMetadataExtension.h"

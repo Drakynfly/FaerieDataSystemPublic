@@ -4,39 +4,11 @@
 
 #include "FaerieFastArraySerializerHack.h"
 #include "ItemContainerExtensionBase.h"
-#include "SpatialStructs.h"
+#include "SpatialTypes.h"
 #include "InventorySpatialGridExtension.generated.h"
 
 class UInventorySpatialGridExtension;
 class UFaerieShapeToken;
-
-UENUM(BlueprintType)
-enum class ESpatialItemRotation : uint8
-{
-	None = 0,
-	Ninety = 1,
-	One_Eighty = 2,
-	Two_Seventy = 3,
-	MAX UMETA(Hidden)
-};
-ENUM_RANGE_BY_COUNT(ESpatialItemRotation, ESpatialItemRotation::MAX)
-
-FORCEINLINE ESpatialItemRotation GetNextRotation(const ESpatialItemRotation CurrentRotation)
-{
-	switch (CurrentRotation)
-	{
-	case ESpatialItemRotation::None:
-		return ESpatialItemRotation::Ninety;
-	case ESpatialItemRotation::Ninety:
-		return ESpatialItemRotation::One_Eighty;
-	case ESpatialItemRotation::One_Eighty:
-		return ESpatialItemRotation::Two_Seventy;
-	case ESpatialItemRotation::Two_Seventy:
-		return ESpatialItemRotation::None;
-	default:
-		return ESpatialItemRotation::None;
-	}
-}
 
 USTRUCT(BlueprintType)
 struct FSpatialItemPlacement
@@ -45,7 +17,7 @@ struct FSpatialItemPlacement
 
 	FSpatialItemPlacement() : ItemShape(FFaerieGridShape::MakeSquare(1)) {}
 
-	explicit FSpatialItemPlacement(const FFaerieGridShape& InShape) 
+	explicit FSpatialItemPlacement(const FFaerieGridShape& InShape)
 		: ItemShape(InShape) {}
 
 	FSpatialItemPlacement(const FFaerieGridShape& InShape,
@@ -79,11 +51,16 @@ struct FSpatialItemPlacement
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "SpatialItemPlacement")
 	ESpatialItemRotation Rotation = ESpatialItemRotation::None;
 
+	FFaerieGridShape GetRotated() const
+	{
+		return ItemShape.Rotate(Rotation);
+	}
+
 	friend bool operator==(const FSpatialItemPlacement& A, const FSpatialItemPlacement& B)
 	{
-		return A.Origin == B.Origin && 
-			A.PivotPoint == B.PivotPoint && 
-			A.ItemShape == B.ItemShape && 
+		return A.Origin == B.Origin &&
+			A.PivotPoint == B.PivotPoint &&
+			A.ItemShape == B.ItemShape &&
 			A.Rotation == B.Rotation;
 	}
 
@@ -221,23 +198,22 @@ public:
 	bool MoveItem(const FInventoryKey& Key, const FIntPoint& SourcePoint, const FIntPoint& TargetPoint);
 	bool RotateItem(const FInventoryKey& Key);
 
-
 	// @todo probably split into two functions. one with rotation check, one without. public API probably doesn't need to see the rotation check!
 	bool FitsInGrid(const FSpatialItemPlacement& PlacementData, TConstArrayView<FInventoryKey> ExcludedKeys = {}) const;
 
 	void FindFirstEmptyLocation(FSpatialItemPlacement& OutPlacementData) const;
+
 	UFUNCTION(BlueprintCallable, Category = "Grid")
 	FSpatialItemPlacement GetEntryPlacementData(const FInventoryKey& Key) const;
-	
+
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Grid")
 	void SetGridSize(FIntPoint NewGridSize);
 
 	FSpatialEntryChangedNative& GetOnSpatialEntryChanged() { return SpatialEntryChangedDelegateNative; }
 	FGridSizeChangedNative& GetOnGridSizeChanged() { return GridSizeChangedDelegateNative; }
+
 protected:
 	FSpatialKeyedEntry* FindItemByKey(const FInventoryKey& Key);
-
-	static bool ValidateSourcePoint(const FSpatialKeyedEntry* Entry, const FIntPoint& SourcePoint);
 
 	// @todo Drakyn: look at these
 	FSpatialKeyedEntry* FindOverlappingItem(const FFaerieGridShape& Shape, const FIntPoint& Offset,
@@ -257,8 +233,10 @@ protected:
 
 	UPROPERTY(EditAnywhere, Replicated, Category = "Data")
 	FSpatialContent SpatialEntries;
-	TBitArray<> OccupiedCells;
+
 private:
+	TBitArray<> OccupiedCells;
+
 	FSpatialEntryChangedNative SpatialEntryChangedDelegateNative;
 	FGridSizeChangedNative GridSizeChangedDelegateNative;
 };

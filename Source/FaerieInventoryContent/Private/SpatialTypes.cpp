@@ -1,8 +1,8 @@
 ﻿// Copyright Guy (Drakynfly) Lundvall. All Rights Reserved.
 
-#include "SpatialStructs.h"
+#include "SpatialTypes.h"
 
-#include UE_INLINE_GENERATED_CPP_BY_NAME(SpatialStructs)
+#include UE_INLINE_GENERATED_CPP_BY_NAME(SpatialTypes)
 
 FFaerieGridShape FFaerieGridShape::MakeSquare(const int32 Size)
 {
@@ -67,7 +67,7 @@ bool FFaerieGridShape::IsSymmetrical() const
 
 	//create shape copy to compare against
 	FFaerieGridShape ShapeCopy = *this;
-	ShapeCopy.RotateInline(ShapeCopy.GetShapeCenter());
+	ShapeCopy.RotateAroundInline(ShapeCopy.GetShapeCenter());
 	ShapeCopy.NormalizeInline();
 	// Compare the shapes
 	return ShapeCopy == *this;
@@ -88,7 +88,44 @@ FFaerieGridShape FFaerieGridShape::Translate(const FIntPoint& Position) const
 	return OutShape;
 }
 
-void FFaerieGridShape::RotateInline(const FIntPoint& PivotPoint)
+void FFaerieGridShape::RotateInline(const ESpatialItemRotation Rotation)
+{
+	switch (Rotation)
+	{
+	case ESpatialItemRotation::Ninety:
+		*this = RotateAngle(90.f);
+		break;
+	case ESpatialItemRotation::One_Eighty:
+		*this = RotateAngle(180.f);
+		break;
+	case ESpatialItemRotation::Two_Seventy:
+		*this = RotateAngle(270.f);
+		break;
+	case ESpatialItemRotation::None:
+	case ESpatialItemRotation::MAX:
+	default:
+		break;
+	}
+}
+
+FFaerieGridShape FFaerieGridShape::Rotate(const ESpatialItemRotation Rotation) const
+{
+	switch (Rotation)
+	{
+	case ESpatialItemRotation::Ninety:
+		return RotateAngle(90.f);
+	case ESpatialItemRotation::One_Eighty:
+		return RotateAngle(180.f);
+	case ESpatialItemRotation::Two_Seventy:
+		return RotateAngle(270.f);
+	case ESpatialItemRotation::None:
+	case ESpatialItemRotation::MAX:
+	default:
+		return *this;
+	}
+}
+
+void FFaerieGridShape::RotateAroundInline(const FIntPoint& PivotPoint)
 {
 	for (FIntPoint& Point : Points)
 	{
@@ -106,40 +143,17 @@ void FFaerieGridShape::RotateInline(const FIntPoint& PivotPoint)
 	}
 }
 
-FFaerieGridShape FFaerieGridShape::Rotate(const FIntPoint& PivotPoint) const
+FFaerieGridShape FFaerieGridShape::RotateAround(const FIntPoint& PivotPoint) const
 {
 	FFaerieGridShape NewShape = *this;
-	NewShape.RotateInline(PivotPoint);
+	NewShape.RotateAroundInline(PivotPoint);
 	return NewShape;
 }
 
-FFaerieGridShape FFaerieGridShape::Rotate(const float AngleDegrees) const
+FFaerieGridShape FFaerieGridShape::RotateAngle(const float AngleDegrees) const
 {
 	FFaerieGridShape NewShape = *this;
-	NewShape.RotateAboutAngle(AngleDegrees);
-	return NewShape;
-}
 
-void FFaerieGridShape::RotateAroundCenterInline()
-{
-	if (Points.IsEmpty())
-	{
-		return;
-	}
-
-	// Use existing rotation logic with calculated center
-	RotateInline(GetShapeCenter());
-}
-
-FFaerieGridShape FFaerieGridShape::RotateAroundCenter() const
-{
-	FFaerieGridShape NewShape = *this;
-	NewShape.RotateAroundCenterInline();
-	return NewShape;
-}
-
-void FFaerieGridShape::RotateAboutAngle(const float AngleDegrees)
-{
 	// Get center point
 	const FIntPoint Center = GetShapeCenter();
 
@@ -150,7 +164,7 @@ void FFaerieGridShape::RotateAboutAngle(const float AngleDegrees)
 	const float CosTheta = FMath::Cos(AngleRadians);
 	const float SinTheta = FMath::Sin(AngleRadians);
 
-	for (FIntPoint& Point : Points)
+	for (FIntPoint& Point : NewShape.Points)
 	{
 		// Translate to origin
 		const int32 TranslatedX = Point.X - Center.X;
@@ -164,6 +178,26 @@ void FFaerieGridShape::RotateAboutAngle(const float AngleDegrees)
 		Point.X = FMath::RoundToInt(RotatedX + Center.X);
 		Point.Y = FMath::RoundToInt(RotatedY + Center.Y);
 	}
+
+	return NewShape;
+}
+
+void FFaerieGridShape::RotateAroundCenterInline()
+{
+	if (Points.IsEmpty())
+	{
+		return;
+	}
+
+	// Use existing rotation logic with calculated center
+	RotateAroundInline(GetShapeCenter());
+}
+
+FFaerieGridShape FFaerieGridShape::RotateAroundCenter() const
+{
+	FFaerieGridShape NewShape = *this;
+	NewShape.RotateAroundCenterInline();
+	return NewShape;
 }
 
 void FFaerieGridShape::NormalizeInline()

@@ -11,18 +11,18 @@ using FEntryStorageProxyEvent = TMulticastDelegate<void(UInventoryEntryStoragePr
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FCacheEvent, UInventoryEntryStorageProxy*, Proxy);
 
 UCLASS(Abstract)
-class FAERIEINVENTORY_API UInventoryEntryProxyBase : public UObject, public IFaerieItemDataProxy
+class UInventoryEntryProxyBase : public UObject, public IFaerieItemDataProxy
 {
 	GENERATED_BODY()
 
 public:
 	/** Get all stacks for this item. */
 	UFUNCTION(BlueprintCallable, Category = "Entry Cache")
-	TArray<FKeyedStack> GetAllStacks() const;
+	FAERIEINVENTORY_API TArray<FKeyedStack> GetAllStacks() const;
 
 	/** Get the stack limit of this item. */
 	UFUNCTION(BlueprintCallable, Category = "Entry Cache")
-	int32 GetStackLimit() const;
+	FAERIEINVENTORY_API int32 GetStackLimit() const;
 
 protected:
 	virtual FInventoryEntryView GetInventoryEntry() const PURE_VIRTUAL(UInventoryEntryProxyBase::GetInventoryEntry, return FInventoryEntryView(); )
@@ -45,12 +45,12 @@ public:
 	virtual FInventoryEntryView GetInventoryEntry() const override final;
 	//~ UInventoryEntryProxyBase
 
-	UFaerieItemStorage* GetStorage() const { return ItemStorage.Get(); }
-	int32 GetItemVersion() const { return LocalItemVersion; }
-	virtual FEntryKey GetKey() const PURE_VIRTUAL(UInventoryEntryStorageProxy::GetKey, return FEntryKey(); )
+	FAERIEINVENTORY_API UFaerieItemStorage* GetStorage() const { return ItemStorage.Get(); }
+	FAERIEINVENTORY_API int32 GetItemVersion() const { return LocalItemVersion; }
+	FAERIEINVENTORY_API virtual FEntryKey GetKey() const PURE_VIRTUAL(UInventoryEntryStorageProxy::GetKey, return FEntryKey(); )
 
-	FEntryStorageProxyEvent& GetOnCacheUpdated() { return OnCacheUpdatedNative; }
-	FEntryStorageProxyEvent& GetOnCacheRemoved() { return OnCacheRemovedNative; }
+	FAERIEINVENTORY_API FEntryStorageProxyEvent& GetOnCacheUpdated() { return OnCacheUpdatedNative; }
+	FAERIEINVENTORY_API FEntryStorageProxyEvent& GetOnCacheRemoved() { return OnCacheRemovedNative; }
 
 protected:
 	void NotifyCreation();
@@ -86,7 +86,7 @@ class UFaerieItemStorage;
  * An implementation of UInventoryEntryStorageProxy that reads from an inventory entry inside an item storage.
  */
 UCLASS(meta = (DontUseGenericSpawnObject = "true"))
-class UInventoryEntryProxy : public UInventoryEntryStorageProxy
+class FAERIEINVENTORY_API UInventoryEntryProxy : public UInventoryEntryStorageProxy
 {
 	GENERATED_BODY()
 

@@ -7,8 +7,9 @@
 
 enum class ESpatialItemRotation : uint8;
 struct FFaerieGridShape;
+
 /**
- * 
+ *
  */
 UCLASS()
 class UFaerieGridLibrary : public UBlueprintFunctionLibrary
@@ -16,6 +17,6 @@ class UFaerieGridLibrary : public UBlueprintFunctionLibrary
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(BlueprintCallable, Category="Shape Manipulation")
-	static FFaerieGridShape RotateShape(FFaerieGridShape InShape, const ESpatialItemRotation Rotation);
+	UFUNCTION(BlueprintCallable, Category = "Faerie|GridLibrary")
+	static FFaerieGridShape RotateShape(const FFaerieGridShape& InShape, ESpatialItemRotation Rotation);
 };
