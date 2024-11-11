@@ -124,6 +124,7 @@ UItemContainerExtensionBase* UFaerieInventoryComponent::AddExtension(const TSubc
 	}
 
 	UItemContainerExtensionBase* NewExtension = NewObject<UItemContainerExtensionBase>(ItemStorage, ExtensionClass);
+	NewExtension->SetIdentifier();
 	ItemStorage->AddExtension(NewExtension);
 	AddReplicatedSubObject(NewExtension);
 
