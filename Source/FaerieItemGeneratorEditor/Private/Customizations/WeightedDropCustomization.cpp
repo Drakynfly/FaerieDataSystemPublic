@@ -37,7 +37,7 @@ void FWeightedDropCustomization::CustomizeHeader(const TSharedRef<IPropertyHandl
         [
             SNew(SHorizontalBox)
             + SHorizontalBox::Slot()
-                .HAlign(HAlign_Fill).AutoWidth()
+                .HAlign(HAlign_Fill)
                 .MaxWidth(60.f)
                 .Padding(10.f)
                 [

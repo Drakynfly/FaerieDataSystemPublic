@@ -2,7 +2,7 @@
 
 #include "ItemGeneratorConfig.h"
 
-#include "ItemSourcePool.h"
+#include "FaerieItemPool.h"
 #include "Squirrel.h"
 #include "UObject/ObjectSaveContext.h"
 

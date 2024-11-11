@@ -2,25 +2,25 @@
 
 #include "FaerieDataSystemFactories.h"
 #include "FaerieItemRecipe.h"
-#include "ItemSourcePool.h"
+#include "FaerieItemPool.h"
 
-// ITEM SOURCE POOL
-UItemSourcePool_Factory::UItemSourcePool_Factory(const FObjectInitializer& ObjectInitializer)
+// FAERIE ITEM POOL
+UFaerieItemPool_Factory::UFaerieItemPool_Factory(const FObjectInitializer& ObjectInitializer)
   : Super(ObjectInitializer)
 {
     bEditAfterNew = true;
     bCreateNew = true;
-    SupportedClass = UItemSourcePool::StaticClass();
+    SupportedClass = UFaerieItemPool::StaticClass();
 }
 
-UObject* UItemSourcePool_Factory::FactoryCreateNew(UClass* Class,
+UObject* UFaerieItemPool_Factory::FactoryCreateNew(UClass* Class,
                                                         UObject* InParent,
                                                         const FName Name,
                                                         const EObjectFlags Flags,
                                                         UObject* Context,
                                                         FFeedbackContext* Warn)
 {
-    return NewObject<UItemSourcePool>(InParent, Class, Name, Flags | RF_Transactional, Context);
+    return NewObject<UFaerieItemPool>(InParent, Class, Name, Flags | RF_Transactional, Context);
 }
 
 

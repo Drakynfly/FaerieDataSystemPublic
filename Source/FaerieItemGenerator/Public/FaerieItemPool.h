@@ -7,7 +7,7 @@
 #include "FaerieItemSource.h"
 #include "GenerationStructs.h"
 
-#include "ItemSourcePool.generated.h"
+#include "FaerieItemPool.generated.h"
 
 USTRUCT()
 struct FFaerieWeightedDropPool
@@ -32,15 +32,15 @@ struct FFaerieWeightedDropPool
 class USquirrel;
 
 /**
- * An ItemSourcePool is a list of possible item generations, each with a unique weight.
+ * A Faerie Item Pool is a list of possible item generations, each with a weight that determined its frequency.
  */
 UCLASS()
-class FAERIEITEMGENERATOR_API UItemSourcePool : public UObject, public IFaerieItemSource
+class FAERIEITEMGENERATOR_API UFaerieItemPool : public UObject, public IFaerieItemSource
 {
 	GENERATED_BODY()
 
 public:
-	UItemSourcePool();
+	UFaerieItemPool();
 
 	virtual void PreSave(FObjectPreSaveContext SaveContext) override;
 	virtual void PostLoad() override;
@@ -60,10 +60,10 @@ public:
 	//~ IFaerieItemSource
 
 	// Generates a drop from this table, using the provided random weight, which must be a value between 0 and 1.
-	UFUNCTION(Blueprintable, BlueprintPure = false, Category = "Faerie|ItemSourcePool")
+	UFUNCTION(Blueprintable, BlueprintPure = false, Category = "Faerie|ItemPool")
 	FTableDrop GenerateDrop(double RanWeight) const;
 
-	UFUNCTION(Blueprintable, BlueprintPure = false, Category = "Faerie|ItemSourcePool", DisplayName = "Generate Drop (Seeded)")
+	UFUNCTION(Blueprintable, BlueprintPure = false, Category = "Faerie|ItemPool", DisplayName = "Generate Drop (Seeded)")
 	FTableDrop GenerateDrop_Seeded(USquirrel* Squirrel) const;
 
 protected:

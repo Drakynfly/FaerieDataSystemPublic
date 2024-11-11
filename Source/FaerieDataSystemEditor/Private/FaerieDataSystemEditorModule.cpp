@@ -95,7 +95,7 @@ FFaerieDataSystemEditorModule::FFaerieDataSystemEditorModule()
     PathAssetPairs.Add("IconDefault128", "FaeriePrimaryDataAsset");
     PathAssetPairs.Add("IconInventory128", "FaerieItemAsset");
     PathAssetPairs.Add("IconWeapon128", "FaerieWeaponAsset");
-    PathAssetPairs.Add("IconTable128", "ItemSourcePool");
+    PathAssetPairs.Add("IconTable128", "FaerieItemPool");
 
     FSlateImageBrush* ThumbnailBrush;
 

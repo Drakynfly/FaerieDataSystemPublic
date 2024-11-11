@@ -4,7 +4,7 @@
 
 #include "DetailLayoutBuilder.h"
 #include "ItemGeneratorConfig.h"
-#include "ItemSourcePool.h"
+#include "FaerieItemPool.h"
 
 TSharedRef<IDetailCustomization> FItemGenerationConfigCustomization::MakeInstance()
 {
@@ -20,7 +20,7 @@ void FItemGenerationConfigCustomization::CustomizeDetails(IDetailLayoutBuilder& 
 	PoolProp->GetValue(PoolObj);
 	if (IsValid(PoolObj))
 	{
-		auto&& DropPoolProp = PoolProp->GetChildHandle(UItemSourcePool::GetMemberName_DropPool());
+		auto&& DropPoolProp = PoolProp->GetChildHandle(UFaerieItemPool::GetMemberName_DropPool());
 		DetailBuilder.AddPropertyToCategory(DropPoolProp);
 	}
 	*/

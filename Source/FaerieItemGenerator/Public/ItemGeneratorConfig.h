@@ -5,7 +5,7 @@
 #include "GenerationStructs.h"
 #include "CraftingActionConfig.h"
 #include "InstancedStruct.h"
-#include "ItemSourcePool.h"
+#include "FaerieItemPool.h"
 #include "ItemGeneratorConfig.generated.h"
 
 DECLARE_LOG_CATEGORY_EXTERN(LogItemGenConfig, Log, All);

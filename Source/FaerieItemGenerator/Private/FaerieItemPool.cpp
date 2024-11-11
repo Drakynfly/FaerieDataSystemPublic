@@ -1,6 +1,6 @@
 ﻿// Copyright Guy (Drakynfly) Lundvall. All Rights Reserved.
 
-#include "ItemSourcePool.h"
+#include "FaerieItemPool.h"
 #include "FaerieAssetInfo.h"
 #include "ItemInstancingContext_Crafting.h"
 
@@ -12,7 +12,7 @@
 #include "Misc/DataValidation.h"
 #endif
 
-#include UE_INLINE_GENERATED_CPP_BY_NAME(ItemSourcePool)
+#include UE_INLINE_GENERATED_CPP_BY_NAME(FaerieItemPool)
 
 FTableDrop FFaerieWeightedDropPool::GenerateDrop(const double RanWeight) const
 {
@@ -61,12 +61,12 @@ void FFaerieWeightedDropPool::SortTable()
 }
 #endif
 
-UItemSourcePool::UItemSourcePool()
+UFaerieItemPool::UFaerieItemPool()
 {
 	TableInfo.ObjectName = FText::FromString("<Unnamed Table>");
 }
 
-void UItemSourcePool::PreSave(FObjectPreSaveContext SaveContext)
+void UFaerieItemPool::PreSave(FObjectPreSaveContext SaveContext)
 {
 	Super::PreSave(SaveContext);
 
@@ -82,7 +82,7 @@ void UItemSourcePool::PreSave(FObjectPreSaveContext SaveContext)
 #endif
 }
 
-void UItemSourcePool::PostLoad()
+void UFaerieItemPool::PostLoad()
 {
 	Super::PostLoad();
 #if WITH_EDITOR
@@ -92,9 +92,9 @@ void UItemSourcePool::PostLoad()
 
 #if WITH_EDITOR
 
-#define LOCTEXT_NAMESPACE "ItemSourcePoolValidation"
+#define LOCTEXT_NAMESPACE "FaerieItemPoolValidation"
 
-EDataValidationResult UItemSourcePool::IsDataValid(FDataValidationContext& Context) const
+EDataValidationResult UFaerieItemPool::IsDataValid(FDataValidationContext& Context) const
 {
 	TArray<FFaerieItemSourceObject> AssetList;
 
@@ -126,30 +126,30 @@ EDataValidationResult UItemSourcePool::IsDataValid(FDataValidationContext& Conte
 
 #undef LOCTEXT_NAMESPACE
 
-void UItemSourcePool::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+void UFaerieItemPool::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 	DropPool.CalculatePercentages();
 }
 
-void UItemSourcePool::PostEditChangeChainProperty(FPropertyChangedChainEvent& PropertyChangedEvent)
+void UFaerieItemPool::PostEditChangeChainProperty(FPropertyChangedChainEvent& PropertyChangedEvent)
 {
 	Super::PostEditChangeChainProperty(PropertyChangedEvent);
 	DropPool.CalculatePercentages();
 }
 #endif
 
-FFaerieAssetInfo UItemSourcePool::GetSourceInfo() const
+FFaerieAssetInfo UFaerieItemPool::GetSourceInfo() const
 {
 	return TableInfo;
 }
 
-UFaerieItem* UItemSourcePool::CreateItemInstance(UObject* Outer) const
+UFaerieItem* UFaerieItemPool::CreateItemInstance(UObject* Outer) const
 {
 	return nullptr;
 }
 
-UFaerieItem* UItemSourcePool::CreateItemInstance(const UItemInstancingContext* Context) const
+UFaerieItem* UFaerieItemPool::CreateItemInstance(const UItemInstancingContext* Context) const
 {
 	const UItemInstancingContext_Crafting* CraftingContent = Cast<UItemInstancingContext_Crafting>(Context);
 
@@ -177,12 +177,12 @@ UFaerieItem* UItemSourcePool::CreateItemInstance(const UItemInstancingContext* C
 	return nullptr;
 }
 
-FTableDrop UItemSourcePool::GenerateDrop(const double RanWeight) const
+FTableDrop UFaerieItemPool::GenerateDrop(const double RanWeight) const
 {
 	return DropPool.GenerateDrop(RanWeight);
 }
 
-FTableDrop UItemSourcePool::GenerateDrop_Seeded(USquirrel* Squirrel) const
+FTableDrop UFaerieItemPool::GenerateDrop_Seeded(USquirrel* Squirrel) const
 {
 	if (!ensure(IsValid(Squirrel))) return FTableDrop();
 	return DropPool.GenerateDrop(Squirrel->NextReal());

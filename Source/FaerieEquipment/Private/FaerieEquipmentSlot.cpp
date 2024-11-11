@@ -249,7 +249,7 @@ void UFaerieEquipmentSlot::SetItemInSlot(const FFaerieItemStack Stack)
 	if (Stack.Item != ItemStack.Item)
 	{
 		MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, StoredKey, this);
-		StoredKey = NextKey();
+		StoredKey = KeyGen.NextKey();
 
 		ItemStack = Stack;
 
