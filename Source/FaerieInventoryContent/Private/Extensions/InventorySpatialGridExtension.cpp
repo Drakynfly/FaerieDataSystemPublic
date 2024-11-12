@@ -314,7 +314,8 @@ FSpatialItemPlacement UInventorySpatialGridExtension::GetEntryPlacementData(cons
 bool UInventorySpatialGridExtension::FitsInGrid(const FSpatialItemPlacement& PlacementData, const TConstArrayView<FInventoryKey> ExcludedKeys, FIntPoint* OutCandidate) const
 {
 	// Build list of excluded indices
-	TArray<int32> ExcludedIndices;
+	TSet<int32> ExcludedIndices;
+	ExcludedIndices.Reserve(ExcludedKeys.Num() * PlacementData.ItemShape.Points.Num());
 	for (const FInventoryKey& Key : ExcludedKeys)
 	{
 		const FSpatialItemPlacement Entry = GetEntryPlacementData(Key);
