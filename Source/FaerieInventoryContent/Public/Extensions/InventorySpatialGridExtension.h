@@ -191,7 +191,6 @@ private:
 	bool AddItemToGrid(const FInventoryKey& Key, const UFaerieShapeToken* ShapeToken);
 	void RemoveItem(const FInventoryKey& Key);
 	void RemoveItemsForEntry(const FEntryKey& Key);
-
 public:
 	bool CanAddItemToGrid(const UFaerieShapeToken* ShapeToken) const;
 
@@ -199,7 +198,7 @@ public:
 	bool RotateItem(const FInventoryKey& Key);
 
 	// @todo probably split into two functions. one with rotation check, one without. public API probably doesn't need to see the rotation check!
-	bool FitsInGrid(const FSpatialItemPlacement& PlacementData, TConstArrayView<FInventoryKey> ExcludedKeys = {}) const;
+	bool FitsInGrid(const FSpatialItemPlacement& PlacementData, TConstArrayView<FInventoryKey> ExcludedKeys = {}, FIntPoint* OutCandidate = nullptr) const;
 
 	void FindFirstEmptyLocation(FSpatialItemPlacement& OutPlacementData) const;
 
@@ -221,6 +220,9 @@ protected:
 	bool TrySwapItems(FSpatialKeyedEntry& MovingItem, FSpatialKeyedEntry& OverlappingItem, const FIntPoint& Offset);
 	bool MoveSingleItem(FSpatialKeyedEntry& Item, const FIntPoint& Offset);
 	void UpdateItemPosition(FSpatialKeyedEntry& Item, const FIntPoint& Offset);
+
+	UFUNCTION(BlueprintCallable, Category = "Grid")
+	FIntPoint GetEntryBounds(UPARAM(ref) const FInventoryKey& Entry) const;
 
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FSpatialEntryChanged SpatialEntryChangedDelegate;
