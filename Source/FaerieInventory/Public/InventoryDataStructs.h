@@ -349,7 +349,7 @@ private:
 	TArray<FKeyedInventoryEntry>& GetArray() { return Entries; }
 
 	/** Owning storage to send Fast Array callbacks to */
-	UPROPERTY(Transient)
+	UPROPERTY()
 	TWeakObjectPtr<UFaerieItemStorage> ChangeListener;
 
 public:
