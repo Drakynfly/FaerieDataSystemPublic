@@ -602,9 +602,7 @@ void UInventorySpatialGridExtension::UpdateItemPosition(FSpatialKeyedEntry& Item
 
 FIntPoint UInventorySpatialGridExtension::GetEntryBounds(const FInventoryKey& Entry) const
 {
-	const FSpatialItemPlacement PlacementData = GetEntryPlacementData(Entry);
-	const FIntPoint Size = PlacementData.ItemShape.GetSize();
-	return Size;
+	return GetEntryPlacementData(Entry).ItemShape.GetSize();
 }
 
 bool UInventorySpatialGridExtension::RotateItem(const FInventoryKey& Key)

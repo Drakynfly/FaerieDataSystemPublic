@@ -222,7 +222,7 @@ protected:
 	void UpdateItemPosition(FSpatialKeyedEntry& Item, const FIntPoint& Offset);
 
 	UFUNCTION(BlueprintCallable, Category = "Grid")
-	FIntPoint GetEntryBounds(UPARAM(ref) const FInventoryKey& Entry) const;
+	FIntPoint GetEntryBounds(const FInventoryKey& Entry) const;
 
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FSpatialEntryChanged SpatialEntryChangedDelegate;
