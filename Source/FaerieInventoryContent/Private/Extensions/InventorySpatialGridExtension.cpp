@@ -346,7 +346,7 @@ bool UInventorySpatialGridExtension::FitsInGrid(const FSpatialItemPlacement& Pla
 			if(OutCandidate)
 			{
 				// Skip past this occupied cell
-				OutCandidate->X = AbsolutePosition.X + 1;
+				OutCandidate->X = AbsolutePosition.X;
 				OutCandidate->Y = PlacementData.Origin.Y;
 			}
 			return false;
