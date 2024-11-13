@@ -311,10 +311,11 @@ FSpatialItemPlacement UInventorySpatialGridExtension::GetEntryPlacementData(cons
 	return FSpatialItemPlacement();
 }
 
-bool UInventorySpatialGridExtension::FitsInGrid(const FSpatialItemPlacement& PlacementData, const TConstArrayView<FInventoryKey> ExcludedKeys) const
+bool UInventorySpatialGridExtension::FitsInGrid(const FSpatialItemPlacement& PlacementData, const TConstArrayView<FInventoryKey> ExcludedKeys, FIntPoint* OutCandidate) const
 {
 	// Build list of excluded indices
 	TArray<int32> ExcludedIndices;
+	ExcludedIndices.Reserve(ExcludedKeys.Num() * PlacementData.ItemShape.Points.Num());
 	for (const FInventoryKey& Key : ExcludedKeys)
 	{
 		const FSpatialItemPlacement Entry = GetEntryPlacementData(Key);
@@ -342,6 +343,12 @@ bool UInventorySpatialGridExtension::FitsInGrid(const FSpatialItemPlacement& Pla
 		// If this index is not in the excluded list, check if it's occupied
 		if (const int32 BitGridIndex = AbsolutePosition.X + AbsolutePosition.Y * GridSize.X; !ExcludedIndices.Contains(BitGridIndex) && OccupiedCells[BitGridIndex])
 		{
+			if(OutCandidate)
+			{
+				// Skip past this occupied cell
+				OutCandidate->X = AbsolutePosition.X;
+				OutCandidate->Y = PlacementData.Origin.Y;
+			}
 			return false;
 		}
 	}
@@ -351,89 +358,60 @@ bool UInventorySpatialGridExtension::FitsInGrid(const FSpatialItemPlacement& Pla
 
 void UInventorySpatialGridExtension::FindFirstEmptyLocation(FSpatialItemPlacement& OutPlacementData) const
 {
+	// Early exit if grid is empty or invalid
+	if (GridSize.X <= 0 || GridSize.Y <= 0)
+	{
+		OutPlacementData.Origin = FIntPoint::NoneValue;
+		return;
+	}
+
+	// Determine which rotations to check
+	TArray<ESpatialItemRotation> RotationRange;
 	if (OutPlacementData.ItemShape.IsSymmetrical())
 	{
-		int32 Min = TNumericLimits<int32>::Max();
-		int32 Max = TNumericLimits<int32>::Min();
-		for (const FIntPoint& Point : OutPlacementData.ItemShape.Points)
+		RotationRange.Add(ESpatialItemRotation::None);
+	}
+	else
+	{
+		for (const ESpatialItemRotation Rotation : TEnumRange<ESpatialItemRotation>())
 		{
-			Min = FMath::Min(Min, Point.X);
-			Max = FMath::Max(Max, Point.X);
+			RotationRange.Add(Rotation);
 		}
-		const int32 LookAhead = Max - Min + 1;
+	}
+	int32 Min = TNumericLimits<int32>::Max();
+	int32 Max = TNumericLimits<int32>::Min();
+	for (const FIntPoint& Point : OutPlacementData.ItemShape.Points)
+	{
+		Min = FMath::Min(Min, Point.X);
+		Max = FMath::Max(Max, Point.X);
+	}
+	const int32 LookAhead = Max - Min + 1;
 
-		for (FIntPoint Test = FIntPoint::ZeroValue; Test.Y < GridSize.Y; Test.Y+=LookAhead)
+	// For each cell in the grid
+	FIntPoint TestPoints = FIntPoint::ZeroValue;
+	for (TestPoints.Y = 0; TestPoints.Y < GridSize.Y; TestPoints.Y++)
+	{
+		for (TestPoints.X = 0; TestPoints.X < GridSize.X; TestPoints.X++)
 		{
-			while (Test.X < GridSize.X)
+			// Skip if current cell is occupied
+			if (OccupiedCells[TestPoints.Y * GridSize.X + TestPoints.X])
 			{
-				OutPlacementData.Origin = Test;
-				if (FitsInGrid(OutPlacementData))
+				continue;
+			}
+			// Try each rotation at this potential origin point
+			OutPlacementData.Origin = FIntPoint(TestPoints.X, TestPoints.Y);
+			for (const ESpatialItemRotation Rotation : RotationRange)
+			{
+				OutPlacementData.Rotation = Rotation;
+				if (FitsInGrid(OutPlacementData, TArray<FInventoryKey>(), &TestPoints))
 				{
 					OutPlacementData.PivotPoint = OutPlacementData.ItemShape.GetShapeCenter() + OutPlacementData.Origin;
 					return;
 				}
-				Test.X += LookAhead;
 			}
-			Test.X = 0;
 		}
 	}
-	else
-	{
-		// Find minimum slice width across all rotations, I tried coming up with other ways to optimize this, but they all skipped points
-		// Maybe this isn't worth it?
-		int32 MinLookAhead = TNumericLimits<int32>::Max();
-
-		for (const ESpatialItemRotation Rotation : TEnumRange<ESpatialItemRotation>())
-		{
-			TArray<FIntPoint> RotatedPoints = OutPlacementData.ItemShape.Rotate(Rotation).Points;
-
-			// Group points by Y coordinate
-			TMap<int32, TArray<int32>> PointsByY;
-			for (const FIntPoint& Point : RotatedPoints)
-			{
-				PointsByY.FindOrAdd(Point.Y).Add(Point.X);
-			}
-
-			// Find width of each Y slice
-			for (const auto& Pair : PointsByY)
-			{
-				const TArray<int32>& XCoords = Pair.Value;
-				int32 MinX = TNumericLimits<int32>::Max();
-				int32 MaxX = TNumericLimits<int32>::Min();
-
-				for (const int32 X : XCoords)
-				{
-					MinX = FMath::Min(MinX, X);
-					MaxX = FMath::Max(MaxX, X);
-				}
-
-				const int32 SliceWidth = MaxX - MinX + 1;
-				MinLookAhead = FMath::Min(MinLookAhead, SliceWidth);
-			}
-		}
-
-		for (FIntPoint Test = FIntPoint::ZeroValue; Test.Y < GridSize.Y; Test.Y+=MinLookAhead)
-		{
-			while (Test.X < GridSize.X)
-			{
-				OutPlacementData.Origin = Test;
-				for (const ESpatialItemRotation Rotation : TEnumRange<ESpatialItemRotation>())
-				{
-					OutPlacementData.Rotation = Rotation;
-					if (FitsInGrid(OutPlacementData))
-					{
-						OutPlacementData.PivotPoint = OutPlacementData.ItemShape.GetShapeCenter() + OutPlacementData.Origin;
-						return;
-					}
-				}
-
-				// Jump by minimum slice width
-				Test.X += MinLookAhead;
-			}
-			Test.X = 0;
-		}
-	}
-
+	// No valid placement found
 	OutPlacementData.Origin = FIntPoint::NoneValue;
 }
 
@@ -449,17 +427,22 @@ void UInventorySpatialGridExtension::SetGridSize(const FIntPoint NewGridSize)
 		OccupiedCells.Init(false, GridSize.X * GridSize.Y);
 
 		// Copy over existing data that's still in bounds
-		for(int32 y = 0; y < OldSize.Y; y++)
+		for(int32 y = 0; y < FMath::Min(OldSize.Y, GridSize.Y); y++)
 		{
-			for(int32 x = 0; x < OldSize.X; x++)
+			for(int32 x = 0; x < FMath::Min(OldSize.X, GridSize.X); x++)
 			{
 				const int32 OldIndex = x + y * OldSize.X;
-				const int32 NewIndex = x + y * NewGridSize.X;
+				const int32 NewIndex = x + y * GridSize.X;
 				OccupiedCells[NewIndex] = OldOccupied[OldIndex];
 			}
 		}
 
 		MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, GridSize, this);
+		if(!IsRunningDedicatedServer())
+		{
+			//OnReps must be called manually for local and listen server builds
+			OnRep_GridSize();
+		}
 	}
 }
 
@@ -624,6 +607,11 @@ void UInventorySpatialGridExtension::UpdateItemPosition(FSpatialKeyedEntry& Item
 	Item.Value.Origin = Item.Value.Origin + Offset;
 	Item.Value.PivotPoint = Item.Value.PivotPoint + Offset;
 	SpatialEntries.MarkItemDirty(Item);
+}
+
+FIntPoint UInventorySpatialGridExtension::GetEntryBounds(const FInventoryKey& Entry) const
+{
+	return GetEntryPlacementData(Entry).ItemShape.GetSize();
 }
 
 bool UInventorySpatialGridExtension::RotateItem(const FInventoryKey& Key)
