@@ -8,7 +8,6 @@
 
 #include "FaerieItemSlotInterface.generated.h"
 
-struct FConstStructView;
 class UFaerieItemTemplate;
 
 USTRUCT(BlueprintType)
@@ -30,8 +29,7 @@ class UFaerieItemSlotInterface : public UInterface
 	GENERATED_BODY()
 };
 
-// @todo 5.5: change to TConstStructView<FFaerieItemCraftingSlots>
-using FFaerieCraftingSlotsView = FConstStructView;
+using FFaerieCraftingSlotsView = TConstStructView<FFaerieItemCraftingSlots>;
 
 /**
  *

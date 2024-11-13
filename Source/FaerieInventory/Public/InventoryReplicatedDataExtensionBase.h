@@ -157,8 +157,8 @@ protected:
 	bool EditDataForEntry(const UFaerieItemContainerBase* Container, const FEntryKey Key, const TFunctionRef<void(FStructView)>& Edit);
 
 private:
-	FStructView FindFastArrayForContainer(const UFaerieItemContainerBase* Container);
-	FConstStructView FindFastArrayForContainer(const UFaerieItemContainerBase* Container) const;
+	TStructView<FRepDataFastArray> FindFastArrayForContainer(const UFaerieItemContainerBase* Container);
+	TConstStructView<FRepDataFastArray> FindFastArrayForContainer(const UFaerieItemContainerBase* Container) const;
 
 private:
 	UPROPERTY(Replicated)
