@@ -122,8 +122,8 @@ private:
     void HandleStateChanged();
 
 public:
-    FSimpleMulticastDelegate& GetOnStateChanged() { return OnStateChangedNative; }
-    FSimpleMulticastDelegate& GetOnConfigurationChanged() { return OnConfigurationChangedNative; }
+    FSimpleMulticastDelegate::RegistrationType& GetOnStateChanged() { return OnStateChangedNative; }
+    FSimpleMulticastDelegate::RegistrationType& GetOnConfigurationChanged() { return OnConfigurationChangedNative; }
 
     // Tests if the capacity of an entry can fit in this container.
     UFUNCTION(BlueprintPure, Category = "Faerie|InventoryCapacity")

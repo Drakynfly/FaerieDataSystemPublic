@@ -23,7 +23,7 @@ public:
 
 	FFaerieItemProxy GetItemData() const { return ItemProxy; }
 
-	FOnCardRefreshed& GetOnCardRefreshed() { return OnCardRefreshed; }
+	FOnCardRefreshed::RegistrationType& GetOnCardRefreshed() { return OnCardRefreshed; }
 
 	UFUNCTION(BlueprintCallable, Category = "Faerie|ItemCard")
 	void Refresh();

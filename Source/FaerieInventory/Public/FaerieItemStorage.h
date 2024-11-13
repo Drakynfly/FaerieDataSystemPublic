@@ -115,9 +115,9 @@ private:
 	/*	  STORAGE API - ALL USERS    */
 	/**------------------------------*/
 public:
-	FEntryKeyEventNative& GetOnKeyAdded() { return OnKeyAddedCallback; }
-	FEntryKeyEventNative& GetOnKeyUpdated() { return OnKeyUpdatedCallback; }
-	FEntryKeyEventNative& GetOnKeyRemoved() { return OnKeyRemovedCallback; }
+	FEntryKeyEventNative::RegistrationType& GetOnKeyAdded() { return OnKeyAddedCallback; }
+	FEntryKeyEventNative::RegistrationType& GetOnKeyUpdated() { return OnKeyUpdatedCallback; }
+	FEntryKeyEventNative::RegistrationType& GetOnKeyRemoved() { return OnKeyRemovedCallback; }
 
 	FInventoryEntryView GetEntryView(FEntryKey Key) const;
 
