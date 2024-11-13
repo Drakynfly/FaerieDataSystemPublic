@@ -201,9 +201,9 @@ void UInventorySpatialGridExtension::PostRemoval(const UFaerieItemContainerBase*
 
 void UInventorySpatialGridExtension::PreEntryReplicatedRemove(const FSpatialKeyedEntry& Entry)
 {
-	//This is to account for removals through proxies that dont directly interface with the grid
+	// This is to account for removals through proxies that don't directly interface with the grid
 	const FFaerieGridShape Temp = Entry.Value.GetRotated();
-	for (auto& Point : Temp.Points)
+	for (auto&& Point : Temp.Points)
 	{
 		const FIntPoint OldPoint = Entry.Value.Origin + Point;
 		const int32 OldBitGridIndex = OldPoint.Y * GridSize.X + OldPoint.X;
@@ -235,7 +235,7 @@ bool UInventorySpatialGridExtension::CanAddItemToGrid(const UFaerieShapeToken* S
 {
 	FSpatialItemPlacement TestPlacement(ShapeToken->GetShape());
 	FindFirstEmptyLocation(TestPlacement);
-	if(TestPlacement.Origin == FIntPoint::NoneValue) return	false;
+	if (TestPlacement.Origin == FIntPoint::NoneValue) return	false;
 	return true;
 }
 
@@ -348,7 +348,7 @@ bool UInventorySpatialGridExtension::FitsInGrid(const FSpatialItemPlacement& Pla
 		// If this index is not in the excluded list, check if it's occupied
 		if (const int32 BitGridIndex = AbsolutePosition.X + AbsolutePosition.Y * GridSize.X; !ExcludedIndices.Contains(BitGridIndex) && OccupiedCells[BitGridIndex])
 		{
-			if(OutCandidate)
+			if (OutCandidate)
 			{
 				// Skip past this occupied cell
 				OutCandidate->X = AbsolutePosition.X;
@@ -432,9 +432,9 @@ void UInventorySpatialGridExtension::SetGridSize(const FIntPoint NewGridSize)
 		OccupiedCells.Init(false, GridSize.X * GridSize.Y);
 
 		// Copy over existing data that's still in bounds
-		for(int32 y = 0; y < FMath::Min(OldSize.Y, GridSize.Y); y++)
+		for (int32 y = 0; y < FMath::Min(OldSize.Y, GridSize.Y); y++)
 		{
-			for(int32 x = 0; x < FMath::Min(OldSize.X, GridSize.X); x++)
+			for (int32 x = 0; x < FMath::Min(OldSize.X, GridSize.X); x++)
 			{
 				const int32 OldIndex = x + y * OldSize.X;
 				const int32 NewIndex = x + y * GridSize.X;
@@ -532,7 +532,7 @@ bool UInventorySpatialGridExtension::TrySwapItems(FSpatialKeyedEntry& MovingItem
 	OverlappedItemData.Origin = OriginalOverlappingOrigin + ReverseOffset;
 
 	// This is a first check mainly to see if the item would fit inside the grids bounds
-	if (!FitsInGrid(SourceItemData,MakeArrayView(&OverlappingItem.Key, 1)) ||
+	if (!FitsInGrid(SourceItemData, MakeArrayView(&OverlappingItem.Key, 1)) ||
 		!FitsInGrid(OverlappedItemData, MakeArrayView(&MovingItem.Key, 1)))
 	{
 		return false;
