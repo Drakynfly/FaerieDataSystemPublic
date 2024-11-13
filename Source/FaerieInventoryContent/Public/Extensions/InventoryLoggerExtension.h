@@ -54,6 +54,7 @@ struct TStructOpsTypeTraits<FLoggedInventoryEvent> : public TStructOpsTypeTraits
 };
 
 
+using FInventoryEventLoggedNative = TMulticastDelegate<void(const FLoggedInventoryEvent&)>;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FInventoryEventLogged, const FLoggedInventoryEvent&, LoggedEvent);
 
 /**
@@ -74,6 +75,8 @@ protected:
 	void HandleNewEvent(const FLoggedInventoryEvent& Event);
 
 public:
+	FInventoryEventLoggedNative::RegistrationType& GetOnInventoryEventLogged() { return OnInventoryEventLoggedNative; }
+
 	UFUNCTION(BlueprintCallable, Category = "LoggerExtension")
 	int32 GetNumEvents() const { return EventLog.Num(); }
 
@@ -83,17 +86,18 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "LoggerExtension")
 	TArray<FLoggedInventoryEvent> GetRecentEvents(int32 NumEvents) const;
 
-	UPROPERTY(BlueprintAssignable, Category = "LoggerExtension|Events")
-	FInventoryEventLogged OnInventoryEventLogged;
-
 protected:
 	UFUNCTION(/* Replication */)
 	virtual void OnRep_EventLog();
 
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FInventoryEventLogged OnInventoryEventLogged;
 
 	UPROPERTY(ReplicatedUsing = "OnRep_EventLog")
 	TArray<FLoggedInventoryEvent> EventLog;
 
 private:
+	FInventoryEventLoggedNative OnInventoryEventLoggedNative;
+
 	int32 LocalEventLogCount = 0;
 };

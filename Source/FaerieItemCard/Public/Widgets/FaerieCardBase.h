@@ -33,10 +33,10 @@ protected:
 	void BP_Refresh();
 
 protected:
-	UPROPERTY(BlueprintReadOnly, Category = "Faerie|CardWidget")
+	UPROPERTY(BlueprintReadOnly, Category = "CardWidget")
 	FFaerieItemProxy ItemProxy;
 
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Faerie|CardWidget")
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "CardWidget")
 	bool RefreshOnConstruct = true;
 
 	FOnCardRefreshed OnCardRefreshed;

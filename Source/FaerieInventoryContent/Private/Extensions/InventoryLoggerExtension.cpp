@@ -30,6 +30,7 @@ void UInventoryLoggerExtension::HandleNewEvent(const FLoggedInventoryEvent& Even
 {
 	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, EventLog, this);
 	EventLog.Add(Event);
+	OnInventoryEventLoggedNative.Broadcast(Event);
 	OnInventoryEventLogged.Broadcast(Event);
 }
 

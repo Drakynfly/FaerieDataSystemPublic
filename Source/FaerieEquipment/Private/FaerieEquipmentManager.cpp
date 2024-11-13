@@ -82,6 +82,7 @@ void UFaerieEquipmentManager::AddDefaultSlots()
 void UFaerieEquipmentManager::OnSlotItemChanged(UFaerieEquipmentSlot* Slot)
 {
 	RecalcLocalChecksum();
+	OnEquipmentChangedEventNative.Broadcast(Slot);
 	OnEquipmentChangedEvent.Broadcast(Slot);
 }
 
@@ -117,9 +118,11 @@ void UFaerieEquipmentManager::CheckLocalChecksum()
 
 	if (OldChecksumsMatch != ChecksumsMatch)
 	{
-		OnClientChecksumEvent.Broadcast(ChecksumsMatch ?
+		const EFaerieEquipmentClientChecksumState BroadcastState = ChecksumsMatch ?
 			EFaerieEquipmentClientChecksumState::Synchronized :
-			EFaerieEquipmentClientChecksumState::Desynchronized);
+			EFaerieEquipmentClientChecksumState::Desynchronized;
+		OnClientChecksumEventNative.Broadcast(BroadcastState);
+		OnClientChecksumEvent.Broadcast(BroadcastState);
 	}
 }
 
@@ -148,6 +151,9 @@ UFaerieEquipmentSlot* UFaerieEquipmentManager::AddSlot(const FFaerieSlotTag Slot
 
 		NewSlot->AddExtension(ExtensionGroup);
 
+		OnEquipmentSlotAddedNative.Broadcast(NewSlot);
+		OnEquipmentSlotAdded.Broadcast(NewSlot);
+
 		return NewSlot;
 	}
 
@@ -163,6 +169,9 @@ bool UFaerieEquipmentManager::RemoveSlot(UFaerieEquipmentSlot* Slot)
 
 	if (Slots.Remove(Slot))
 	{
+		OnPreEquipmentSlotRemovedNative.Broadcast(Slot);
+		OnPreEquipmentSlotRemoved.Broadcast(Slot);
+
 		Slot->RemoveExtension(ExtensionGroup);
 
 		MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, Slots, this)

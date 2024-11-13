@@ -22,7 +22,10 @@ enum class EFaerieEquipmentClientChecksumState : uint8
 	Synchronized
 };
 
+
+using FEquipmentChangedEventNative = TMulticastDelegate<void(UFaerieEquipmentSlot*)>;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FEquipmentChangedEvent, UFaerieEquipmentSlot*, Slot);
+using FEquipmentClientChecksumEventNative = TMulticastDelegate<void(EFaerieEquipmentClientChecksumState)>;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FEquipmentClientChecksumEvent, EFaerieEquipmentClientChecksumState, State);
 
 UCLASS(Blueprintable, ClassGroup = ("Faerie"), meta = (BlueprintSpawnableComponent),
@@ -62,6 +65,10 @@ public:
 	/**------------------------------*/
 	/*			SLOTS API			 */
 	/**------------------------------*/
+
+	FEquipmentChangedEventNative::RegistrationType& GetOnEquipmentSlotAdded() { return OnEquipmentSlotAddedNative; }
+	FEquipmentChangedEventNative::RegistrationType& GetOnPreEquipmentSlotRemoved() { return OnPreEquipmentSlotRemovedNative; }
+	FEquipmentChangedEventNative::RegistrationType& GetOnEquipmentChangedEvent() { return OnEquipmentChangedEventNative; }
 
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Faerie|EquipmentManager")
 	UFaerieEquipmentSlot* AddSlot(FFaerieSlotTag SlotID, UFaerieEquipmentSlotDescription* Description);
@@ -126,13 +133,28 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Faerie|EquipmentManager")
 	FFaerieEquipmentHash GetServerChecksum() const { return ServerChecksum; }
-public:
-	UPROPERTY(BlueprintAssignable, Category = "Events")
+
+	FEquipmentClientChecksumEventNative::RegistrationType& GetOnClientChecksumEvent() { return OnClientChecksumEventNative; }
+
+protected:
+	UPROPERTY(BlueprintAssignable, Transient, Category = "Events")
 	FEquipmentClientChecksumEvent OnClientChecksumEvent;
 
+	UPROPERTY(BlueprintAssignable, Transient, Category = "Events")
+	FEquipmentChangedEvent OnEquipmentSlotAdded;
+
+	UPROPERTY(BlueprintAssignable, Transient, Category = "Events")
+	FEquipmentChangedEvent OnPreEquipmentSlotRemoved;
+
 	// A generic event when any slot is changed, either by adding or removing the item, or the item itself is changed.
-	UPROPERTY(BlueprintAssignable, Category = "Events")
+	UPROPERTY(BlueprintAssignable, Transient, Category = "Events")
 	FEquipmentChangedEvent OnEquipmentChangedEvent;
+
+private:
+	FEquipmentClientChecksumEventNative OnClientChecksumEventNative;
+	FEquipmentChangedEventNative OnEquipmentSlotAddedNative;
+	FEquipmentChangedEventNative OnPreEquipmentSlotRemovedNative;
+	FEquipmentChangedEventNative OnEquipmentChangedEventNative;
 
 protected:
 	UPROPERTY(EditAnywhere, Category = "Equipment")
