@@ -443,11 +443,9 @@ void UInventorySpatialGridExtension::SetGridSize(const FIntPoint NewGridSize)
 		}
 
 		MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, GridSize, this);
-		if(!IsRunningDedicatedServer())
-		{
-			//OnReps must be called manually for local and listen server builds
-			OnRep_GridSize();
-		}
+
+		// OnReps must be called manually on the server in c++
+		OnRep_GridSize();
 	}
 }
 
