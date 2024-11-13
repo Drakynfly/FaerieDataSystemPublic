@@ -13,7 +13,6 @@ public class FaerieItemData : ModuleRules
             {
                 "Core",
                 "GameplayTags",
-                "StructUtils",
                 "FaerieDataUtils"
             }
         );

@@ -3,7 +3,7 @@
 #pragma once
 
 #include "FaerieItemSource.h"
-#include "InstancedStruct.h"
+#include "StructUtils/InstancedStruct.h"
 #include "ItemSlotHandle.h"
 
 #include "GenerationStructs.generated.h"

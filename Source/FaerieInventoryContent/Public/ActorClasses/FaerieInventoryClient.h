@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "InstancedStruct.h"
+#include "StructUtils/InstancedStruct.h"
 #include "Components/ActorComponent.h"
 #include "InventoryDataStructs.h"
 #include "FaerieInventoryClient.generated.h"

@@ -19,7 +19,6 @@ public class FaerieInventoryContent : ModuleRules
                 "NetCore",
                 "Slate",
                 "SlateCore",
-                "StructUtils",
                 "UMG"
             });
 

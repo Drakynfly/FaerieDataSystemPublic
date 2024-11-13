@@ -2,7 +2,7 @@
 
 #include "InventoryReplicatedDataExtensionBase.h"
 #include "FaerieItemContainerBase.h"
-#include "StructView.h"
+#include "StructUtils/StructView.h"
 #include "Net/UnrealNetwork.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(InventoryReplicatedDataExtensionBase)

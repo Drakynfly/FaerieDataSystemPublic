@@ -15,8 +15,7 @@ public class FaerieEquipment : ModuleRules
 				"CoreUObject",
 				"Engine",
 				"NetCore",
-				"GameplayTags",
-				"StructUtils"
+				"GameplayTags"
 			});
 
 		PublicDependencyModuleNames.AddRange(

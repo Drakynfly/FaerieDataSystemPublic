@@ -3,9 +3,9 @@
 #pragma once
 
 #include "FaerieFastArraySerializerHack.h"
-#include "InstancedStruct.h"
 #include "ItemContainerExtensionBase.h"
-#include "StructView.h"
+#include "StructUtils/InstancedStruct.h"
+#include "StructUtils/StructView.h"
 #include "InventoryReplicatedDataExtensionBase.generated.h"
 
 struct FRepDataFastArray;

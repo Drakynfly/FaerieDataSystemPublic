@@ -161,7 +161,7 @@ void UFaerieItemStorage::PostContentAdded(const FKeyedInventoryEntry& Entry)
 {
 	if (!Entry.Key.IsValid())
 	{
-		UE_LOG(LogFaerieItemStorage, Warning, TEXT("Received Invalid PostContentAdded Key"))
+		UE_LOG(LogFaerieItemStorage, Warning, TEXT("PostContentAdded: Received Invalid Key"))
 		return;
 	}
 
@@ -212,7 +212,7 @@ void UFaerieItemStorage::PreContentRemoved(const FKeyedInventoryEntry& Entry)
 {
 	if (!Entry.Key.IsValid())
 	{
-		UE_LOG(LogFaerieItemStorage, Warning, TEXT("Received Invalid PreContentRemoved Key"))
+		UE_LOG(LogFaerieItemStorage, Warning, TEXT("PreContentRemoved: Received Invalid Key"))
 		return;
 	}
 
@@ -239,7 +239,7 @@ void UFaerieItemStorage::PreContentRemoved(const FKeyedInventoryEntry& Entry)
 
 FInventoryEntryView UFaerieItemStorage::GetEntryViewImpl(const FEntryKey Key) const
 {
-	return FInventoryEntryView::Make(EntryMap[Key]);
+	return FInventoryEntryView(EntryMap[Key]);
 }
 
 UInventoryEntryProxy* UFaerieItemStorage::GetEntryProxyImpl(const FEntryKey Key) const
@@ -580,7 +580,7 @@ bool UFaerieItemStorage::GetStackProxy(const FInventoryKey Key, FFaerieItemProxy
 void UFaerieItemStorage::GetEntryArray(const TArray<FEntryKey>& Keys, TArray<FInventoryEntry>& Entries) const
 {
 	// Allocate memory once
-	Entries.SetNumUninitialized(Keys.Num(), true);
+	Entries.SetNumUninitialized(Keys.Num(), EAllowShrinking::Yes);
 	for (int32 i = 0; i < Keys.Num(); ++i)
 	{
 		GetEntryImpl(Keys[i], Entries[i]);

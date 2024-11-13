@@ -4,7 +4,7 @@
 
 #include "GenerationStructs.h"
 #include "CraftingActionConfig.h"
-#include "InstancedStruct.h"
+#include "StructUtils/InstancedStruct.h"
 #include "FaerieItemPool.h"
 #include "ItemGeneratorConfig.generated.h"
 

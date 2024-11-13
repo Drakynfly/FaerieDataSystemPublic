@@ -4,7 +4,7 @@
 
 #include "UObject/Interface.h"
 #include "ItemSlotHandle.h"
-#include "StructView.h"
+#include "StructUtils/StructView.h"
 
 #include "FaerieItemSlotInterface.generated.h"
 
