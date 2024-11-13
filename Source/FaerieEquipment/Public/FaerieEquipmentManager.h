@@ -4,6 +4,7 @@
 
 #include "EquipmentHashTypes.h"
 #include "FaerieSlotTag.h"
+#include "InventoryDataStructs.h"
 #include "Components/ActorComponent.h"
 
 #include "FaerieEquipmentManager.generated.h"
@@ -22,7 +23,31 @@ enum class EFaerieEquipmentClientChecksumState : uint8
 	Synchronized
 };
 
+USTRUCT()
+struct FFaerieEquipmentDefaultSlot
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, Category = "Faerie|EquipmentDefaultSlot")
+	TObjectPtr<UFaerieEquipmentSlotDescription> SlotDescription;
+
+	// Predefined extensions added to this slot.
+	UPROPERTY(EditAnywhere, Instanced, NoClear, Category = "Faerie|EquipmentDefaultSlot")
+	TObjectPtr<UItemContainerExtensionGroup> ExtensionGroup;
+};
+
+USTRUCT()
+struct FFaerieEquipmentSaveData
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	TArray<FFaerieContainerSaveData> PerSlotData;
+};
+
+using FEquipmentChangedEventNative = TMulticastDelegate<void(UFaerieEquipmentSlot*)>;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FEquipmentChangedEvent, UFaerieEquipmentSlot*, Slot);
+using FEquipmentClientChecksumEventNative = TMulticastDelegate<void(EFaerieEquipmentClientChecksumState)>;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FEquipmentClientChecksumEvent, EFaerieEquipmentClientChecksumState, State);
 
 UCLASS(Blueprintable, ClassGroup = ("Faerie"), meta = (BlueprintSpawnableComponent),
@@ -37,6 +62,7 @@ public:
 	UFaerieEquipmentManager();
 
 	//~ UObject
+	virtual void PostInitProperties() override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	//~ UObject
 
@@ -46,9 +72,11 @@ public:
 	virtual void ReadyForReplication() override;
 	//~ UActorComponent
 
-protected:
+private:
 	void AddDefaultSlots();
+	void AddSubobjectsForReplication();
 
+protected:
 	void OnSlotItemChanged(UFaerieEquipmentSlot* Slot);
 
 	void RecalcLocalChecksum();
@@ -60,8 +88,20 @@ protected:
 
 public:
 	/**------------------------------*/
+	/*		 SAVE DATA API			 */
+	/**------------------------------*/
+
+	virtual FFaerieContainerSaveData MakeSaveData() const;
+	virtual void LoadSaveData(const FFaerieContainerSaveData& SaveData);
+
+
+	/**------------------------------*/
 	/*			SLOTS API			 */
 	/**------------------------------*/
+
+	FEquipmentChangedEventNative::RegistrationType& GetOnEquipmentSlotAdded() { return OnEquipmentSlotAddedNative; }
+	FEquipmentChangedEventNative::RegistrationType& GetOnPreEquipmentSlotRemoved() { return OnPreEquipmentSlotRemovedNative; }
+	FEquipmentChangedEventNative::RegistrationType& GetOnEquipmentChangedEvent() { return OnEquipmentChangedEventNative; }
 
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Faerie|EquipmentManager")
 	UFaerieEquipmentSlot* AddSlot(FFaerieSlotTag SlotID, UFaerieEquipmentSlotDescription* Description);
@@ -126,24 +166,44 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Faerie|EquipmentManager")
 	FFaerieEquipmentHash GetServerChecksum() const { return ServerChecksum; }
-public:
-	UPROPERTY(BlueprintAssignable, Category = "Events")
-	FEquipmentClientChecksumEvent OnClientChecksumEvent;
 
-	// A generic event when any slot is changed, either by adding or removing the item, or the item itself is changed.
-	UPROPERTY(BlueprintAssignable, Category = "Events")
-	FEquipmentChangedEvent OnEquipmentChangedEvent;
+	FEquipmentClientChecksumEventNative::RegistrationType& GetOnClientChecksumEvent() { return OnClientChecksumEventNative; }
 
 protected:
-	UPROPERTY(EditAnywhere, Category = "Equipment")
+	UPROPERTY(BlueprintAssignable, Transient, Category = "Events")
+	FEquipmentClientChecksumEvent OnClientChecksumEvent;
+
+	UPROPERTY(BlueprintAssignable, Transient, Category = "Events")
+	FEquipmentChangedEvent OnEquipmentSlotAdded;
+
+	UPROPERTY(BlueprintAssignable, Transient, Category = "Events")
+	FEquipmentChangedEvent OnPreEquipmentSlotRemoved;
+
+	// A generic event when any slot is changed, either by adding or removing the item, or the item itself is changed.
+	UPROPERTY(BlueprintAssignable, Transient, Category = "Events")
+	FEquipmentChangedEvent OnEquipmentChangedEvent;
+
+private:
+	FEquipmentClientChecksumEventNative OnClientChecksumEventNative;
+	FEquipmentChangedEventNative OnEquipmentSlotAddedNative;
+	FEquipmentChangedEventNative OnPreEquipmentSlotRemovedNative;
+	FEquipmentChangedEventNative OnEquipmentChangedEventNative;
+
+protected:
+	UE_DEPRECATED(5.5, "Use InstanceDefaultSlots instead")
+	UPROPERTY(VisibleAnywhere, Category = "Equipment")
 	TMap<FFaerieSlotTag, TObjectPtr<UFaerieEquipmentSlotDescription>> DefaultSlots;
+
+	// Slots and their extensions to add to this equipment manager by default.
+	UPROPERTY(EditAnywhere, Category = "Equipment", meta = (ForceInlineRow))
+	TMap<FFaerieSlotTag, FFaerieEquipmentDefaultSlot> InstanceDefaultSlots;
 
 	// Predefined extensions added to all slots in this manager.
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Instanced, NoClear, Category = "Extensions")
 	TObjectPtr<UItemContainerExtensionGroup> ExtensionGroup;
 
 private:
-	UPROPERTY(Replicated, Transient)
+	UPROPERTY(Replicated)
 	TArray<TObjectPtr<UFaerieEquipmentSlot>> Slots;
 
 	// For clients, this is the last received hash for the serverside equipment state.

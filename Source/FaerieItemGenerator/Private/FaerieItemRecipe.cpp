@@ -6,5 +6,5 @@
 
 FFaerieCraftingSlotsView UFaerieItemRecipe::GetCraftingSlots() const
 {
-	return FFaerieCraftingSlotsView::Make(CraftingSlots);
+	return CraftingSlots;
 }

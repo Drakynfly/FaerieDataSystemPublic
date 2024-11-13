@@ -208,8 +208,8 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Grid")
 	void SetGridSize(FIntPoint NewGridSize);
 
-	FSpatialEntryChangedNative& GetOnSpatialEntryChanged() { return SpatialEntryChangedDelegateNative; }
-	FGridSizeChangedNative& GetOnGridSizeChanged() { return GridSizeChangedDelegateNative; }
+	FSpatialEntryChangedNative::RegistrationType& GetOnSpatialEntryChanged() { return SpatialEntryChangedDelegateNative; }
+	FGridSizeChangedNative::RegistrationType& GetOnGridSizeChanged() { return GridSizeChangedDelegateNative; }
 
 protected:
 	FSpatialKeyedEntry* FindItemByKey(const FInventoryKey& Key);

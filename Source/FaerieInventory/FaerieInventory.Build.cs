@@ -20,7 +20,6 @@ public class FaerieInventory : ModuleRules
                 "Engine",
                 "GameplayTags",
                 "NetCore",
-                "StructUtils",
                 "Slate",
                 "UMG"
             });

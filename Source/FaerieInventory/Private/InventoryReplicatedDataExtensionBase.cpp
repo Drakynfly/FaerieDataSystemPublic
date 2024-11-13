@@ -2,7 +2,7 @@
 
 #include "InventoryReplicatedDataExtensionBase.h"
 #include "FaerieItemContainerBase.h"
-#include "StructView.h"
+#include "StructUtils/StructView.h"
 #include "Net/UnrealNetwork.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(InventoryReplicatedDataExtensionBase)
@@ -131,7 +131,7 @@ void UInventoryReplicatedDataExtensionBase::GetLifetimeReplicatedProps(TArray<FL
 	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, PerContainerData, SharedParams);
 }
 
-FInstancedStruct UInventoryReplicatedDataExtensionBase::MakeSaveData(const UFaerieItemContainerBase* Container)
+FInstancedStruct UInventoryReplicatedDataExtensionBase::MakeSaveData(const UFaerieItemContainerBase* Container) const
 {
 	if (SaveRepDataArray())
 	{
@@ -144,7 +144,7 @@ FInstancedStruct UInventoryReplicatedDataExtensionBase::MakeSaveData(const UFaer
 void UInventoryReplicatedDataExtensionBase::LoadSaveData(const UFaerieItemContainerBase* Container,
 	const FInstancedStruct& SaveData)
 {
-	if (const FStructView ContainerData = FindFastArrayForContainer(Container);
+	if (const TStructView<FRepDataFastArray> ContainerData = FindFastArrayForContainer(Container);
 		ContainerData.IsValid())
 	{
 		FRepDataFastArray& Ref = ContainerData.Get<FRepDataFastArray>();
@@ -186,7 +186,7 @@ void UInventoryReplicatedDataExtensionBase::PreRemoval(const UFaerieItemContaine
 {
 	Super::PreRemoval(Container, Key, Removal);
 
-	if (const FStructView ContainerData = FindFastArrayForContainer(Container);
+	if (const TStructView<FRepDataFastArray> ContainerData = FindFastArrayForContainer(Container);
 		ContainerData.IsValid())
 	{
 		FRepDataFastArray& Ref = ContainerData.Get<FRepDataFastArray>();
@@ -202,7 +202,7 @@ void UInventoryReplicatedDataExtensionBase::PreRemoval(const UFaerieItemContaine
 FConstStructView UInventoryReplicatedDataExtensionBase::GetDataForEntry(const UFaerieItemContainerBase* Container,
 	const FEntryKey Key) const
 {
-	if (const FConstStructView ContainerData = FindFastArrayForContainer(Container);
+	if (const TConstStructView<FRepDataFastArray> ContainerData = FindFastArrayForContainer(Container);
 		ContainerData.IsValid())
 	{
 		const FRepDataFastArray& Ref = ContainerData.Get<const FRepDataFastArray>();
@@ -212,13 +212,13 @@ FConstStructView UInventoryReplicatedDataExtensionBase::GetDataForEntry(const UF
 			return Ref[Key];
 		}
 	}
-	return FConstStructView(GetDataScriptStruct());
+	return {};
 }
 
 bool UInventoryReplicatedDataExtensionBase::EditDataForEntry(const UFaerieItemContainerBase* Container,
 	const FEntryKey Key, const TFunctionRef<void(FStructView)>& Edit)
 {
-	const FStructView ContainerData = FindFastArrayForContainer(Container);
+	const TStructView<FRepDataFastArray> ContainerData = FindFastArrayForContainer(Container);
 	if (!ContainerData.IsValid())
 	{
 		return false;
@@ -242,7 +242,7 @@ bool UInventoryReplicatedDataExtensionBase::EditDataForEntry(const UFaerieItemCo
 	return true;
 }
 
-FStructView UInventoryReplicatedDataExtensionBase::FindFastArrayForContainer(const UFaerieItemContainerBase* Container)
+TStructView<FRepDataFastArray> UInventoryReplicatedDataExtensionBase::FindFastArrayForContainer(const UFaerieItemContainerBase* Container)
 {
 	if (auto&& Found = PerContainerData.FindByPredicate(
 			[Container](const TObjectPtr<URepDataArrayWrapper>& Userdata)
@@ -250,12 +250,12 @@ FStructView UInventoryReplicatedDataExtensionBase::FindFastArrayForContainer(con
 				return Userdata && Userdata->Container == Container;
 			}))
 	{
-		return FStructView::Make((*Found)->DataArray);
+		return (*Found)->DataArray;
 	}
-	return nullptr;
+	return TStructView<FRepDataFastArray>();
 }
 
-FConstStructView UInventoryReplicatedDataExtensionBase::FindFastArrayForContainer(const UFaerieItemContainerBase* Container) const
+TConstStructView<FRepDataFastArray> UInventoryReplicatedDataExtensionBase::FindFastArrayForContainer(const UFaerieItemContainerBase* Container) const
 {
 	if (auto&& Found = PerContainerData.FindByPredicate(
 			[Container](const TObjectPtr<URepDataArrayWrapper>& Userdata)
@@ -263,7 +263,7 @@ FConstStructView UInventoryReplicatedDataExtensionBase::FindFastArrayForContaine
 				return Userdata && Userdata->Container == Container;
 			}))
 	{
-		return FConstStructView::Make((*Found)->DataArray);
+		return (*Found)->DataArray;
 	}
-	return nullptr;
+	return TConstStructView<FRepDataFastArray>();
 }

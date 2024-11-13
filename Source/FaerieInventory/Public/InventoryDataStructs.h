@@ -8,7 +8,7 @@
 #include "GameplayTagContainer.h"
 #include "TTypedTagStaticImpl2.h"
 #include "Net/Serialization/FastArraySerializer.h"
-#include "StructView.h"
+#include "StructUtils/StructView.h"
 #include "InventoryDataStructs.generated.h"
 
 /**
@@ -298,8 +298,7 @@ struct TStructOpsTypeTraits<FInventoryEntry> : public TStructOpsTypeTraitsBase2<
 	};
 };
 
-// @todo 5.5: change to TConstStructView<FInventoryEntry>
-using FInventoryEntryView = FConstStructView;
+using FInventoryEntryView = TConstStructView<FInventoryEntry>;
 
 struct FInventoryContent;
 

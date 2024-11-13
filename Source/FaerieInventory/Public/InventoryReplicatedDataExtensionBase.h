@@ -3,9 +3,9 @@
 #pragma once
 
 #include "FaerieFastArraySerializerHack.h"
-#include "InstancedStruct.h"
 #include "ItemContainerExtensionBase.h"
-#include "StructView.h"
+#include "StructUtils/InstancedStruct.h"
+#include "StructUtils/StructView.h"
 #include "InventoryReplicatedDataExtensionBase.generated.h"
 
 struct FRepDataFastArray;
@@ -135,7 +135,7 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	//~ UItemContainerExtensionBase
-	virtual FInstancedStruct MakeSaveData(const UFaerieItemContainerBase* Container) override;
+	virtual FInstancedStruct MakeSaveData(const UFaerieItemContainerBase* Container) const override;
 	virtual void LoadSaveData(const UFaerieItemContainerBase* Container, const FInstancedStruct& SaveData) override;
 	virtual void InitializeExtension(const UFaerieItemContainerBase* Container) override;
 	virtual void DeinitializeExtension(const UFaerieItemContainerBase* Container) override;
@@ -157,8 +157,8 @@ protected:
 	bool EditDataForEntry(const UFaerieItemContainerBase* Container, const FEntryKey Key, const TFunctionRef<void(FStructView)>& Edit);
 
 private:
-	FStructView FindFastArrayForContainer(const UFaerieItemContainerBase* Container);
-	FConstStructView FindFastArrayForContainer(const UFaerieItemContainerBase* Container) const;
+	TStructView<FRepDataFastArray> FindFastArrayForContainer(const UFaerieItemContainerBase* Container);
+	TConstStructView<FRepDataFastArray> FindFastArrayForContainer(const UFaerieItemContainerBase* Container) const;
 
 private:
 	UPROPERTY(Replicated)

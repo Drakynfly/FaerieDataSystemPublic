@@ -12,11 +12,13 @@ UFaerieItemProxyComponent::UFaerieItemProxyComponent()
 void UFaerieItemProxyComponent::SetItemProxy(const FFaerieItemProxy Proxy)
 {
 	ItemProxy = Proxy;
+	OnItemSetNative.Broadcast(this, ItemProxy);
 	OnItemSet.Broadcast(this, ItemProxy);
 }
 
 void UFaerieItemProxyComponent::ClearItemProxy()
 {
 	ItemProxy = nullptr;
+	OnItemClearNative.Broadcast(this);
 	OnItemClear.Broadcast(this);
 }

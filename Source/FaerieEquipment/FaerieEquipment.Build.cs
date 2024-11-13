@@ -15,8 +15,7 @@ public class FaerieEquipment : ModuleRules
 				"CoreUObject",
 				"Engine",
 				"NetCore",
-				"GameplayTags",
-				"StructUtils"
+				"GameplayTags"
 			});
 
 		PublicDependencyModuleNames.AddRange(
@@ -24,7 +23,8 @@ public class FaerieEquipment : ModuleRules
 			{
 				"FaerieItemData",
 				"FaerieItemMesh",
-				"FaerieInventory"
+				"FaerieInventory",
+				"Flakes"
 			});
 
 		PrivateDependencyModuleNames.AddRange(

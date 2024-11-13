@@ -56,6 +56,7 @@ struct FEquipmentVisualMetadata
 	FEquipmentVisualizerCallback ChangeCallback;
 };
 
+using FEquipmentVisualizerUpdateNative = TMulticastDelegate<void(FFaerieVisualKey, UObject*)>;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FEquipmentVisualizerUpdate, FFaerieVisualKey, Key, UObject*, Visual);
 
 
@@ -70,7 +71,11 @@ class FAERIEEQUIPMENT_API UEquipmentVisualizer : public UActorComponent
 public:
 	UEquipmentVisualizer();
 
+	//~ UActorComponent
 	virtual void OnComponentDestroyed(bool bDestroyingHierarchy) override;
+	//~ UActorComponent
+
+	FEquipmentVisualizerUpdateNative::RegistrationType& GetOnAnyVisualUpdate() { return OnAnyVisualUpdateNative; }
 
 	UFUNCTION(BlueprintCallable, Category = "Faerie|EquipmentVisualizer", meta = (DeterminesOutputType = "Class"))
 	UObject* GetSpawnedVisualByClass(TSubclassOf<UObject> Class, FFaerieVisualKey& Key) const;
@@ -109,13 +114,12 @@ public:
 	void AwaitOrReceiveUpdate(FFaerieVisualKey Key, FEquipmentVisualizerCallback Callback);
 
 	UFUNCTION(BlueprintPure)
-	static FFaerieVisualKey MakeVisualKeyFromProxy(TScriptInterface<IFaerieItemDataProxy> Proxy);
+	static FFaerieVisualKey MakeVisualKeyFromProxy(const TScriptInterface<IFaerieItemDataProxy>& Proxy);
 
 protected:
 	UFUNCTION(/* Dynamic Callback */)
-	void OnVisualActorDestroyed(AActor* DestroyedActor);
+	virtual void OnVisualActorDestroyed(AActor* DestroyedActor);
 
-public:
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FEquipmentVisualizerUpdate OnAnyVisualUpdate;
 
@@ -131,4 +135,7 @@ protected:
 
 	UPROPERTY()
 	TMap<FFaerieVisualKey, FEquipmentVisualMetadata> KeyedMetadata;
+
+private:
+	FEquipmentVisualizerUpdateNative OnAnyVisualUpdateNative;
 };

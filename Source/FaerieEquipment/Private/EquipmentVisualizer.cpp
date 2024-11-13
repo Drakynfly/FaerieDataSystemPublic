@@ -142,6 +142,7 @@ AActor* UEquipmentVisualizer::SpawnVisualActor(const FFaerieVisualKey Key, const
 			}
 
 			KeyedMetadata.FindOrAdd(Key).ChangeCallback.ExecuteIfBound(Key, NewActor);
+			OnAnyVisualUpdateNative.Broadcast(Key, NewActor);
 			OnAnyVisualUpdate.Broadcast(Key, NewActor);
 
 			return NewActor;
@@ -196,7 +197,7 @@ void UEquipmentVisualizer::AwaitOrReceiveUpdate(const FFaerieVisualKey Key, cons
 	}
 }
 
-FFaerieVisualKey UEquipmentVisualizer::MakeVisualKeyFromProxy(const TScriptInterface<IFaerieItemDataProxy> Proxy)
+FFaerieVisualKey UEquipmentVisualizer::MakeVisualKeyFromProxy(const TScriptInterface<IFaerieItemDataProxy>& Proxy)
 {
 	return { Proxy.GetInterface() };
 }

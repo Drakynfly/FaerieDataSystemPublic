@@ -7,7 +7,9 @@
 #include "FaerieItemProxyComponent.generated.h"
 
 class UFaerieItemProxyComponent;
+using FItemSetEventNative = TMulticastDelegate<void(UFaerieItemProxyComponent*, FFaerieItemProxy)>;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FItemSetEvent, UFaerieItemProxyComponent*, Component, FFaerieItemProxy, Proxy);
+using FItemClearEventNative = TMulticastDelegate<void(UFaerieItemProxyComponent*)>;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FItemClearEvent, UFaerieItemProxyComponent*, Component);
 
 
@@ -22,6 +24,8 @@ class FAERIEITEMDATA_API UFaerieItemProxyComponent : public UActorComponent
 public:
 	UFaerieItemProxyComponent();
 
+	FItemSetEventNative::RegistrationType& GetOnItemSet() { return OnItemSetNative; }
+	FItemClearEventNative::RegistrationType& GetOnItemClear() { return OnItemClearNative; }
 	FFaerieItemProxy GetItemProxy() const { return ItemProxy; }
 
 	UFUNCTION(BlueprintCallable, Category = "Faerie|ItemProxyComponent")
@@ -30,13 +34,17 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Faerie|ItemProxyComponent")
 	void ClearItemProxy();
 
+protected:
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FItemSetEvent OnItemSet;
 
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FItemClearEvent OnItemClear;
 
-protected:
 	UPROPERTY(BlueprintReadOnly, Category = "ItemProxy")
 	FFaerieItemProxy ItemProxy;
+
+private:
+	FItemSetEventNative OnItemSetNative;
+	FItemClearEventNative OnItemClearNative;
 };

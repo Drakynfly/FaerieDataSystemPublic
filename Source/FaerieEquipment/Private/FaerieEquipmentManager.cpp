@@ -21,6 +21,19 @@ UFaerieEquipmentManager::UFaerieEquipmentManager()
 	ExtensionGroup->SetIdentifier();
 }
 
+void UFaerieEquipmentManager::PostInitProperties()
+{
+	Super::PostInitProperties();
+
+	for (auto&& DefaultSlot : InstanceDefaultSlots)
+	{
+		if (IsValid(DefaultSlot.Value.ExtensionGroup))
+		{
+			DefaultSlot.Value.ExtensionGroup->SetIdentifier();
+		}
+	}
+}
+
 void UFaerieEquipmentManager::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -49,6 +62,29 @@ void UFaerieEquipmentManager::ReadyForReplication()
 {
 	Super::ReadyForReplication();
 
+	AddSubobjectsForReplication();
+}
+
+void UFaerieEquipmentManager::AddDefaultSlots()
+{
+	if (!Slots.IsEmpty())
+	{
+		// Default slots already added
+		return;
+	}
+
+	for (auto&& Element : InstanceDefaultSlots)
+	{
+		if (auto&& DefaultSlot = AddSlot(Element.Key, Element.Value.SlotDescription);
+			IsValid(DefaultSlot))
+		{
+			DefaultSlot->AddExtension(DuplicateObject(Element.Value.ExtensionGroup, DefaultSlot));
+		}
+	}
+}
+
+void UFaerieEquipmentManager::AddSubobjectsForReplication()
+{
 	const AActor* Owner = GetOwner();
 	check(Owner);
 
@@ -68,20 +104,16 @@ void UFaerieEquipmentManager::ReadyForReplication()
 				AddReplicatedSubObject(Slot);
 			}
 		}
-	}
-}
 
-void UFaerieEquipmentManager::AddDefaultSlots()
-{
-	for (auto&& Element : DefaultSlots)
-	{
-		AddSlot(Element.Key, Element.Value);
+		// Make slots replicate once
+		MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, Slots, this)
 	}
 }
 
 void UFaerieEquipmentManager::OnSlotItemChanged(UFaerieEquipmentSlot* Slot)
 {
 	RecalcLocalChecksum();
+	OnEquipmentChangedEventNative.Broadcast(Slot);
 	OnEquipmentChangedEvent.Broadcast(Slot);
 }
 
@@ -91,7 +123,7 @@ void UFaerieEquipmentManager::RecalcLocalChecksum()
 
 	Algo::TransformIf(Slots, Tags,
 		[](const TObjectPtr<UFaerieEquipmentSlot>& Slot){ return IsValid(Slot); },
-		[](const TObjectPtr<UFaerieEquipmentSlot>& Slot) { return Slot->SlotID; });
+		[](const TObjectPtr<UFaerieEquipmentSlot>& Slot) { return Slot->Config.SlotID; });
 
 	LocalChecksum = Faerie::Hash::HashEquipment(this, Tags, &Faerie::Hash::HashItemByName);
 
@@ -117,15 +149,58 @@ void UFaerieEquipmentManager::CheckLocalChecksum()
 
 	if (OldChecksumsMatch != ChecksumsMatch)
 	{
-		OnClientChecksumEvent.Broadcast(ChecksumsMatch ?
+		const EFaerieEquipmentClientChecksumState BroadcastState = ChecksumsMatch ?
 			EFaerieEquipmentClientChecksumState::Synchronized :
-			EFaerieEquipmentClientChecksumState::Desynchronized);
+			EFaerieEquipmentClientChecksumState::Desynchronized;
+		OnClientChecksumEventNative.Broadcast(BroadcastState);
+		OnClientChecksumEvent.Broadcast(BroadcastState);
 	}
 }
 
 void UFaerieEquipmentManager::OnRep_ServerChecksum()
 {
 	CheckLocalChecksum();
+}
+
+FFaerieContainerSaveData UFaerieEquipmentManager::MakeSaveData() const
+{
+	FFaerieEquipmentSaveData SlotSaveData;
+	SlotSaveData.PerSlotData.Reserve(Slots.Num());
+	for (auto&& Slot : Slots)
+	{
+		SlotSaveData.PerSlotData.Add(Slot->MakeSaveData());
+	}
+
+	FFaerieContainerSaveData SaveData;
+	SaveData.ItemData = FInstancedStruct::Make(SlotSaveData);
+	return SaveData;
+}
+
+void UFaerieEquipmentManager::LoadSaveData(const FFaerieContainerSaveData& SaveData)
+{
+	Slots.Reset();
+
+	const FFaerieEquipmentSaveData& EquipmentSaveData = SaveData.ItemData.Get<FFaerieEquipmentSaveData>();
+	for (const FFaerieContainerSaveData& SlotSaveData : EquipmentSaveData.PerSlotData)
+	{
+		if (UFaerieEquipmentSlot* NewSlot = NewObject<UFaerieEquipmentSlot>(this))
+		{
+			NewSlot->LoadSaveData(SlotSaveData);
+			Slots.Add(NewSlot);
+			NewSlot->OnItemChangedNative.AddUObject(this, &ThisClass::OnSlotItemChanged);
+			NewSlot->OnItemDataChangedNative.AddUObject(this, &ThisClass::OnSlotItemChanged);
+			NewSlot->AddExtension(ExtensionGroup);
+		}
+	}
+
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, Slots, this);
+
+	RecalcLocalChecksum();
+
+	if (IsReadyForReplication())
+	{
+		AddSubobjectsForReplication();
+	}
 }
 
 UFaerieEquipmentSlot* UFaerieEquipmentManager::AddSlot(const FFaerieSlotTag SlotID, UFaerieEquipmentSlotDescription* Description)
@@ -136,9 +211,9 @@ UFaerieEquipmentSlot* UFaerieEquipmentManager::AddSlot(const FFaerieSlotTag Slot
 	if (UFaerieEquipmentSlot* NewSlot = NewObject<UFaerieEquipmentSlot>(this);
 		ensure(IsValid(NewSlot)))
 	{
-		NewSlot->SlotID = SlotID;
-		NewSlot->SlotDescription = Description;
-		NewSlot->SingleItemSlot = true; // @todo expose somewhere
+		NewSlot->Config.SlotID = SlotID;
+		NewSlot->Config.SlotDescription = Description;
+		NewSlot->Config.SingleItemSlot = true; // @todo expose somewhere
 		MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, Slots, this)
 		Slots.Add(NewSlot);
 		AddReplicatedSubObject(NewSlot);
@@ -147,6 +222,9 @@ UFaerieEquipmentSlot* UFaerieEquipmentManager::AddSlot(const FFaerieSlotTag Slot
 		NewSlot->OnItemDataChangedNative.AddUObject(this, &ThisClass::OnSlotItemChanged);
 
 		NewSlot->AddExtension(ExtensionGroup);
+
+		OnEquipmentSlotAddedNative.Broadcast(NewSlot);
+		OnEquipmentSlotAdded.Broadcast(NewSlot);
 
 		return NewSlot;
 	}
@@ -163,6 +241,9 @@ bool UFaerieEquipmentManager::RemoveSlot(UFaerieEquipmentSlot* Slot)
 
 	if (Slots.Remove(Slot))
 	{
+		OnPreEquipmentSlotRemovedNative.Broadcast(Slot);
+		OnPreEquipmentSlotRemoved.Broadcast(Slot);
+
 		Slot->RemoveExtension(ExtensionGroup);
 
 		MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, Slots, this)
@@ -184,7 +265,7 @@ UFaerieEquipmentSlot* UFaerieEquipmentManager::FindSlot(const FFaerieSlotTag Slo
 	for (auto&& Slot : Slots)
 	{
 		if (!IsValid(Slot)) continue;
-		if (Slot->SlotID == SlotID)
+		if (Slot->GetSlotID() == SlotID)
 		{
 			return Slot;
 		}

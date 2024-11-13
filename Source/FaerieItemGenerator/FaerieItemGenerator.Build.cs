@@ -12,8 +12,7 @@ public class FaerieItemGenerator : ModuleRules
             new []
             {
                 "Core",
-                "GameplayTags",
-                "StructUtils"
+                "GameplayTags"
             }
         );
 

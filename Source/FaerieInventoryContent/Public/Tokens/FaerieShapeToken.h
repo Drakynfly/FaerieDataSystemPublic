@@ -17,7 +17,7 @@ class FAERIEINVENTORYCONTENT_API UFaerieShapeToken : public UFaerieItemToken
 public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-	FFaerieGridShape GetShape() const { return Shape; }
+	const FFaerieGridShape& GetShape() const { return Shape; }
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Replicated, meta = (ShowOnlyInnerProperties))

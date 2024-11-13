@@ -378,6 +378,14 @@ void UInventorySpatialGridExtension::FindFirstEmptyLocation(FSpatialItemPlacemen
 			RotationRange.Add(Rotation);
 		}
 	}
+	int32 Min = TNumericLimits<int32>::Max();
+	int32 Max = TNumericLimits<int32>::Min();
+	for (const FIntPoint& Point : OutPlacementData.ItemShape.Points)
+	{
+		Min = FMath::Min(Min, Point.X);
+		Max = FMath::Max(Max, Point.X);
+	}
+	const int32 LookAhead = Max - Min + 1;
 
 	// For each cell in the grid
 	FIntPoint TestPoints = FIntPoint::ZeroValue;

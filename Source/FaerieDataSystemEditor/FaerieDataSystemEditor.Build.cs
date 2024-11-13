@@ -14,8 +14,7 @@ public class FaerieDataSystemEditor : ModuleRules
                 "Core",
                 "CoreUObject",
                 "Engine",
-                "InputCore",
-                "StructUtils"
+                "InputCore"
             });
 
         PrivateDependencyModuleNames.AddRange(

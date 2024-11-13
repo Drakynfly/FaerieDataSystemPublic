@@ -5,9 +5,13 @@
 #include "FaerieItemContainerBase.h"
 #include "FaerieItemDataProxy.h"
 #include "FaerieSlotTag.h"
+#include "FlakesStructs.h"
 #include "FaerieEquipmentSlot.generated.h"
 
 struct FFaerieAssetInfo;
+class UFaerieEquipmentSlot;
+class UFaerieEquipmentSlotDescription;
+class UFaerieItem;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogFaerieEquipmentSlot, Log, All)
 
@@ -17,16 +21,44 @@ namespace Faerie::Equipment::Tags
 	FAERIEEQUIPMENT_API UE_DECLARE_GAMEPLAY_TAG_TYPED_EXTERN(FFaerieInventoryTag, SlotTake)
 }
 
-class UFaerieEquipmentSlotDescription;
-class UFaerieItem;
+USTRUCT(BlueprintType)
+struct FFaerieEquipmentSlotConfig
+{
+	GENERATED_BODY()
 
-class UFaerieEquipmentSlot;
+	// Unique ID for this slot.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Config")
+	FFaerieSlotTag SlotID;
+
+	// Info about this slot.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Config")
+	TObjectPtr<UFaerieEquipmentSlotDescription> SlotDescription;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Config")
+	bool SingleItemSlot;
+};
+
+USTRUCT()
+struct FFaerieEquipmentSlotSaveData
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	FFaerieEquipmentSlotConfig Config;
+
+	UPROPERTY()
+	FFlake ItemStack;
+
+	UPROPERTY()
+	FEntryKey StoredKey;
+};
+
+
 using FEquipmentSlotEventNative = TMulticastDelegate<void(UFaerieEquipmentSlot*)>;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FEquipmentSlotEvent, UFaerieEquipmentSlot*, Slot);
 
-
 /**
- *
+ * An equipment slot that hold and replicates a single Stack of Items.
  */
 UCLASS(BlueprintType)
 class FAERIEEQUIPMENT_API UFaerieEquipmentSlot : public UFaerieItemContainerBase, public IFaerieItemDataProxy
@@ -38,11 +70,11 @@ class FAERIEEQUIPMENT_API UFaerieEquipmentSlot : public UFaerieItemContainerBase
 	friend class UFaerieChildSlotToken;
 
 public:
-	UFaerieEquipmentSlot();
-
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	//~ UFaerieItemContainerBase
+	virtual FFaerieContainerSaveData MakeSaveData() const override;
+	virtual void LoadSaveData(const FFaerieContainerSaveData& SaveData) override;
 	virtual bool IsValidKey(FEntryKey Key) const override;
 	virtual void ForEachKey(const TFunctionRef<void(FEntryKey)>& Func) const override;
 	virtual void OnItemMutated(const UFaerieItem* InItem, const UFaerieItemToken* Token) override;
@@ -75,10 +107,10 @@ protected:
 	virtual void BroadcastDataChange();
 
 public:
-	FFaerieSlotTag GetSlotID() const { return SlotID; }
+	FFaerieSlotTag GetSlotID() const { return Config.SlotID; }
 
-	FEquipmentSlotEventNative& GetOnItemChanged() { return OnItemChangedNative; }
-	FEquipmentSlotEventNative& GetOnItemDataChanged() { return OnItemDataChangedNative; }
+	FEquipmentSlotEventNative::RegistrationType& GetOnItemChanged() { return OnItemChangedNative; }
+	FEquipmentSlotEventNative::RegistrationType& GetOnItemDataChanged() { return OnItemDataChangedNative; }
 
 	// This checks if the stack could ever be contained by this slot, ignoring its current state.
 	UFUNCTION(BlueprintCallable, Category = "Faerie|EquipmentSlot")
@@ -113,23 +145,15 @@ protected:
 	void OnRep_Item();
 
 	// Broadcast when the item filling this slot is removed, or a new item is set.
-	UPROPERTY(BlueprintAssignable, Category = "Faerie|EquipmentSlot|Events")
+	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FEquipmentSlotEvent OnItemChanged;
 
 	// Broadcast when the Item filling this slot has its data mutated. Usually by a sub-item being added/removed.
-	UPROPERTY(BlueprintAssignable, Category = "Faerie|EquipmentSlot|Events")
+	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FEquipmentSlotEvent OnItemDataChanged;
 
-	// Unique ID for this slot.
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Replicated, Category = "Config")
-	FFaerieSlotTag SlotID;
-
-	// Info about this slot.
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Replicated, Category = "Config")
-	TObjectPtr<UFaerieEquipmentSlotDescription> SlotDescription;
-
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Replicated, Category = "Config")
-	bool SingleItemSlot;
+	FFaerieEquipmentSlotConfig Config;
 
 	// Current item stack being contained in this slot.
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, ReplicatedUsing = "OnRep_Item", Category = "State")

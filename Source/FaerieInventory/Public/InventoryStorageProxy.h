@@ -49,8 +49,8 @@ public:
 	FAERIEINVENTORY_API int32 GetItemVersion() const { return LocalItemVersion; }
 	FAERIEINVENTORY_API virtual FEntryKey GetKey() const PURE_VIRTUAL(UInventoryEntryStorageProxy::GetKey, return FEntryKey(); )
 
-	FAERIEINVENTORY_API FEntryStorageProxyEvent& GetOnCacheUpdated() { return OnCacheUpdatedNative; }
-	FAERIEINVENTORY_API FEntryStorageProxyEvent& GetOnCacheRemoved() { return OnCacheRemovedNative; }
+	FAERIEINVENTORY_API FEntryStorageProxyEvent::RegistrationType& GetOnCacheUpdated() { return OnCacheUpdatedNative; }
+	FAERIEINVENTORY_API FEntryStorageProxyEvent::RegistrationType& GetOnCacheRemoved() { return OnCacheRemovedNative; }
 
 protected:
 	void NotifyCreation();

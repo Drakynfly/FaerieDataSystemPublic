@@ -12,8 +12,7 @@ public class FaerieItemMesh : ModuleRules
             new []
             {
                 "Core",
-                "GameplayTags",
-                "StructUtils"
+                "GameplayTags"
             });
 
         PublicDependencyModuleNames.AddRange(

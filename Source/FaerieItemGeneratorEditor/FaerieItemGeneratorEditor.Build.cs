@@ -12,7 +12,6 @@ public class FaerieItemGeneratorEditor : ModuleRules
             new []
             {
                 "Core",
-                "StructUtils",
                 "FaerieItemGenerator",
                 "FaerieDataSystemEditor"
             }

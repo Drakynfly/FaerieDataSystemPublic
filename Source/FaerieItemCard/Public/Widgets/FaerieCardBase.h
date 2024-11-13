@@ -23,7 +23,7 @@ public:
 
 	FFaerieItemProxy GetItemData() const { return ItemProxy; }
 
-	FOnCardRefreshed& GetOnCardRefreshed() { return OnCardRefreshed; }
+	FOnCardRefreshed::RegistrationType& GetOnCardRefreshed() { return OnCardRefreshed; }
 
 	UFUNCTION(BlueprintCallable, Category = "Faerie|ItemCard")
 	void Refresh();
@@ -33,10 +33,10 @@ protected:
 	void BP_Refresh();
 
 protected:
-	UPROPERTY(BlueprintReadOnly, Category = "Faerie|CardWidget")
+	UPROPERTY(BlueprintReadOnly, Category = "CardWidget")
 	FFaerieItemProxy ItemProxy;
 
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Faerie|CardWidget")
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "CardWidget")
 	bool RefreshOnConstruct = true;
 
 	FOnCardRefreshed OnCardRefreshed;

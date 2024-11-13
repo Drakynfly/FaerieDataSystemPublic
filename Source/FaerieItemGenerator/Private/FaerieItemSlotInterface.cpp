@@ -12,7 +12,7 @@ namespace Faerie::Crafting
 		{
 			return Interface->GetCraftingSlots();
 		}
-		return FFaerieCraftingSlotsView(FFaerieItemCraftingSlots::StaticStruct());
+		return FFaerieCraftingSlotsView();
 	}
 
 	bool IsSlotOptional(const IFaerieItemSlotInterface* Interface, const FFaerieItemSlotHandle& Name)

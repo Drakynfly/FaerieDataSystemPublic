@@ -50,7 +50,11 @@ void UFaerieItemContainerBase::RavelExtensionData(TMap<FGuid, FInstancedStruct>&
 			if (const FInstancedStruct Struct = Extension->MakeSaveData(this);
 				Struct.IsValid())
 			{
-				Data.Add(Identifier, Extension->MakeSaveData(this));
+				if (const FInstancedStruct SaveData = Extension->MakeSaveData(this);
+					SaveData.IsValid())
+				{
+					Data.Add(Identifier, Extension->MakeSaveData(this));
+				}
 			}
 		});
 
