@@ -43,7 +43,7 @@ protected:
 	virtual void PostDuplicate(EDuplicateMode::Type DuplicateMode) override;
 	//~ UObject
 
-	virtual FInstancedStruct MakeSaveData(const UFaerieItemContainerBase* Container) { return {}; }
+	virtual FInstancedStruct MakeSaveData(const UFaerieItemContainerBase* Container) const { return {}; }
 	virtual void LoadSaveData(const UFaerieItemContainerBase* Container, const FInstancedStruct& SaveData) {}
 
 	/* Called at begin play or when the extension is created during runtime */

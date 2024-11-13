@@ -6,6 +6,7 @@
 #include "FaerieAssetInfo.h"
 #include "FaerieItem.h"
 #include "FaerieItemTemplate.h"
+#include "FlakesStructs.h"
 #include "ItemContainerEvent.h"
 #include "ItemContainerExtensionBase.h"
 #include "Net/UnrealNetwork.h"
@@ -22,25 +23,43 @@ namespace Faerie::Equipment::Tags
 	UE_DEFINE_GAMEPLAY_TAG_TYPED_COMMENT(FFaerieInventoryTag, SlotTake, "Fae.Inventory.Take", "Event tag when item data is removed from a slot")
 }
 
-UFaerieEquipmentSlot::UFaerieEquipmentSlot()
-{
-	SingleItemSlot = true;
-}
-
 void UFaerieEquipmentSlot::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	// Config members only need to replicate once
-	DOREPLIFETIME_CONDITION(ThisClass, SlotID, COND_InitialOnly);
-	DOREPLIFETIME_CONDITION(ThisClass, SlotDescription, COND_InitialOnly);
-	DOREPLIFETIME_CONDITION(ThisClass, SingleItemSlot, COND_InitialOnly);
+	// Config only needs to replicate once
+	DOREPLIFETIME_CONDITION(ThisClass, Config, COND_InitialOnly);
 
 	// State members are push based
 	FDoRepLifetimeParams SharedParams;
 	SharedParams.bIsPushBased = true;
 	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, ItemStack, SharedParams);
 	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, StoredKey, SharedParams);
+}
+
+FFaerieContainerSaveData UFaerieEquipmentSlot::MakeSaveData() const
+{
+	FFaerieEquipmentSlotSaveData SlotSaveData;
+	SlotSaveData.Config = Config;
+	SlotSaveData.ItemStack = Flakes::MakeFlake<Flakes::Binary::Type>(FConstStructView::Make(ItemStack), this);
+	SlotSaveData.StoredKey = StoredKey;
+
+	FFaerieContainerSaveData SaveData;
+	SaveData.ItemData = FInstancedStruct::Make(SlotSaveData);
+	RavelExtensionData(SaveData.ExtensionData);
+	return SaveData;
+}
+
+void UFaerieEquipmentSlot::LoadSaveData(const FFaerieContainerSaveData& SaveData)
+{
+	const FFaerieEquipmentSlotSaveData& SlotSaveData = SaveData.ItemData.Get<FFaerieEquipmentSlotSaveData>();
+	Config = SlotSaveData.Config;
+	const FFaerieItemStack LoadedItemStack = Flakes::CreateStruct<Flakes::Binary::Type, FFaerieItemStack>(SlotSaveData.ItemStack, this);
+	StoredKey = SlotSaveData.StoredKey;
+
+	SetItemInSlot(LoadedItemStack);
+
+	UnravelExtensionData(SaveData.ExtensionData);
 }
 
 //~ UFaerieItemContainerBase
@@ -112,6 +131,7 @@ int32 UFaerieEquipmentSlot::GetCopies() const
 {
 	return ItemStack.Copies;
 }
+
 bool UFaerieEquipmentSlot::CanMutate() const
 {
 	// Items should not be modified while in an equipment slot. Remove them first.
@@ -163,7 +183,7 @@ bool UFaerieEquipmentSlot::CouldSetInSlot(const FFaerieItemStackView View) const
 {
 	if (!View.Item.IsValid()) return false;
 
-	if (SingleItemSlot && View.Copies > 1)
+	if (Config.SingleItemSlot && View.Copies > 1)
 	{
 		return false;
 	}
@@ -173,9 +193,9 @@ bool UFaerieEquipmentSlot::CouldSetInSlot(const FFaerieItemStackView View) const
 		return false;
 	}
 
-	if (IsValid(SlotDescription))
+	if (IsValid(Config.SlotDescription))
 	{
-		return SlotDescription->Template->TryMatch(View);
+		return Config.SlotDescription->Template->TryMatch(View);
 	}
 
 	return false;
@@ -193,7 +213,7 @@ bool UFaerieEquipmentSlot::CanSetInSlot(const FFaerieItemStackView View) const
 			return false;
 		}
 
-		if (SingleItemSlot)
+		if (Config.SingleItemSlot)
 		{
 			return false;
 		}
@@ -204,9 +224,9 @@ bool UFaerieEquipmentSlot::CanSetInSlot(const FFaerieItemStackView View) const
 		return false;
 	}
 
-	if (IsValid(SlotDescription))
+	if (IsValid(Config.SlotDescription))
 	{
-		return SlotDescription->Template->TryMatch(View);
+		return Config.SlotDescription->Template->TryMatch(View);
 	}
 
 	return false;
@@ -332,10 +352,10 @@ FFaerieItemStack UFaerieEquipmentSlot::TakeItemFromSlot(int32 Copies)
 
 FFaerieAssetInfo UFaerieEquipmentSlot::GetSlotInfo() const
 {
-	if (IsValid(SlotDescription) &&
-		IsValid(SlotDescription->Template))
+	if (IsValid(Config.SlotDescription) &&
+		IsValid(Config.SlotDescription->Template))
 	{
-		return SlotDescription->Template->GetDescription();
+		return Config.SlotDescription->Template->GetDescription();
 	}
 	return FFaerieAssetInfo();
 }
@@ -353,7 +373,7 @@ UFaerieEquipmentSlot* UFaerieEquipmentSlot::FindSlot(const FFaerieSlotTag SlotTa
 
 		for (auto&& Child : Children)
 		{
-			if (Child->SlotID == SlotTag)
+			if (Child->Config.SlotID == SlotTag)
 			{
 				return Child;
 			}
@@ -363,7 +383,7 @@ UFaerieEquipmentSlot* UFaerieEquipmentSlot::FindSlot(const FFaerieSlotTag SlotTa
 		{
 			for (auto&& Child : Children)
 			{
-				if (auto&& ChildSlot = Child->FindSlot(SlotID, true))
+				if (auto&& ChildSlot = Child->FindSlot(Config.SlotID, true))
 				{
 					return ChildSlot;
 				}

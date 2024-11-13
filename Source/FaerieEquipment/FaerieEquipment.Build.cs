@@ -23,7 +23,8 @@ public class FaerieEquipment : ModuleRules
 			{
 				"FaerieItemData",
 				"FaerieItemMesh",
-				"FaerieInventory"
+				"FaerieInventory",
+				"Flakes"
 			});
 
 		PrivateDependencyModuleNames.AddRange(

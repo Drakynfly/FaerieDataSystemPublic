@@ -135,7 +135,7 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	//~ UItemContainerExtensionBase
-	virtual FInstancedStruct MakeSaveData(const UFaerieItemContainerBase* Container) override;
+	virtual FInstancedStruct MakeSaveData(const UFaerieItemContainerBase* Container) const override;
 	virtual void LoadSaveData(const UFaerieItemContainerBase* Container, const FInstancedStruct& SaveData) override;
 	virtual void InitializeExtension(const UFaerieItemContainerBase* Container) override;
 	virtual void DeinitializeExtension(const UFaerieItemContainerBase* Container) override;

@@ -33,14 +33,7 @@ protected:
 
 protected:
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "EquipmentSlot")
-	FFaerieSlotTag SlotID;
-
-	// Description used for the child slot
-	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "EquipmentSlot")
-	TObjectPtr<UFaerieEquipmentSlotDescription> SlotDescription;
-
-	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "EquipmentSlot")
-	bool SingleItemSlot = true;
+	FFaerieEquipmentSlotConfig Config;
 
 	UPROPERTY(EditInstanceOnly, Instanced, NoClear, Category = "EquipmentSlot")
 	TObjectPtr<UItemContainerExtensionGroup> Extensions;

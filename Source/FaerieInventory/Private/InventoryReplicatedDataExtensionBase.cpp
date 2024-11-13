@@ -131,7 +131,7 @@ void UInventoryReplicatedDataExtensionBase::GetLifetimeReplicatedProps(TArray<FL
 	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, PerContainerData, SharedParams);
 }
 
-FInstancedStruct UInventoryReplicatedDataExtensionBase::MakeSaveData(const UFaerieItemContainerBase* Container)
+FInstancedStruct UInventoryReplicatedDataExtensionBase::MakeSaveData(const UFaerieItemContainerBase* Container) const
 {
 	if (SaveRepDataArray())
 	{

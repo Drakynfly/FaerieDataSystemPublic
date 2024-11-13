@@ -27,9 +27,7 @@ void UFaerieChildSlotToken::PostLoad()
 	{
 		if (auto&& Slot = GetSlotContainer())
 		{
-			Slot->SlotID = SlotID;
-			Slot->SlotDescription = SlotDescription;
-			Slot->SingleItemSlot = SingleItemSlot;
+			Slot->Config = Config;
 			Slot->OnItemChangedNative.AddUObject(this, &ThisClass::OnSlotItemChanged);
 		}
 	}
@@ -41,12 +39,12 @@ void UFaerieChildSlotToken::PostLoad()
 
 EDataValidationResult UFaerieChildSlotToken::IsDataValid(FDataValidationContext& Context) const
 {
-	if (!SlotID.IsValid())
+	if (!Config.SlotID.IsValid())
 	{
 		Context.AddError(LOCTEXT("InvalidSlotID", "Must have valid SlotID set!"));
 	}
 
-	if (!IsValid(SlotDescription))
+	if (!IsValid(Config.SlotDescription))
 	{
 		Context.AddError(LOCTEXT("InvalidSlotDescription", "Must have valid SlotDescription set!"));
 	}
