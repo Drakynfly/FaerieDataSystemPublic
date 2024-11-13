@@ -311,6 +311,11 @@ FSpatialItemPlacement UInventorySpatialGridExtension::GetEntryPlacementData(cons
 	return FSpatialItemPlacement();
 }
 
+FIntPoint UInventorySpatialGridExtension::GetEntryBounds(const FInventoryKey& Entry) const
+{
+	return GetEntryPlacementData(Entry).ItemShape.GetSize();
+}
+
 bool UInventorySpatialGridExtension::FitsInGrid(const FSpatialItemPlacement& PlacementData, const TConstArrayView<FInventoryKey> ExcludedKeys, FIntPoint* OutCandidate) const
 {
 	// Build list of excluded indices
@@ -607,11 +612,6 @@ void UInventorySpatialGridExtension::UpdateItemPosition(FSpatialKeyedEntry& Item
 	Item.Value.Origin = Item.Value.Origin + Offset;
 	Item.Value.PivotPoint = Item.Value.PivotPoint + Offset;
 	SpatialEntries.MarkItemDirty(Item);
-}
-
-FIntPoint UInventorySpatialGridExtension::GetEntryBounds(const FInventoryKey& Entry) const
-{
-	return GetEntryPlacementData(Entry).ItemShape.GetSize();
 }
 
 bool UInventorySpatialGridExtension::RotateItem(const FInventoryKey& Key)

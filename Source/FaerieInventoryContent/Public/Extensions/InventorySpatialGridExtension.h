@@ -202,10 +202,13 @@ public:
 
 	void FindFirstEmptyLocation(FSpatialItemPlacement& OutPlacementData) const;
 
-	UFUNCTION(BlueprintCallable, Category = "Grid")
+	UFUNCTION(BlueprintCallable, Category = "Faerie|Grid")
 	FSpatialItemPlacement GetEntryPlacementData(const FInventoryKey& Key) const;
 
-	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Grid")
+	UFUNCTION(BlueprintCallable, Category = "Faerie|Grid")
+	FIntPoint GetEntryBounds(const FInventoryKey& Entry) const;
+
+	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Faerie|Grid")
 	void SetGridSize(FIntPoint NewGridSize);
 
 	FSpatialEntryChangedNative::RegistrationType& GetOnSpatialEntryChanged() { return SpatialEntryChangedDelegateNative; }
@@ -220,9 +223,6 @@ protected:
 	bool TrySwapItems(FSpatialKeyedEntry& MovingItem, FSpatialKeyedEntry& OverlappingItem, const FIntPoint& Offset);
 	bool MoveSingleItem(FSpatialKeyedEntry& Item, const FIntPoint& Offset);
 	void UpdateItemPosition(FSpatialKeyedEntry& Item, const FIntPoint& Offset);
-
-	UFUNCTION(BlueprintCallable, Category = "Grid")
-	FIntPoint GetEntryBounds(const FInventoryKey& Entry) const;
 
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FSpatialEntryChanged SpatialEntryChangedDelegate;
