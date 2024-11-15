@@ -6,6 +6,10 @@
 
 UFaerieItem* IFaerieItemSource::CreateItemInstance(UObject* Outer) const
 {
+	if(!Outer)
+	{
+		Outer = GetTransientPackage();
+	}
 	unimplemented();
 	return nullptr;
 }

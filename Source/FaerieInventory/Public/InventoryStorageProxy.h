@@ -6,9 +6,13 @@
 #include "InventoryDataStructs.h"
 #include "InventoryStorageProxy.generated.h"
 
+class UFaerieClientItemProxy;
 class UInventoryEntryStorageProxy;
 using FEntryStorageProxyEvent = TMulticastDelegate<void(UInventoryEntryStorageProxy*)>;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FCacheEvent, UInventoryEntryStorageProxy*, Proxy);
+
+using FClientItemProxyNativeEvent = TMulticastDelegate<void(UFaerieClientItemProxy *)>;
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FClientItemProxyEvent, UFaerieClientItemProxy*, Proxy);
 
 UCLASS(Abstract)
 class UInventoryEntryProxyBase : public UObject, public IFaerieItemDataProxy
@@ -127,4 +131,26 @@ public:
 protected:
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "StackProxy")
 	FInventoryKey Key;
+};
+
+UCLASS(BlueprintType, Blueprintable)
+class UFaerieClientItemProxy : public UInventoryEntryStorageProxy
+{
+	GENERATED_BODY()
+public:
+	UFUNCTION(BlueprintCallable, Category="Faerie|ClientItemProxy")
+	FInventoryKey& GetInventoryKey() { return Key; }
+
+	UFUNCTION(BlueprintCallable, Category = "Faerie|ClientItemProxy")
+	void InitializeProxy(UFaerieItemStorage* InItemStorage, const FInventoryKey InInventoryKey);
+	UPROPERTY(BlueprintAssignable)
+	FClientItemProxyEvent OnClientItemUpdated;
+protected:
+	UPROPERTY(BlueprintReadOnly)
+	FInventoryKey Key;
+	
+	void NotifyCreation(UFaerieItemStorage* Storage, const FEntryKey InKey);
+private:
+	FClientItemProxyNativeEvent OnClientItemUpdatedNative;
+
 };
