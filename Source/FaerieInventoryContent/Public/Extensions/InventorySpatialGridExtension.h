@@ -191,10 +191,11 @@ private:
 	bool AddItemToGrid(const FInventoryKey& Key, const UFaerieShapeToken* ShapeToken);
 	void RemoveItem(const FInventoryKey& Key);
 	void RemoveItemsForEntry(const FEntryKey& Key);
+
 public:
 	bool CanAddItemToGrid(const UFaerieShapeToken* ShapeToken) const;
 
-	bool MoveItem(const FInventoryKey& Key, const FIntPoint& SourcePoint, const FIntPoint& TargetPoint);
+	bool MoveItem(const FInventoryKey& Key, const FIntPoint& TargetPoint);
 	bool RotateItem(const FInventoryKey& Key);
 
 	// @todo probably split into two functions. one with rotation check, one without. public API probably doesn't need to see the rotation check!
@@ -215,14 +216,20 @@ public:
 	FGridSizeChangedNative::RegistrationType& GetOnGridSizeChanged() { return GridSizeChangedDelegateNative; }
 
 protected:
-	FSpatialKeyedEntry* FindItemByKey(const FInventoryKey& Key);
+	// Convert a point into a grid index
+	int32 Ravel(const FIntPoint& Point) const;
+
+	// Convert a grid index to a point
+	FIntPoint Unravel(int32 Index) const;
 
 	// @todo Drakyn: look at these
-	FSpatialKeyedEntry* FindOverlappingItem(const FFaerieGridShape& Shape, const FIntPoint& Offset,
-											const FInventoryKey& ExcludeKey);
-	bool TrySwapItems(FSpatialKeyedEntry& MovingItem, FSpatialKeyedEntry& OverlappingItem, const FIntPoint& Offset);
-	bool MoveSingleItem(FSpatialKeyedEntry& Item, const FIntPoint& Offset);
-	void UpdateItemPosition(FSpatialKeyedEntry& Item, const FIntPoint& Offset);
+	FSpatialKeyedEntry* FindItemByKey(const FInventoryKey& Key);
+	FSpatialKeyedEntry* FindOverlappingItem(const FFaerieGridShape& TranslatedShape, const FInventoryKey& ExcludeKey);
+	bool TrySwapItems(FSpatialKeyedEntry& MovingItemA, FSpatialKeyedEntry& MovingItemB);
+
+	bool MoveSingleItem(FSpatialKeyedEntry& Item, const FIntPoint& NewPosition);
+
+	void UpdateItemPosition(FSpatialKeyedEntry& Item, const FIntPoint& NewPosition);
 
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FSpatialEntryChanged SpatialEntryChangedDelegate;

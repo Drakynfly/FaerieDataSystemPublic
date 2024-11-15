@@ -208,9 +208,6 @@ struct FFaerieClientAction_RequestMoveItemBetweenSpatialSlots : public FFaerieCl
 	FInventoryKey TargetKey;
 
 	UPROPERTY(BlueprintReadWrite, Category = "RequestMoveSpatialEntry")
-	FIntPoint DragStart = FIntPoint::ZeroValue;
-
-	UPROPERTY(BlueprintReadWrite, Category = "RequestMoveSpatialEntry")
 	FIntPoint DragEnd = FIntPoint::ZeroValue;
 };
 

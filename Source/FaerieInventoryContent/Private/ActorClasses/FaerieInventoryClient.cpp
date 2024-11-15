@@ -230,7 +230,7 @@ bool FFaerieClientAction_RequestMoveItemBetweenSpatialSlots::Server_Execute(cons
 
 	if (auto&& SpatialExtension = Storage->GetExtension<UInventorySpatialGridExtension>())
 	{
-		return SpatialExtension->MoveItem(TargetKey, DragStart, DragEnd);
+		return SpatialExtension->MoveItem(TargetKey, DragEnd);
 	}
 
 	return false;
