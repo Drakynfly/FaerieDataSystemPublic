@@ -143,6 +143,7 @@ void UInventorySpatialGridExtension::DeinitializeExtension(const UFaerieItemCont
 EEventExtensionResponse UInventorySpatialGridExtension::AllowsAddition(const UFaerieItemContainerBase* Container,
 																		const FFaerieItemStackView Stack)
 {
+	// @todo add boolean in config to allow items without a shape
 	if (!CanAddItemToGrid(Stack.Item->GetToken<UFaerieShapeToken>()))
 	{
 		return EEventExtensionResponse::Disallowed;
@@ -235,8 +236,7 @@ bool UInventorySpatialGridExtension::CanAddItemToGrid(const UFaerieShapeToken* S
 {
 	FSpatialItemPlacement TestPlacement(ShapeToken->GetShape());
 	FindFirstEmptyLocation(TestPlacement);
-	if (TestPlacement.Origin == FIntPoint::NoneValue) return	false;
-	return true;
+	return TestPlacement.Origin != FIntPoint::NoneValue;
 }
 
 bool UInventorySpatialGridExtension::AddItemToGrid(const FInventoryKey& Key, const UFaerieShapeToken* ShapeToken)
@@ -346,7 +346,8 @@ bool UInventorySpatialGridExtension::FitsInGrid(const FSpatialItemPlacement& Pla
 		}
 
 		// If this index is not in the excluded list, check if it's occupied
-		if (const int32 BitGridIndex = AbsolutePosition.X + AbsolutePosition.Y * GridSize.X; !ExcludedIndices.Contains(BitGridIndex) && OccupiedCells[BitGridIndex])
+		if (const int32 BitGridIndex = AbsolutePosition.X + AbsolutePosition.Y * GridSize.X;
+			!ExcludedIndices.Contains(BitGridIndex) && OccupiedCells[BitGridIndex])
 		{
 			if (OutCandidate)
 			{

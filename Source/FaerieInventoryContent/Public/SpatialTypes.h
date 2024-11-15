@@ -58,7 +58,7 @@ struct FAERIEINVENTORYCONTENT_API FFaerieGridShape
 {
 	GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Grid")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "FaerieGridShape")
 	TArray<FIntPoint> Points;
 
 	// Make a rectangular shape
@@ -66,6 +66,7 @@ struct FAERIEINVENTORYCONTENT_API FFaerieGridShape
 	static FFaerieGridShape MakeRect(int32 Height, int32 Width);
 
 	FIntPoint GetSize() const;
+	FInt32Rect GetBounds() const;
 	FIntPoint GetShapeCenter() const;
 	FIntPoint GetShapeAverageCenter() const;
 	bool IsSymmetrical() const;
@@ -76,9 +77,12 @@ struct FAERIEINVENTORYCONTENT_API FFaerieGridShape
 	void RotateInline(ESpatialItemRotation Rotation);
 	[[nodiscard]] FFaerieGridShape Rotate(ESpatialItemRotation Rotation) const;
 
-	/* 90 degree rotation around a pivot point */
-	void RotateAroundInline(const FIntPoint& PivotPoint);
-	[[nodiscard]] FFaerieGridShape RotateAround(const FIntPoint& PivotPoint) const;
+	void RotateAroundInline_90(const FIntPoint& PivotPoint);
+	[[nodiscard]] FFaerieGridShape RotateAround_90(const FIntPoint& PivotPoint) const;
+	void RotateAroundInline_180(const FIntPoint& PivotPoint);
+	[[nodiscard]] FFaerieGridShape RotateAround_180(const FIntPoint& PivotPoint) const;
+	void RotateAroundInline_270(const FIntPoint& PivotPoint);
+	[[nodiscard]] FFaerieGridShape RotateAround_270(const FIntPoint& PivotPoint) const;
 
 	void RotateAroundCenterInline();
 	[[nodiscard]] FFaerieGridShape RotateAroundCenter() const;
