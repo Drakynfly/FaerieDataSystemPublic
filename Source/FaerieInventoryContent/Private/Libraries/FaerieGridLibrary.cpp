@@ -1,9 +1,9 @@
 // Copyright Guy (Drakynfly) Lundvall. All Rights Reserved.
 
-#include "UFaerieGridLibrary.h"
+#include "FaerieGridLibrary.h"
 #include "SpatialTypes.h"
 
-#include UE_INLINE_GENERATED_CPP_BY_NAME(UFaerieGridLibrary)
+#include UE_INLINE_GENERATED_CPP_BY_NAME(FaerieGridLibrary)
 
 FFaerieGridShape UFaerieGridLibrary::RotateShape(const FFaerieGridShape& InShape, const ESpatialItemRotation Rotation)
 {

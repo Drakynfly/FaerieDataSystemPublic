@@ -3,7 +3,7 @@
 #pragma once
 
 #include "Kismet/BlueprintFunctionLibrary.h"
-#include "UFaerieGridLibrary.generated.h"
+#include "FaerieGridLibrary.generated.h"
 
 enum class ESpatialItemRotation : uint8;
 struct FFaerieGridShape;
