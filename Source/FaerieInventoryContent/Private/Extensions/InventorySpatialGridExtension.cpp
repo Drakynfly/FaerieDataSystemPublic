@@ -407,7 +407,7 @@ void UInventorySpatialGridExtension::FindFirstEmptyLocation(FSpatialItemPlacemen
 			for (const ESpatialItemRotation Rotation : RotationRange)
 			{
 				OutPlacementData.Rotation = Rotation;
-				if (FitsInGrid(OutPlacementData, TArray<FInventoryKey>(), &TestPoints))
+				if (FitsInGrid(OutPlacementData,  {}, &TestPoints))
 				{
 					OutPlacementData.PivotPoint = OutPlacementData.ItemShape.GetShapeCenter() + OutPlacementData.Origin;
 					return;
