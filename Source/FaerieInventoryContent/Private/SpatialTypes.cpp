@@ -94,6 +94,24 @@ bool FFaerieGridShape::IsSymmetrical() const
 	return ShapeCopy == *this;
 }
 
+bool FFaerieGridShape::Contains(const FFaerieGridShape& Other) const
+{
+	TSet<FIntPoint> SeenPoints;
+	SeenPoints.Append(Points);
+
+	for (const FIntPoint& OtherPoint : Other.Points)
+	{
+		bool AlreadySeen;
+		SeenPoints.Add(OtherPoint, &AlreadySeen);
+		if (AlreadySeen)
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
 void FFaerieGridShape::TranslateInline(const FIntPoint& Position)
 {
 	for (FIntPoint& Coord : Points)

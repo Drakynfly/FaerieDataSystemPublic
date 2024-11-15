@@ -70,6 +70,7 @@ struct FAERIEINVENTORYCONTENT_API FFaerieGridShape
 	FIntPoint GetShapeCenter() const;
 	FIntPoint GetShapeAverageCenter() const;
 	bool IsSymmetrical() const;
+	bool Contains(const FFaerieGridShape& Other) const;
 
 	void TranslateInline(const FIntPoint& Position);
 	[[nodiscard]] FFaerieGridShape Translate(const FIntPoint& Position) const;

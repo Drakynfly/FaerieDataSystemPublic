@@ -494,27 +494,17 @@ FSpatialKeyedEntry* UInventorySpatialGridExtension::FindOverlappingItem(const FF
 																		const FInventoryKey& ExcludeKey)
 {
 	return SpatialEntries.Items.FindByPredicate(
-		[this, &TranslatedShape, ExcludeKey](const FSpatialKeyedEntry& In)
+		[this, &TranslatedShape, ExcludeKey](const FSpatialKeyedEntry& Other)
 		{
-			if (ExcludeKey == In.Key)
+			if (ExcludeKey == Other.Key)
 			{
 				return false;
 			}
 
-			// Create a rotated version of the "In" item's shape
-			const FFaerieGridShape OtherRotatedShape = In.Value.GetRotated();
+			// Create a rotated and translated version of the other item's shape
+			const FFaerieGridShape OtherTranslatedShape = Other.Value.GetRotated().Translate(Other.Value.Origin);
 
-			for (const FIntPoint& Point : TranslatedShape.Points)
-			{
-				for (const FIntPoint& OtherPoint : OtherRotatedShape.Points)
-				{
-					if (Point == In.Value.Origin + OtherPoint)
-					{
-						return true;
-					}
-				}
-			}
-			return false;
+			return TranslatedShape.Contains(OtherTranslatedShape);
 		});
 }
 
