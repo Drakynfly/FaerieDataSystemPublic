@@ -182,6 +182,8 @@ void FItemShapeCustomization::OnCellClicked(const FIntPoint CellCoord)
 			ShapeGrid->Points.Add(CellCoord);
 			StructHandle->NotifyPostChange(EPropertyChangeType::ArrayAdd);
 		}
+
+		// @todo Normalize shape after editing!
 	}
 }
 

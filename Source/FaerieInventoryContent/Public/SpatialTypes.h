@@ -98,3 +98,68 @@ private:
 	// Internal rotation util
 	[[nodiscard]] FFaerieGridShape RotateAngle(float AngleDegrees) const;
 };
+
+/*
+ * A view of a FFaerieGridShape.
+ */
+struct FAERIEINVENTORYCONTENT_API FFaerieGridShapeView
+{
+	TArrayView<FIntPoint> Points;
+
+	FFaerieGridShapeView(FFaerieGridShape& Shape)
+	  : Points(Shape.Points) {}
+
+	FIntPoint GetSize() const;
+	FInt32Rect GetBounds() const;
+	FIntPoint GetShapeCenter() const;
+	FIntPoint GetShapeAverageCenter() const;
+	bool IsSymmetrical() const;
+	bool Contains(const FFaerieGridShapeView& Other) const;
+
+	void TranslateInline(const FIntPoint& Position);
+	[[nodiscard]] FFaerieGridShapeView Translate(const FIntPoint& Position) const;
+
+	void RotateInline(ESpatialItemRotation Rotation);
+	[[nodiscard]] FFaerieGridShapeView Rotate(ESpatialItemRotation Rotation) const;
+
+	void RotateAroundInline_90(const FIntPoint& PivotPoint);
+	[[nodiscard]] FFaerieGridShapeView RotateAround_90(const FIntPoint& PivotPoint) const;
+	void RotateAroundInline_180(const FIntPoint& PivotPoint);
+	[[nodiscard]] FFaerieGridShapeView RotateAround_180(const FIntPoint& PivotPoint) const;
+	void RotateAroundInline_270(const FIntPoint& PivotPoint);
+	[[nodiscard]] FFaerieGridShapeView RotateAround_270(const FIntPoint& PivotPoint) const;
+
+	void RotateAroundCenterInline();
+	[[nodiscard]] FFaerieGridShapeView RotateAroundCenter() const;
+
+	void NormalizeInline();
+	[[nodiscard]] FFaerieGridShapeView Normalize() const;
+
+	friend bool operator==(const FFaerieGridShapeView& Lhs, const FFaerieGridShapeView& Rhs);
+	friend bool operator!=(const FFaerieGridShapeView& Lhs, const FFaerieGridShapeView& Rhs) { return !(Lhs == Rhs); }
+};
+
+/*
+ * A const view of a FFaerieGridShape.
+ */
+struct FAERIEINVENTORYCONTENT_API FFaerieGridShapeConstView
+{
+	TConstArrayView<FIntPoint> Points;
+
+	FFaerieGridShapeConstView() = default;
+
+	FFaerieGridShapeConstView(const FFaerieGridShape& Shape)
+	  : Points(Shape.Points) {}
+
+	FIntPoint GetSize() const;
+	FInt32Rect GetBounds() const;
+	FIntPoint GetShapeCenter() const;
+	FIntPoint GetShapeAverageCenter() const;
+	bool IsSymmetrical() const;
+	bool Contains(const FFaerieGridShapeView& Other) const;
+
+	FFaerieGridShape Copy() const;
+
+	friend bool operator==(const FFaerieGridShapeConstView& Lhs, const FFaerieGridShapeConstView& Rhs);
+	friend bool operator!=(const FFaerieGridShapeConstView& Lhs, const FFaerieGridShapeConstView& Rhs) { return !(Lhs == Rhs); }
+};

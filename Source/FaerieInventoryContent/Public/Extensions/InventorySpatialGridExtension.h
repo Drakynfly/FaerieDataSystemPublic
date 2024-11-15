@@ -15,52 +15,24 @@ struct FSpatialItemPlacement
 {
 	GENERATED_BODY()
 
-	FSpatialItemPlacement() : ItemShape(FFaerieGridShape::MakeSquare(1)) {}
+	FSpatialItemPlacement() = default;
 
-	explicit FSpatialItemPlacement(const FFaerieGridShape& InShape)
-		: ItemShape(InShape) {}
+	explicit FSpatialItemPlacement(const FIntPoint Origin)
+	  : Origin(Origin) {}
 
-	FSpatialItemPlacement(const FFaerieGridShape& InShape,
-						const FIntPoint Origin,
-						const FIntPoint PivotPoint,
-						const ESpatialItemRotation Rotation)
-		: Origin(Origin)
-		, PivotPoint(PivotPoint)
-		, ItemShape(InShape)
-		, Rotation(Rotation) {}
-
-	FSpatialItemPlacement(const FFaerieGridShape& InShape,
-						const FIntPoint Origin,
-						const ESpatialItemRotation Rotation)
-		: Origin(Origin)
-		, ItemShape(InShape)
-		, Rotation(Rotation)
-	{
-		PivotPoint = ItemShape.GetShapeCenter() + Origin;
-	}
+	FSpatialItemPlacement(const FIntPoint Origin, const ESpatialItemRotation Rotation)
+	  : Origin(Origin),
+		Rotation(Rotation) {}
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "SpatialItemPlacement")
 	FIntPoint Origin = FIntPoint::ZeroValue;
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "SpatialItemPlacement")
-	FIntPoint PivotPoint = FIntPoint::ZeroValue;
-
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "SpatialItemPlacement")
-	FFaerieGridShape ItemShape;
-
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "SpatialItemPlacement")
 	ESpatialItemRotation Rotation = ESpatialItemRotation::None;
-
-	FFaerieGridShape GetRotated() const
-	{
-		return ItemShape.Rotate(Rotation);
-	}
 
 	friend bool operator==(const FSpatialItemPlacement& A, const FSpatialItemPlacement& B)
 	{
 		return A.Origin == B.Origin &&
-			A.PivotPoint == B.PivotPoint &&
-			A.ItemShape == B.ItemShape &&
 			A.Rotation == B.Rotation;
 	}
 
@@ -113,7 +85,7 @@ private:
 	TWeakObjectPtr<UInventorySpatialGridExtension> ChangeListener;
 
 public:
-	bool EditItem(FInventoryKey Key, const TFunctionRef<void(FSpatialItemPlacement&)>& Func);
+	bool EditItem(FInventoryKey Key, const TFunctionRef<bool(FSpatialItemPlacement&)>& Func);
 
 	void PreEntryReplicatedRemove(const FSpatialKeyedEntry& Entry) const;
 	void PostEntryReplicatedAdd(const FSpatialKeyedEntry& Entry);
@@ -199,13 +171,16 @@ public:
 	bool RotateItem(const FInventoryKey& Key);
 
 	// @todo probably split into two functions. one with rotation check, one without. public API probably doesn't need to see the rotation check!
-	bool FitsInGrid(const FSpatialItemPlacement& PlacementData, TConstArrayView<FInventoryKey> ExcludedKeys = {}, FIntPoint* OutCandidate = nullptr) const;
+	bool FitsInGrid(const FFaerieGridShapeConstView& Shape, const FSpatialItemPlacement& PlacementData, TConstArrayView<FInventoryKey> ExcludedKeys = {}, FIntPoint* OutCandidate = nullptr) const;
 
-	void FindFirstEmptyLocation(FSpatialItemPlacement& OutPlacementData) const;
+	FSpatialItemPlacement FindFirstEmptyLocation(const FFaerieGridShape& Shape) const;
+
+	FFaerieGridShapeConstView GetItemShape(FEntryKey Key) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Faerie|Grid")
 	FSpatialItemPlacement GetEntryPlacementData(const FInventoryKey& Key) const;
 
+	// @todo rename GetEntrySize (bounds is something else)
 	UFUNCTION(BlueprintCallable, Category = "Faerie|Grid")
 	FIntPoint GetEntryBounds(const FInventoryKey& Entry) const;
 
@@ -222,14 +197,16 @@ protected:
 	// Convert a grid index to a point
 	FIntPoint Unravel(int32 Index) const;
 
+	static FFaerieGridShape ApplyPlacement(const FFaerieGridShapeConstView& Shape, const FSpatialItemPlacement& Placement);
+
 	// @todo Drakyn: look at these
-	FSpatialKeyedEntry* FindItemByKey(const FInventoryKey& Key);
 	FSpatialKeyedEntry* FindOverlappingItem(const FFaerieGridShape& TranslatedShape, const FInventoryKey& ExcludeKey);
-	bool TrySwapItems(FSpatialKeyedEntry& MovingItemA, FSpatialKeyedEntry& MovingItemB);
 
-	bool MoveSingleItem(FSpatialKeyedEntry& Item, const FIntPoint& NewPosition);
+	bool TrySwapItems(FInventoryKey KeyA, FSpatialItemPlacement& PlacementA, FInventoryKey KeyB, FSpatialItemPlacement& PlacementB);
 
-	void UpdateItemPosition(FSpatialKeyedEntry& Item, const FIntPoint& NewPosition);
+	bool MoveSingleItem(const FInventoryKey Key, FSpatialItemPlacement& Placement, const FIntPoint& NewPosition);
+
+	void UpdateItemPosition(const FInventoryKey Key, FSpatialItemPlacement& Placement, const FIntPoint& NewPosition);
 
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FSpatialEntryChanged SpatialEntryChangedDelegate;
@@ -248,4 +225,11 @@ private:
 
 	FSpatialEntryChangedNative SpatialEntryChangedDelegateNative;
 	FGridSizeChangedNative GridSizeChangedDelegateNative;
+
+	/*
+	 * @todo we do not support multiple containers. FSpatialContent would need to be refactored to allow that.
+	 * (Or use UInventoryReplicatedDataExtensionBase). Until then, we can safely assume we only worry about one container.
+	 */
+	UPROPERTY(Replicated)
+	TObjectPtr<const UFaerieItemContainerBase> InitializedContainer;
 };
