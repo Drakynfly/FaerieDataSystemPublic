@@ -31,7 +31,8 @@ void UItemContainerExtensionBase::SetIdentifier(const FGuid* GuidToUse)
 	}
 	else
 	{
-		Identifier = FGuid::NewGuid();
+		constexpr int64 ExtensionGuidDeterminismSeed = 1;
+		Identifier = FGuid::NewDeterministicGuid(GetFullName(), ExtensionGuidDeterminismSeed);
 	}
 }
 

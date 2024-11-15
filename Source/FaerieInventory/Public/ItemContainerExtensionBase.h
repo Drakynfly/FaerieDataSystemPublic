@@ -50,7 +50,7 @@ protected:
 	virtual void InitializeExtension(const UFaerieItemContainerBase* Container) {}
 	virtual void DeinitializeExtension(const UFaerieItemContainerBase* Container) {}
 
-	/* Does this extension allow this item to be added to the container */
+	/* Does this extension allow this item to be added to the container? */
 	virtual EEventExtensionResponse AllowsAddition(const UFaerieItemContainerBase* Container, FFaerieItemStackView Stack) { return EEventExtensionResponse::NoExplicitResponse; }
 
 	/* Allows us to react before an item is added */
@@ -58,15 +58,15 @@ protected:
 	/* Allows us to use the key from the last addition */
 	virtual void PostAddition(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) {}
 
-	/* Does this extension allow removal from/of an entry in the container */
-	virtual EEventExtensionResponse AllowsRemoval(const UFaerieItemContainerBase* Container, const FEntryKey Key, const FFaerieInventoryTag Reason) const { return EEventExtensionResponse::NoExplicitResponse; }
+	/* Does this extension allow removal from/of an entry in the container? */
+	virtual EEventExtensionResponse AllowsRemoval(const UFaerieItemContainerBase* Container, FEntryKey Key, FFaerieInventoryTag Reason) const { return EEventExtensionResponse::NoExplicitResponse; }
 
 	/* Allows us to react before an item is removed */
-	virtual void PreRemoval(const UFaerieItemContainerBase* Container, const FEntryKey Key, const int32 Removal) {}
+	virtual void PreRemoval(const UFaerieItemContainerBase* Container, FEntryKey Key, int32 Removal) {}
 	/* Allows us to use the key from the last removal */
 	virtual void PostRemoval(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) {}
 
-	virtual void PostEntryChanged(const UFaerieItemContainerBase* Container, const FEntryKey Key) {}
+	virtual void PostEntryChanged(const UFaerieItemContainerBase* Container, FEntryKey Key) {}
 
 public:
 	void SetIdentifier(const FGuid* GuidToUse = nullptr);
@@ -103,10 +103,10 @@ public:
 	virtual EEventExtensionResponse AllowsAddition(const UFaerieItemContainerBase* Container, FFaerieItemStackView Stack) override;
 	virtual void PreAddition(const UFaerieItemContainerBase* Container, FFaerieItemStackView Stack) override;
 	virtual void PostAddition(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) override;
-	virtual EEventExtensionResponse AllowsRemoval(const UFaerieItemContainerBase* Container, const FEntryKey Key, const FFaerieInventoryTag Reason) const override;
-	virtual void PreRemoval(const UFaerieItemContainerBase* Container, const FEntryKey Key, const int32 Removal) override;
+	virtual EEventExtensionResponse AllowsRemoval(const UFaerieItemContainerBase* Container, FEntryKey Key, FFaerieInventoryTag Reason) const override;
+	virtual void PreRemoval(const UFaerieItemContainerBase* Container, FEntryKey Key, int32 Removal) override;
 	virtual void PostRemoval(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) override;
-	virtual void PostEntryChanged(const UFaerieItemContainerBase* Container, const FEntryKey Key) override;
+	virtual void PostEntryChanged(const UFaerieItemContainerBase* Container, FEntryKey Key) override;
 	//~ UItemContainerExtensionBase
 
 private:

@@ -58,14 +58,14 @@ using FEquipmentSlotEventNative = TMulticastDelegate<void(UFaerieEquipmentSlot*)
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FEquipmentSlotEvent, UFaerieEquipmentSlot*, Slot);
 
 /**
- * An equipment slot that hold and replicates a single Stack of Items.
+ * An equipment slot that holds and replicates a single Stack of Items.
  */
 UCLASS(BlueprintType)
 class FAERIEEQUIPMENT_API UFaerieEquipmentSlot : public UFaerieItemContainerBase, public IFaerieItemDataProxy
 {
 	GENERATED_BODY()
 
-	// We friend the only classes allowed to set our SlotDescription
+	// We friend the only classes allowed to set our Config
 	friend class UFaerieEquipmentManager;
 	friend class UFaerieChildSlotToken;
 

@@ -139,7 +139,7 @@ public:
 	virtual void LoadSaveData(const UFaerieItemContainerBase* Container, const FInstancedStruct& SaveData) override;
 	virtual void InitializeExtension(const UFaerieItemContainerBase* Container) override;
 	virtual void DeinitializeExtension(const UFaerieItemContainerBase* Container) override;
-	virtual void PreRemoval(const UFaerieItemContainerBase* Container, const FEntryKey Key, const int32 Removal) override;
+	virtual void PreRemoval(const UFaerieItemContainerBase* Container, FEntryKey Key, int32 Removal) override;
 	//~ UItemContainerExtensionBase
 
 	// Children must implement this. It gives the struct type instanced per item.

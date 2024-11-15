@@ -26,7 +26,7 @@ class FAERIEINVENTORYCONTENT_API UInventoryEjectionHandlerExtension : public UIt
 
 public:
 	//~ UItemContainerExtensionBase
-	virtual EEventExtensionResponse AllowsRemoval(const UFaerieItemContainerBase* Container, const FEntryKey Key, const FFaerieInventoryTag Reason) const override;
+	virtual EEventExtensionResponse AllowsRemoval(const UFaerieItemContainerBase* Container, FEntryKey Key, FFaerieInventoryTag Reason) const override;
 	virtual void PostRemoval(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) override;
 	//~ UItemContainerExtensionBase
 

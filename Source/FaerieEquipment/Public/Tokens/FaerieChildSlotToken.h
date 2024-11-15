@@ -6,8 +6,6 @@
 #include "Tokens/FaerieItemStorageToken.h"
 #include "FaerieChildSlotToken.generated.h"
 
-class UFaerieEquipmentSlotDescription;
-
 /**
  *
  */

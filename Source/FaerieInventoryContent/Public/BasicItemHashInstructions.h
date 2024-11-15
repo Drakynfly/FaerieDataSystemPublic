@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "FaerieHash.h"
 #include "FaerieItemStackHashInstruction.h"
 #include "BasicItemHashInstructions.generated.h"
 
@@ -18,11 +19,11 @@ class UFISHI_Literial : public UFaerieItemStackHashInstruction
 	GENERATED_BODY()
 
 public:
-	virtual int32 Hash(FFaerieItemStackView StackView) const override;
+	virtual uint32 Hash(FFaerieItemStackView StackView) const override;
 
 protected:
 	UPROPERTY(EditAnywhere, Category = "FISHI")
-	int32 Value = 0;
+	FFaerieHash Value;
 };
 
 /**
@@ -34,7 +35,7 @@ class UFISHI_IsValid : public UFaerieItemStackHashInstruction
 	GENERATED_BODY()
 
 public:
-	virtual int32 Hash(FFaerieItemStackView StackView) const override;
+	virtual uint32 Hash(FFaerieItemStackView StackView) const override;
 };
 
 
@@ -47,7 +48,7 @@ class UFISHI_And : public UFaerieItemStackHashInstruction
 	GENERATED_BODY()
 
 public:
-	virtual int32 Hash(FFaerieItemStackView StackView) const override;
+	virtual uint32 Hash(FFaerieItemStackView StackView) const override;
 
 protected:
 	UPROPERTY(EditAnywhere, Instanced, Category = "FISHI")
@@ -64,7 +65,7 @@ class UFISHI_Or : public UFaerieItemStackHashInstruction
 	GENERATED_BODY()
 
 public:
-	virtual int32 Hash(FFaerieItemStackView StackView) const override;
+	virtual uint32 Hash(FFaerieItemStackView StackView) const override;
 
 protected:
 	UPROPERTY(EditAnywhere, Instanced, Category = "FISHI")
@@ -81,7 +82,7 @@ class UFISHI_BooleanFilter : public UFaerieItemStackHashInstruction
 	GENERATED_BODY()
 
 public:
-	virtual int32 Hash(FFaerieItemStackView StackView) const override;
+	virtual uint32 Hash(FFaerieItemStackView StackView) const override;
 
 protected:
 	// Pattern used to determine if an item qualifies as fitting this template.
@@ -98,7 +99,7 @@ class UFISHI_BooleanSelect : public UFaerieItemStackHashInstruction
 	GENERATED_BODY()
 
 public:
-	virtual int32 Hash(FFaerieItemStackView StackView) const override;
+	virtual uint32 Hash(FFaerieItemStackView StackView) const override;
 
 protected:
 	// Pattern used to determine if an item qualifies as fitting this template.
@@ -122,7 +123,7 @@ class UFISHI_Tokens : public UFaerieItemStackHashInstruction
 	GENERATED_BODY()
 
 public:
-	virtual int32 Hash(FFaerieItemStackView StackView) const override;
+	virtual uint32 Hash(FFaerieItemStackView StackView) const override;
 
 protected:
 	// Pattern used to determine if an item qualifies as fitting this template.

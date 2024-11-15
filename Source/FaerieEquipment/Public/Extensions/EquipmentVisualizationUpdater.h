@@ -20,8 +20,8 @@ protected:
 	virtual void DeinitializeExtension(const UFaerieItemContainerBase* Container) override;
 
 	virtual void PostAddition(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) override;
-	virtual void PreRemoval(const UFaerieItemContainerBase* Container, const FEntryKey Key, const int32 Removal) override;
-	virtual void PostEntryChanged(const UFaerieItemContainerBase* Container, const FEntryKey Key) override;
+	virtual void PreRemoval(const UFaerieItemContainerBase* Container, FEntryKey Key, int32 Removal) override;
+	virtual void PostEntryChanged(const UFaerieItemContainerBase* Container, FEntryKey Key) override;
 
 private:
 	static UEquipmentVisualizer* GetVisualizer(const UFaerieItemContainerBase* Container);

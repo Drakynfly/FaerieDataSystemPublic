@@ -20,7 +20,7 @@ protected:
 	virtual EEventExtensionResponse AllowsAddition(const UFaerieItemContainerBase* Container, FFaerieItemStackView Stack) override;
 	virtual void PostAddition(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) override;
 	virtual void PostRemoval(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) override;
-	virtual void PostEntryChanged(const UFaerieItemContainerBase* Container, const FEntryKey Key) override;
+	virtual void PostEntryChanged(const UFaerieItemContainerBase* Container, FEntryKey Key) override;
 	//~ UItemContainerExtensionBase
 
 public:

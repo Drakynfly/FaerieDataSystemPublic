@@ -20,12 +20,12 @@
 #define BOOLEAN_FILTER_FALSE 582595723
 #define TOKEN_HASH_EMPTY 693300541
 
-int32 UFISHI_Literial::Hash(const FFaerieItemStackView StackView) const
+uint32 UFISHI_Literial::Hash(const FFaerieItemStackView StackView) const
 {
-	return Value;
+	return Value.Hash;
 }
 
-int32 UFISHI_IsValid::Hash(const FFaerieItemStackView StackView) const
+uint32 UFISHI_IsValid::Hash(const FFaerieItemStackView StackView) const
 {
 	if (StackView.Item.IsValid() &&
 		Faerie::ItemData::IsValidStack(StackView.Copies))
@@ -35,7 +35,7 @@ int32 UFISHI_IsValid::Hash(const FFaerieItemStackView StackView) const
 	return VALIDATED_FALSE;
 }
 
-int32 UFISHI_And::Hash(const FFaerieItemStackView StackView) const
+uint32 UFISHI_And::Hash(const FFaerieItemStackView StackView) const
 {
 	int32 Hash = 0;
 
@@ -47,7 +47,7 @@ int32 UFISHI_And::Hash(const FFaerieItemStackView StackView) const
 	return Hash;
 }
 
-int32 UFISHI_Or::Hash(const FFaerieItemStackView StackView) const
+uint32 UFISHI_Or::Hash(const FFaerieItemStackView StackView) const
 {
 	for (auto Instruction : Instructions)
 	{
@@ -61,7 +61,7 @@ int32 UFISHI_Or::Hash(const FFaerieItemStackView StackView) const
 	return HASH_FAILURE;
 }
 
-int32 UFISHI_BooleanFilter::Hash(const FFaerieItemStackView StackView) const
+uint32 UFISHI_BooleanFilter::Hash(const FFaerieItemStackView StackView) const
 {
 	if (!ensure(IsValid(Pattern)))
 	{
@@ -76,7 +76,7 @@ int32 UFISHI_BooleanFilter::Hash(const FFaerieItemStackView StackView) const
 	return BOOLEAN_FILTER_FALSE;
 }
 
-int32 UFISHI_BooleanSelect::Hash(const FFaerieItemStackView StackView) const
+uint32 UFISHI_BooleanSelect::Hash(const FFaerieItemStackView StackView) const
 {
 	if (!ensure(IsValid(Pattern)))
 	{
@@ -91,9 +91,9 @@ int32 UFISHI_BooleanSelect::Hash(const FFaerieItemStackView StackView) const
 	return ChildHash(False, StackView);
 }
 
-int32 UFISHI_Tokens::Hash(const FFaerieItemStackView StackView) const
+uint32 UFISHI_Tokens::Hash(const FFaerieItemStackView StackView) const
 {
-	int32 Hash = 0;
+	uint32 Hash = 0;
 
 	constexpr bool IncludeSuper = false;
 

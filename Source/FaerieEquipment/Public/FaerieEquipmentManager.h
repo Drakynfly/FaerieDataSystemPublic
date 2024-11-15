@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "EquipmentHashTypes.h"
+#include "FaerieHash.h"
 #include "FaerieSlotTag.h"
 #include "InventoryDataStructs.h"
 #include "Components/ActorComponent.h"
@@ -15,13 +15,6 @@ class UFaerieEquipmentSlotDescription;
 class UItemContainerExtensionBase;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogEquipmentManager, Log, All)
-
-UENUM(BlueprintType)
-enum class EFaerieEquipmentClientChecksumState : uint8
-{
-	Desynchronized,
-	Synchronized
-};
 
 USTRUCT()
 struct FFaerieEquipmentDefaultSlot
@@ -47,8 +40,6 @@ struct FFaerieEquipmentSaveData
 
 using FEquipmentChangedEventNative = TMulticastDelegate<void(UFaerieEquipmentSlot*)>;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FEquipmentChangedEvent, UFaerieEquipmentSlot*, Slot);
-using FEquipmentClientChecksumEventNative = TMulticastDelegate<void(EFaerieEquipmentClientChecksumState)>;
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FEquipmentClientChecksumEvent, EFaerieEquipmentClientChecksumState, State);
 
 UCLASS(Blueprintable, ClassGroup = ("Faerie"), meta = (BlueprintSpawnableComponent),
 	HideCategories = (Collision, ComponentTick, Replication, ComponentReplication, Activation, Sockets, Navigation))
@@ -78,13 +69,6 @@ private:
 
 protected:
 	void OnSlotItemChanged(UFaerieEquipmentSlot* Slot);
-
-	void RecalcLocalChecksum();
-
-	void CheckLocalChecksum();
-
-	UFUNCTION(/* Replication */)
-	void OnRep_ServerChecksum();
 
 public:
 	/**------------------------------*/
@@ -156,23 +140,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Faerie|EquipmentManager", BlueprintAuthorityOnly)
 	bool RemoveExtensionFromSlot(FFaerieSlotTag SlotID, TSubclassOf<UItemContainerExtensionBase> ExtensionClass);
 
-
-	/**------------------------------*/
-	/*		 EQUIPMENT CHECKSUM		 */
-	/**------------------------------*/
-
-	UFUNCTION(BlueprintCallable, Category = "Faerie|EquipmentManager")
-	FFaerieEquipmentHash GetLocalChecksum() const { return LocalChecksum; }
-
-	UFUNCTION(BlueprintCallable, Category = "Faerie|EquipmentManager")
-	FFaerieEquipmentHash GetServerChecksum() const { return ServerChecksum; }
-
-	FEquipmentClientChecksumEventNative::RegistrationType& GetOnClientChecksumEvent() { return OnClientChecksumEventNative; }
-
 protected:
-	UPROPERTY(BlueprintAssignable, Transient, Category = "Events")
-	FEquipmentClientChecksumEvent OnClientChecksumEvent;
-
 	UPROPERTY(BlueprintAssignable, Transient, Category = "Events")
 	FEquipmentChangedEvent OnEquipmentSlotAdded;
 
@@ -184,7 +152,6 @@ protected:
 	FEquipmentChangedEvent OnEquipmentChangedEvent;
 
 private:
-	FEquipmentClientChecksumEventNative OnClientChecksumEventNative;
 	FEquipmentChangedEventNative OnEquipmentSlotAddedNative;
 	FEquipmentChangedEventNative OnPreEquipmentSlotRemovedNative;
 	FEquipmentChangedEventNative OnEquipmentChangedEventNative;
@@ -205,17 +172,4 @@ protected:
 private:
 	UPROPERTY(Replicated)
 	TArray<TObjectPtr<UFaerieEquipmentSlot>> Slots;
-
-	// For clients, this is the last received hash for the serverside equipment state.
-	// For servers, this is identical to LocalChecksum.
-	UPROPERTY(ReplicatedUsing = "OnRep_ServerChecksum")
-	FFaerieEquipmentHash ServerChecksum;
-
-	// This is the hash of the current local equipment.
-	// This is compared against ServerChecksum each time equipment is changed to verify the client has received the
-	// current equipment state.
-	FFaerieEquipmentHash LocalChecksum;
-
-	// Are our checksums known to currently match.
-	bool ChecksumsMatch = true;
 };

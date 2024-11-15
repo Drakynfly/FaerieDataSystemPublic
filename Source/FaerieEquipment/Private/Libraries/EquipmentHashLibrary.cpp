@@ -6,12 +6,12 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(EquipmentHashLibrary)
 
-FFaerieEquipmentHash UFaerieEquipmentHashLibrary::HashEquipment(const UFaerieEquipmentManager* Manager,
+FFaerieHash UFaerieEquipmentHashLibrary::HashEquipment(const UFaerieEquipmentManager* Manager,
 																const FFaerieEquipmentHashConfig& Config)
 {
 	if (!Config.HashFunction.IsBound())
 	{
-		return FFaerieEquipmentHash();
+		return FFaerieHash();
 	}
 
 	return Faerie::Hash::HashEquipment(Manager, Config.Slots, DYNAMIC_TO_NATIVE(Config.HashFunction));

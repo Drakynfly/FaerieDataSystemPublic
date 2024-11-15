@@ -47,7 +47,7 @@ class FAERIEINVENTORYCONTENT_API UInventoryMetadataExtension : public UInventory
 
 protected:
 	//~ UItemContainerExtensionBase
-	virtual EEventExtensionResponse AllowsRemoval(const UFaerieItemContainerBase* Container, const FEntryKey Key, const FFaerieInventoryTag Reason) const override;
+	virtual EEventExtensionResponse AllowsRemoval(const UFaerieItemContainerBase* Container, FEntryKey Key, FFaerieInventoryTag Reason) const override;
 	//~ UItemContainerExtensionBase
 
 	//~ UInventoryReplicatedDataExtensionBase

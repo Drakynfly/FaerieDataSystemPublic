@@ -1,7 +1,6 @@
 ﻿// Copyright Guy (Drakynfly) Lundvall. All Rights Reserved.
 
 #include "FaerieEquipmentManager.h"
-#include "EquipmentHashStatics.h"
 #include "FaerieEquipmentSlot.h"
 #include "FaerieItemStorage.h"
 #include "ItemContainerExtensionBase.h"
@@ -41,7 +40,6 @@ void UFaerieEquipmentManager::GetLifetimeReplicatedProps(TArray<FLifetimePropert
 	FDoRepLifetimeParams Params;
 	Params.bIsPushBased = true;
 	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, Slots, Params);
-	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, ServerChecksum, Params);
 }
 
 void UFaerieEquipmentManager::InitializeComponent()
@@ -112,54 +110,8 @@ void UFaerieEquipmentManager::AddSubobjectsForReplication()
 
 void UFaerieEquipmentManager::OnSlotItemChanged(UFaerieEquipmentSlot* Slot)
 {
-	RecalcLocalChecksum();
 	OnEquipmentChangedEventNative.Broadcast(Slot);
 	OnEquipmentChangedEvent.Broadcast(Slot);
-}
-
-void UFaerieEquipmentManager::RecalcLocalChecksum()
-{
-	TSet<FFaerieSlotTag> Tags;
-
-	Algo::TransformIf(Slots, Tags,
-		[](const TObjectPtr<UFaerieEquipmentSlot>& Slot){ return IsValid(Slot); },
-		[](const TObjectPtr<UFaerieEquipmentSlot>& Slot) { return Slot->Config.SlotID; });
-
-	LocalChecksum = Faerie::Hash::HashEquipment(this, Tags, &Faerie::Hash::HashItemByName);
-
-	UE_LOG(LogEquipmentManager, Log, TEXT("New LocalChecksum: [%i]"), LocalChecksum.Hash);
-
-	if (GetNetMode() < NM_Client)
-	{
-		// If we are not a client, update and push the server's checksum
-		ServerChecksum = LocalChecksum;
-		MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, ServerChecksum, this);
-	}
-	else
-	{
-		// If we are a client, check if this change has put us into or out of sync.
-		CheckLocalChecksum();
-	}
-}
-
-void UFaerieEquipmentManager::CheckLocalChecksum()
-{
-	const bool OldChecksumsMatch = ChecksumsMatch;
-	ChecksumsMatch = LocalChecksum == ServerChecksum;
-
-	if (OldChecksumsMatch != ChecksumsMatch)
-	{
-		const EFaerieEquipmentClientChecksumState BroadcastState = ChecksumsMatch ?
-			EFaerieEquipmentClientChecksumState::Synchronized :
-			EFaerieEquipmentClientChecksumState::Desynchronized;
-		OnClientChecksumEventNative.Broadcast(BroadcastState);
-		OnClientChecksumEvent.Broadcast(BroadcastState);
-	}
-}
-
-void UFaerieEquipmentManager::OnRep_ServerChecksum()
-{
-	CheckLocalChecksum();
 }
 
 FFaerieContainerSaveData UFaerieEquipmentManager::MakeSaveData() const
@@ -194,8 +146,6 @@ void UFaerieEquipmentManager::LoadSaveData(const FFaerieContainerSaveData& SaveD
 	}
 
 	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, Slots, this);
-
-	RecalcLocalChecksum();
 
 	if (IsReadyForReplication())
 	{
@@ -251,8 +201,6 @@ bool UFaerieEquipmentManager::RemoveSlot(UFaerieEquipmentSlot* Slot)
 
 		Slot->OnItemChangedNative.RemoveAll(this);
 		Slot->OnItemDataChangedNative.RemoveAll(this);
-
-		RecalcLocalChecksum();
 
 		return true;
 	}

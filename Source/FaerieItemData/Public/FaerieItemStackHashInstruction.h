@@ -17,9 +17,9 @@ class FAERIEITEMDATA_API UFaerieItemStackHashInstruction : public UObject
 	GENERATED_BODY()
 
 public:
-	virtual int32 Hash(FFaerieItemStackView StackView) const PURE_VIRTUAL(UFaerieItemStackHashInstruction::Hash, return 0; )
+	virtual uint32 Hash(FFaerieItemStackView StackView) const PURE_VIRTUAL(UFaerieItemStackHashInstruction::Hash, return 0; )
 
 protected:
 	// Utility for hashing an instruction contained in this one.
-	static int32 ChildHash(const UFaerieItemStackHashInstruction* Child, FFaerieItemStackView StackView);
+	static uint32 ChildHash(const UFaerieItemStackHashInstruction* Child, FFaerieItemStackView StackView);
 };

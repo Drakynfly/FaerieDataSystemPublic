@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "EquipmentHashTypes.h"
+#include "FaerieHash.h"
 #include "FaerieSlotTag.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 
@@ -35,11 +35,11 @@ class UFaerieEquipmentHashLibrary : public UBlueprintFunctionLibrary
 
 public:
 	UFUNCTION(BlueprintPure, Category = "Faerie|EquipmentHash")
-	static int64 BreakEquipmentHash(const FFaerieEquipmentHash Hash) { return Hash.Hash; }
+	static int64 BreakEquipmentHash(const FFaerieHash Hash) { return Hash.Hash; }
 
 	// Generate a hash from a set of slots. Typically used for checksum'ing.
 	UFUNCTION(BlueprintCallable, Category = "Faerie|EquipmentHashing")
-	static FFaerieEquipmentHash HashEquipment(const UFaerieEquipmentManager* Manager, const FFaerieEquipmentHashConfig& Config);
+	static FFaerieHash HashEquipment(const UFaerieEquipmentManager* Manager, const FFaerieEquipmentHashConfig& Config);
 
 	// Generate a hash from a set of slots, using a predefined asset.
 	UFUNCTION(BlueprintCallable, Category = "Faerie|EquipmentHashing")
