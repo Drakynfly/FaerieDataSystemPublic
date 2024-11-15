@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "FaerieHash.h"
+#include "FaerieEquipmentSlotConfig.h"
 #include "FaerieSlotTag.h"
 #include "InventoryDataStructs.h"
 #include "Components/ActorComponent.h"
@@ -22,7 +22,7 @@ struct FFaerieEquipmentDefaultSlot
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, Category = "Faerie|EquipmentDefaultSlot")
-	TObjectPtr<UFaerieEquipmentSlotDescription> SlotDescription;
+	FFaerieEquipmentSlotConfig SlotConfig;
 
 	// Predefined extensions added to this slot.
 	UPROPERTY(EditAnywhere, Instanced, NoClear, Category = "Faerie|EquipmentDefaultSlot")
@@ -88,7 +88,7 @@ public:
 	FEquipmentChangedEventNative::RegistrationType& GetOnEquipmentChangedEvent() { return OnEquipmentChangedEventNative; }
 
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Faerie|EquipmentManager")
-	UFaerieEquipmentSlot* AddSlot(FFaerieSlotTag SlotID, UFaerieEquipmentSlotDescription* Description);
+	UFaerieEquipmentSlot* AddSlot(const FFaerieEquipmentSlotConfig& Config);
 
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Faerie|EquipmentManager")
 	bool RemoveSlot(UFaerieEquipmentSlot* Slot);
@@ -163,7 +163,7 @@ protected:
 
 	// Slots and their extensions to add to this equipment manager by default.
 	UPROPERTY(EditAnywhere, Category = "Equipment", meta = (ForceInlineRow))
-	TMap<FFaerieSlotTag, FFaerieEquipmentDefaultSlot> InstanceDefaultSlots;
+	TArray<FFaerieEquipmentDefaultSlot> InstanceDefaultSlots;
 
 	// Predefined extensions added to all slots in this manager.
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Instanced, NoClear, Category = "Extensions")

@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "FaerieEquipmentSlotConfig.h"
 #include "FaerieItemContainerBase.h"
 #include "FaerieItemDataProxy.h"
 #include "FaerieSlotTag.h"
@@ -20,23 +21,6 @@ namespace Faerie::Equipment::Tags
 	FAERIEEQUIPMENT_API UE_DECLARE_GAMEPLAY_TAG_TYPED_EXTERN(FFaerieInventoryTag, SlotSet)
 	FAERIEEQUIPMENT_API UE_DECLARE_GAMEPLAY_TAG_TYPED_EXTERN(FFaerieInventoryTag, SlotTake)
 }
-
-USTRUCT(BlueprintType)
-struct FFaerieEquipmentSlotConfig
-{
-	GENERATED_BODY()
-
-	// Unique ID for this slot.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Config")
-	FFaerieSlotTag SlotID;
-
-	// Info about this slot.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Config")
-	TObjectPtr<UFaerieEquipmentSlotDescription> SlotDescription;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Config")
-	bool SingleItemSlot;
-};
 
 USTRUCT()
 struct FFaerieEquipmentSlotSaveData

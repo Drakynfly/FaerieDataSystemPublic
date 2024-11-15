@@ -26,9 +26,9 @@ void UFaerieEquipmentManager::PostInitProperties()
 
 	for (auto&& DefaultSlot : InstanceDefaultSlots)
 	{
-		if (IsValid(DefaultSlot.Value.ExtensionGroup))
+		if (IsValid(DefaultSlot.ExtensionGroup))
 		{
-			DefaultSlot.Value.ExtensionGroup->SetIdentifier();
+			DefaultSlot.ExtensionGroup->SetIdentifier();
 		}
 	}
 }
@@ -73,10 +73,10 @@ void UFaerieEquipmentManager::AddDefaultSlots()
 
 	for (auto&& Element : InstanceDefaultSlots)
 	{
-		if (auto&& DefaultSlot = AddSlot(Element.Key, Element.Value.SlotDescription);
+		if (auto&& DefaultSlot = AddSlot(Element.SlotConfig);
 			IsValid(DefaultSlot))
 		{
-			DefaultSlot->AddExtension(DuplicateObject(Element.Value.ExtensionGroup, DefaultSlot));
+			DefaultSlot->AddExtension(DuplicateObject(Element.ExtensionGroup, DefaultSlot));
 		}
 	}
 }
@@ -153,17 +153,15 @@ void UFaerieEquipmentManager::LoadSaveData(const FFaerieContainerSaveData& SaveD
 	}
 }
 
-UFaerieEquipmentSlot* UFaerieEquipmentManager::AddSlot(const FFaerieSlotTag SlotID, UFaerieEquipmentSlotDescription* Description)
+UFaerieEquipmentSlot* UFaerieEquipmentManager::AddSlot(const FFaerieEquipmentSlotConfig& Config)
 {
-	if (!SlotID.IsValid()) return nullptr;
-	if (Description == nullptr) return nullptr;
+	if (!Config.SlotID.IsValid()) return nullptr;
+	if (Config.SlotDescription == nullptr) return nullptr;
 
 	if (UFaerieEquipmentSlot* NewSlot = NewObject<UFaerieEquipmentSlot>(this);
 		ensure(IsValid(NewSlot)))
 	{
-		NewSlot->Config.SlotID = SlotID;
-		NewSlot->Config.SlotDescription = Description;
-		NewSlot->Config.SingleItemSlot = true; // @todo expose somewhere
+		NewSlot->Config = Config;
 		MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, Slots, this)
 		Slots.Add(NewSlot);
 		AddReplicatedSubObject(NewSlot);
