@@ -26,6 +26,9 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Faerie|ItemProxyUtils")
 	static FFaerieItemProxy ToWeakProxy(const TScriptInterface<IFaerieItemDataProxy>& ScriptProxy);
 
+	UFUNCTION(BlueprintPure, Category = "Faerie|ItemProxyUtils")
+	static FFaerieItemProxy GetEmptyProxy();
+
 	// Get the Object implementing the IFaerieItemDataProxy interface.
 	UFUNCTION(BlueprintPure, Category = "Faerie|ItemProxyUtils")
 	static const UObject* GetProxyObject(FFaerieItemProxy Proxy);

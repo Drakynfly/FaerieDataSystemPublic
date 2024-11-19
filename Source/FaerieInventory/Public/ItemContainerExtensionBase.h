@@ -139,7 +139,7 @@ public:
 
 private:
 	// Containers pointing to this group
-	UPROPERTY(Transient)
+	UPROPERTY()
 	TSet<TWeakObjectPtr<const UFaerieItemContainerBase>> Containers;
 
 	// Subobjects responsible for adding to or customizing container behavior.

@@ -16,6 +16,12 @@ FFaerieItemProxy UFaerieItemProxyUtils::ToWeakProxy(const TScriptInterface<IFaer
 	return FFaerieItemProxy(ScriptProxy);
 }
 
+
+FFaerieItemProxy UFaerieItemProxyUtils::GetEmptyProxy()
+{
+	return FFaerieItemProxy();
+}
+
 const UObject* UFaerieItemProxyUtils::GetProxyObject(const FFaerieItemProxy Proxy)
 {
 	return Proxy.GetObject();
