@@ -11,23 +11,25 @@
 
 DECLARE_LOG_CATEGORY_EXTERN(LogFaerieItemStorage, Log, All);
 
-using FEntryKeyEventNative = TMulticastDelegate<void(UFaerieItemStorage*, FEntryKey)>;
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FEntryKeyEvent, UFaerieItemStorage*, Storage, FEntryKey, Key);
-
-using FStorageFilterFunc = TFunctionRef<bool(const FFaerieItemProxy&)>;
-using FNativeStorageFilter = TDelegate<bool(const FFaerieItemProxy&)>;
-DECLARE_DYNAMIC_DELEGATE_RetVal_OneParam(bool, FBlueprintStorageFilter, const FFaerieItemProxy&, Proxy);
-
-using FNativeStorageComparator = TDelegate<bool(const FFaerieItemProxy&, const FFaerieItemProxy&)>;
-DECLARE_DYNAMIC_DELEGATE_RetVal_TwoParams(bool, FBlueprintStorageComparator, const FFaerieItemProxy&, A, const FFaerieItemProxy&, B);
-
-struct FFaerieItemStorageNativeQuery
+namespace Faerie
 {
-	FNativeStorageFilter Filter;
-	bool InvertFilter = false;
-	FNativeStorageComparator Sort;
-	bool InvertSort = false;
-};
+	using FEntryKeyEvent = TMulticastDelegate<void(UFaerieItemStorage*, FEntryKey)>;
+	using FStorageFilterFunc = TFunctionRef<bool(const FFaerieItemProxy&)>;
+	using FStorageFilter = TDelegate<bool(const FFaerieItemProxy&)>;
+	using FStorageComparator = TDelegate<bool(const FFaerieItemProxy&, const FFaerieItemProxy&)>;
+
+	struct FStorageQuery
+	{
+		FStorageFilter Filter;
+		bool InvertFilter = false;
+		FStorageComparator Sort;
+		bool InvertSort = false;
+	};
+}
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FEntryKeyEvent, UFaerieItemStorage*, Storage, FEntryKey, Key);
+DECLARE_DYNAMIC_DELEGATE_RetVal_OneParam(bool, FBlueprintStorageFilter, const FFaerieItemProxy&, Proxy);
+DECLARE_DYNAMIC_DELEGATE_RetVal_TwoParams(bool, FBlueprintStorageComparator, const FFaerieItemProxy&, A, const FFaerieItemProxy&, B);
 
 USTRUCT(BlueprintType)
 struct FFaerieItemStorageBlueprintQuery
@@ -116,9 +118,9 @@ private:
 	/*	  STORAGE API - ALL USERS    */
 	/**------------------------------*/
 public:
-	FEntryKeyEventNative::RegistrationType& GetOnKeyAdded() { return OnKeyAddedCallback; }
-	FEntryKeyEventNative::RegistrationType& GetOnKeyUpdated() { return OnKeyUpdatedCallback; }
-	FEntryKeyEventNative::RegistrationType& GetOnKeyRemoved() { return OnKeyRemovedCallback; }
+	Faerie::FEntryKeyEvent::RegistrationType& GetOnKeyAdded() { return OnKeyAddedCallback; }
+	Faerie::FEntryKeyEvent::RegistrationType& GetOnKeyUpdated() { return OnKeyUpdatedCallback; }
+	Faerie::FEntryKeyEvent::RegistrationType& GetOnKeyRemoved() { return OnKeyRemovedCallback; }
 
 	FInventoryEntryView GetEntryView(FEntryKey Key) const;
 
@@ -184,10 +186,10 @@ public:
 	void GetEntryArray(const TArray<FEntryKey>& Keys, TArray<FInventoryEntry>& Entries) const;
 
 	// Query function to filter for the first matching entry.
-	FKeyedInventoryEntry QueryFirst(const FStorageFilterFunc& Filter) const;
+	FKeyedInventoryEntry QueryFirst(const Faerie::FStorageFilterFunc& Filter) const;
 
 	// Query function to filter and sort for a subsection of contained entries.
-	void QueryAll(const FFaerieItemStorageNativeQuery& Query, TArray<FKeyedInventoryEntry>& OutKeys) const;
+	void QueryAll(const Faerie::FStorageQuery& Query, TArray<FKeyedInventoryEntry>& OutKeys) const;
 
 	// Query function to filter for the first matching entry.
 	UFUNCTION(BlueprintCallable, Category = "Storage|Query")
@@ -281,9 +283,9 @@ public:
 	/*	 DELEGATES	*/
 	/**-------------*/
 protected:
-	FEntryKeyEventNative OnKeyAddedCallback;
-	FEntryKeyEventNative OnKeyUpdatedCallback;
-	FEntryKeyEventNative OnKeyRemovedCallback;
+	Faerie::FEntryKeyEvent OnKeyAddedCallback;
+	Faerie::FEntryKeyEvent OnKeyUpdatedCallback;
+	Faerie::FEntryKeyEvent OnKeyRemovedCallback;
 
 	// Broadcast whenever an entry is added, or a stack amount is increased.
 	UPROPERTY(BlueprintCallable, BlueprintAssignable, Transient, Category = "Events")

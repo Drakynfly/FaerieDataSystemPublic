@@ -136,7 +136,7 @@ protected:
 	TArray<TObjectPtr<UInventoryUIAction>> Actions;
 
 private:
-	FFaerieItemStorageNativeQuery Query;
+	Faerie::FStorageQuery Query;
 
 	bool NeedsResort = false;
 	bool NeedsReconstructEntries = false;

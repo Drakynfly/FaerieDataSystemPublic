@@ -635,7 +635,7 @@ void UFaerieItemStorage::GetEntryArray(const TArray<FEntryKey>& Keys, TArray<FIn
 	}
 }
 
-FKeyedInventoryEntry UFaerieItemStorage::QueryFirst(const FStorageFilterFunc& Filter) const
+FKeyedInventoryEntry UFaerieItemStorage::QueryFirst(const Faerie::FStorageFilterFunc& Filter) const
 {
 	SCOPE_CYCLE_COUNTER(STAT_Storage_QueryFirst);
 
@@ -650,7 +650,7 @@ FKeyedInventoryEntry UFaerieItemStorage::QueryFirst(const FStorageFilterFunc& Fi
 	return FKeyedInventoryEntry();
 }
 
-void UFaerieItemStorage::QueryAll(const FFaerieItemStorageNativeQuery& Query, TArray<FKeyedInventoryEntry>& OutKeys) const
+void UFaerieItemStorage::QueryAll(const Faerie::FStorageQuery& Query, TArray<FKeyedInventoryEntry>& OutKeys) const
 {
 	SCOPE_CYCLE_COUNTER(STAT_Storage_QueryAll);
 
@@ -715,7 +715,7 @@ FEntryKey UFaerieItemStorage::QueryFirst(const FBlueprintStorageFilter& Filter) 
 
 void UFaerieItemStorage::QueryAll(const FFaerieItemStorageBlueprintQuery& Query, TArray<FEntryKey>& OutKeys) const
 {
-	FFaerieItemStorageNativeQuery NativeQuery;
+	Faerie::FStorageQuery NativeQuery;
 	if (Query.Filter.IsBound())
 	{
 		NativeQuery.Filter.BindLambda(

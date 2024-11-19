@@ -211,11 +211,11 @@ void UInventoryContentsBase::AddToSortOrder(const FInventoryKey Key, const bool 
 {
 	struct FInsertKeyPredicate
 	{
-		FInsertKeyPredicate(const FFaerieItemStorageNativeQuery& Query, const UFaerieItemStorage* Storage)
+		FInsertKeyPredicate(const Faerie::FStorageQuery& Query, const UFaerieItemStorage* Storage)
 		  : Query(Query),
 			Storage(Storage) {}
 
-		const FFaerieItemStorageNativeQuery& Query;
+		const Faerie::FStorageQuery& Query;
 		const UFaerieItemStorage* Storage;
 
 		bool operator()(const FInventoryKey A, const FInventoryKey B) const
