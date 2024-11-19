@@ -87,6 +87,8 @@ FInventoryEntryView UInventoryEntryStorageProxy::GetInventoryEntry() const
 void UInventoryEntryStorageProxy::NotifyCreation()
 {
 	LocalItemVersion = 0;
+	OnCacheUpdatedNative.Broadcast(this);
+	OnCacheUpdated.Broadcast(this);
 }
 
 void UInventoryEntryStorageProxy::NotifyUpdate()

@@ -9,7 +9,7 @@
 class IFaerieItemOwnerInterface;
 class UFaerieItem;
 
-// @todo Eventually this should not be BlueprintType, once all API's use FFaerieItemProxy
+// @todo Eventually this should not be BlueprintType, once all APIs use FFaerieItemProxy
 UINTERFACE(BlueprintType, meta = (CannotImplementInterfaceInBlueprint))
 class FAERIEITEMDATA_API UFaerieItemDataProxy : public UInterface
 {
@@ -45,10 +45,10 @@ public:
 };
 
 
-// This struct contains a weak Interface pointer to an proxy for a FaerieItem somewhere. This struct should never be
+// This struct contains a weak Interface pointer of a proxy to a FaerieItem somewhere. This struct should never be
 // serialized, and will not keep the proxy it points to alive.
 // Access to the referenced item data is always const. Mutable access must be granted by the owner of the data.
-// @todo maybe this shouldn't be a Weak proxy? if this doesn't keep them alive, what does?
+// @todo maybe this shouldn't be a Weak proxy? If this doesn't keep them alive, what does?
 USTRUCT(BlueprintType, meta = (HasNativeMake = "/Script/FaerieItemData.FaerieItemProxyUtils.ToWeakProxy"))
 struct FAERIEITEMDATA_API FFaerieItemProxy
 {

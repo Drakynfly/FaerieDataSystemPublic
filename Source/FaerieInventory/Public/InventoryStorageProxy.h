@@ -10,7 +10,11 @@ class UInventoryEntryStorageProxy;
 using FEntryStorageProxyEvent = TMulticastDelegate<void(UInventoryEntryStorageProxy*)>;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FCacheEvent, UInventoryEntryStorageProxy*, Proxy);
 
-UCLASS(Abstract)
+/*
+ * Base class for proxies to an FInventoryEntry struct. For all intents and purposes these only live in a UFaerieItemStorage,
+ * so in almost every case, the child UInventoryEntryStorageProxy is what you want.
+ */
+UCLASS(Abstract, BlueprintType)
 class UInventoryEntryProxyBase : public UObject, public IFaerieItemDataProxy
 {
 	GENERATED_BODY()
@@ -28,6 +32,10 @@ protected:
 	virtual FInventoryEntryView GetInventoryEntry() const PURE_VIRTUAL(UInventoryEntryProxyBase::GetInventoryEntry, return FInventoryEntryView(); )
 };
 
+/*
+ * Base class for a proxy to an FInventoryEntry in a UFaerieItemStorage.
+ * Proxies can be created predictively. When this is the case, ItemVersion will equal -1.
+ */
 UCLASS(Abstract)
 class UInventoryEntryStorageProxy : public UInventoryEntryProxyBase
 {
@@ -59,17 +67,19 @@ protected:
 
 	bool VerifyStatus() const;
 
+	// Broadcast when this proxy is first initialized, or receives an update.
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FCacheEvent OnCacheUpdated;
 
+	// Broadcast when the entry represented by this proxy is being partially removed or deleted.
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FCacheEvent OnCacheRemoved;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	TWeakObjectPtr<UFaerieItemStorage> ItemStorage;
 
-	// Tracks item version locally, so UI knows when to update.
-	// -1 means that this Entry has never received a NotifyCreation and is invalid;
+	// Tracks the item version locally, so the client can track item state.
+	// -1 means that this Entry has never received a NotifyCreation and is not-yet-valid or invalid.
 	// 0 means that this Entry has received a NotifyCreation, but no NotifyUpdate.
 	// Numbers greater increment the Updates we have received.
 	UPROPERTY(BlueprintReadOnly, Category = "Entry Cache")

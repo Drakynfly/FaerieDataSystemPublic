@@ -93,6 +93,7 @@ private:
 	FInventoryEntryView GetEntryViewImpl(FEntryKey Key) const;
 
 	UInventoryEntryProxy* GetEntryProxyImpl(FEntryKey Key) const;
+	UInventoryStackProxy* GetStackProxyImpl(FInventoryKey Key) const;
 
 	// @todo this copies the entry. Kinda wonky, should be used minimally, if at all.
     void GetEntryImpl(FEntryKey Key, FInventoryEntry& Entry) const;
@@ -157,17 +158,25 @@ public:
 	bool GetEntry(FEntryKey Key, FInventoryEntry& Entry) const;
 
 	/**
-	 * Get the UInventoryEntryProxy representing an entry of this storage.
+	 * Get the Inventory Entry Proxy representing an entry in this storage.
 	 * The proxy will be cached for quick repeat access.
+	 * Proxies will be created even if the Key is not valid. This allows the client to prospectively create proxies for
+	 * entries that have not replicated yet.
 	 */
-	UFUNCTION(BlueprintCallable, Category = "Storage|Cache", meta = (ExpandBoolAsExecs = "ReturnValue"))
-	bool GetProxyForEntry(FInventoryKey Key, UInventoryStackProxy*& Entry);
+	UFUNCTION(BlueprintCallable, Category = "Storage|Cache")
+	UInventoryEntryProxy* GetEntryProxy(FEntryKey Key) const;
 
 	/**
-	 * Get the UInventoryEntryProxy representing an entry of this storage.
+	 * Get the Inventory Stack Proxy representing a stack in this storage.
 	 * The proxy will be cached for quick repeat access.
+	 * Proxies will be created even if the Key is not valid. This allows the client to prospectively create proxies for
+	 * stacks that have not replicated yet.
 	 */
-	UFUNCTION(BlueprintCallable, Category = "Storage|Cache", meta = (ExpandBoolAsExecs = "ReturnValue"))
+	UFUNCTION(BlueprintCallable, Category = "Storage|Cache", DisplayName = "Get Stack Proxy")
+	UInventoryStackProxy* GetStackProxy_New(FInventoryKey Key) const;
+
+	UE_DEPRECATED(5.5, "Use Get Stack Proxy instead, and convert to a weak proxy when needed")
+	UFUNCTION(BlueprintCallable, Category = "Storage|Cache", meta = (ExpandBoolAsExecs = "ReturnValue"), DisplayName = "Get Stack Proxy (weak)")
 	bool GetStackProxy(FInventoryKey Key, FFaerieItemProxy& Proxy);
 
 	/** Get entries en masse */
@@ -297,16 +306,17 @@ private:
 	UPROPERTY(Replicated)
 	FInventoryContent EntryMap;
 
-	// These properties are transient, mainly so that editor code that calls accesses them don't need to worry about Caches
+	// These properties are transient, mainly so that editor code that accesses them doesn't need to worry about Caches
 	// being left around. Using weak pointers here is intentional. We don't want this storage to keep these alive. They
 	// should be stored in a strong pointer by whatever requested them, and once nothing needs the proxies, they will die.
-	// #todo how will these maps get cleaned up, to they don't accrue hundred of stale ptrs?
-
-	// Locally stored proxies per individual stack.
-	UPROPERTY(Transient)
-	TMap<FInventoryKey, TWeakObjectPtr<UInventoryStackProxy>> LocalCachedEntries;
+	// Effectively mutable, as these are written to by the const proxy accessors.
+	// @todo how will these maps get cleaned up, to they don't accrue hundreds of stale ptrs?
 
 	// Locally stored proxies per entry.
 	UPROPERTY(Transient)
-	TMap<FEntryKey, TWeakObjectPtr<UInventoryEntryProxy>> EntryProxies;
+	TMap<FEntryKey, TWeakObjectPtr<UInventoryEntryProxy>> LocalEntryProxies;
+
+	// Locally stored proxies per individual stack.
+	UPROPERTY(Transient)
+	TMap<FInventoryKey, TWeakObjectPtr<UInventoryStackProxy>> LocalStackProxies;
 };
