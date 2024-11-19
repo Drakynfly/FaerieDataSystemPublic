@@ -171,7 +171,7 @@ void UCraftingActionWithSlots::ConsumeSlotCosts(const IFaerieItemSlotInterface* 
 		{
 			auto&& ItemProxy = *FilledSlots.Find(Slot.Key);
 
-			if (!ensure(IsValid(ItemProxy.GetObject())))
+			if (!ensure(ItemProxy.IsValid()))
 			{
 				UE_LOG(LogGenerationAction, Error, TEXT("ConsumeSlotCosts is unable to find a filled slot [%s]!"), *Slot.Key.ToString())
 				return false;
@@ -230,7 +230,7 @@ void UCraftingActionWithSlots::Run()
 {
 	for (auto&& Element : FilledSlots)
 	{
-		if (!IsValid(Element.Value.GetObject()) ||
+		if (!Element.Value.IsValid() ||
 			!IsValid(Element.Value->GetItemObject()) ||
 			!Element.Value->CanMutate())
 		{

@@ -21,7 +21,7 @@ void AItemRepresentationActor::RegenerateDataDisplay()
 {
 	ClearDataDisplay();
 
-	if (DataSource.GetInterface() && DataSource->GetItemObject())
+	if (IsValid(DataSource.GetItemObject()))
 	{
 		DisplayData();
 	}

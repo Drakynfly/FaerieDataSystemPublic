@@ -25,7 +25,7 @@ struct FFaerieVisualKey
 
 	friend uint32 GetTypeHash(const FFaerieVisualKey& VisualKey)
 	{
-		return GetTypeHash(VisualKey.Proxy.GetInterface());
+		return GetTypeHash(VisualKey.Proxy.GetObject());
 	}
 };
 

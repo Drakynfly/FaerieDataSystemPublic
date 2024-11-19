@@ -9,7 +9,7 @@ const UFaerieItem* FFaerieItemProxy::GetItemObject() const
 {
 	if (IsValid())
 	{
-		return Proxy->GetItemObject();
+		return operator->()->GetItemObject();
 	}
 	return nullptr;
 }
@@ -18,7 +18,16 @@ int32 FFaerieItemProxy::GetCopies() const
 {
 	if (IsValid())
 	{
-		return Proxy->GetCopies();
+		return operator->()->GetCopies();
 	}
 	return 0;
+}
+
+TScriptInterface<IFaerieItemOwnerInterface> FFaerieItemProxy::GetOwner() const
+{
+	if (IsValid())
+	{
+		return operator->()->GetOwner();
+	}
+	return nullptr;
 }

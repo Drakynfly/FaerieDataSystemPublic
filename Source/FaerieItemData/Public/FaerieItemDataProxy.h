@@ -11,7 +11,7 @@
  * A simple implementation of ItemDataProxy that *does* own its item, denoted by the 'Literal' suffix.
  * It therefore implements IFaerieItemOwnerInterface as well, to allow usage of Release/Possess.
  */
-UCLASS(meta = (DontUseGenericSpawnObject = "true"))
+UCLASS(meta = (DontUseGenericSpawnObject = "true"), BlueprintType)
 class FAERIEITEMDATA_API UFaerieItemDataStackLiteral : public UObject, public IFaerieItemDataProxy, public IFaerieItemOwnerInterface
 {
 	GENERATED_BODY()

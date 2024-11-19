@@ -35,10 +35,10 @@ bool UFaerieItemTemplate::TryMatchWithDescriptions(const FFaerieItemStackView Vi
 {
 	if (!ensure(IsValid(Pattern)))
 	{
-		static const FTextFormat GenericErrorFormat = LOCTEXT("ExecWithErrors_InvalidPattern", "'{this}' contains Invalid Pattern!'");
+		static const FTextFormat GenericErrorFormat = LOCTEXT("ExecWithErrors_InvalidPattern", "'{0}' contains Invalid Pattern!'");
 
-		FFormatNamedArguments Args;
-		Args.Add("this", FText::FromString(GetName()));
+		FFormatOrderedArguments Args;
+		Args.Add(FText::FromString(GetName()));
 
 		Errors.Add(FText::Format(GenericErrorFormat, Args));
 		return false;
@@ -49,10 +49,10 @@ bool UFaerieItemTemplate::TryMatchWithDescriptions(const FFaerieItemStackView Vi
 	{
 		if (Logger.Errors.IsEmpty())
 		{
-			static const FTextFormat GenericErrorFormat = LOCTEXT("ExecWithErrors_GenericErrorFmt", "'{this}' failed with unspecified reason!'");
+			static const FTextFormat GenericErrorFormat = LOCTEXT("ExecWithErrors_GenericErrorFmt", "'{0}' failed with unspecified reason!'");
 
-			FFormatNamedArguments Args;
-			Args.Add("this", FText::FromString(GetName()));
+			FFormatOrderedArguments Args;
+			Args.Add(FText::FromString(GetName()));
 
 			Errors.Add(FText::Format(GenericErrorFormat, Args));
 		}

@@ -9,8 +9,12 @@ bool UFaerieItemProxyUtils::CastProxy(const FFaerieItemProxy& Proxy, UClass* Cla
 	// @note The const_cast here is fine. This function acts as a "Resolve" of the weak pointer in the proxy struct,
 	// which is usually treated as a const view of a proxy. CastProxy implicitly wants to resolve to a non-const pointer,
 	// and Blueprint doesn't understand const pointers anyway.
-	ProxyObject = const_cast<UObject*>(Proxy.GetObject());
-	return ProxyObject->IsA(Class);
+	if (const UObject* Object = Proxy.GetObject())
+	{
+		ProxyObject = const_cast<UObject*>(Object);
+		return ProxyObject->IsA(Class);
+	}
+	return false;
 }
 
 FFaerieItemProxy UFaerieItemProxyUtils::ToWeakProxy(const TScriptInterface<IFaerieItemDataProxy>& ScriptProxy)
@@ -32,7 +36,7 @@ const UFaerieItem* UFaerieItemProxyUtils::GetItemObject(const FFaerieItemProxy& 
 {
 	if (Proxy.IsValid())
 	{
-		return Proxy.GetInterface()->GetItemObject();
+		return Proxy.GetItemObject();
 	}
 	return nullptr;
 }
@@ -41,7 +45,7 @@ int32 UFaerieItemProxyUtils::GetCopies(const FFaerieItemProxy& Proxy)
 {
 	if (Proxy.IsValid())
 	{
-		return Proxy.GetInterface()->GetCopies();
+		return Proxy.GetCopies();
 	}
 	return 0;
 }
@@ -50,7 +54,7 @@ TScriptInterface<IFaerieItemOwnerInterface> UFaerieItemProxyUtils::GetOwner(cons
 {
 	if (Proxy.IsValid())
 	{
-		return Proxy.GetInterface()->GetOwner();
+		return Proxy.GetOwner();
 	}
 	return nullptr;
 }
