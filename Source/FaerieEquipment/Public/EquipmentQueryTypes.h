@@ -8,14 +8,18 @@
 
 struct FFaerieItemStackView;
 
-using FNativeEquipmentFilter = TDelegate<bool(const FFaerieItemStackView&)>;
-DECLARE_DYNAMIC_DELEGATE_RetVal_OneParam(bool, FBlueprintEquipmentFilter, const FFaerieItemStackView&, View);
-
-struct FFaerieEquipmentNativeQuery
+namespace Faerie
 {
-	FNativeEquipmentFilter Filter;
-	bool InvertFilter;
-};
+	using FEquipmentFilter = TDelegate<bool(const FFaerieItemStackView&)>;
+
+	struct FEquipmentQuery
+	{
+		FEquipmentFilter Filter;
+		bool InvertFilter = false;
+	};
+}
+
+DECLARE_DYNAMIC_DELEGATE_RetVal_OneParam(bool, FBlueprintEquipmentFilter, const FFaerieItemStackView&, View);
 
 USTRUCT(BlueprintType)
 struct FFaerieEquipmentQueryTagSet

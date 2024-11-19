@@ -167,6 +167,29 @@ void UFaerieItemStorage::PostContentAdded(const FKeyedInventoryEntry& Entry)
 
 	OnKeyAddedCallback.Broadcast(this, Entry.Key);
 	OnKeyAdded.Broadcast(this, Entry.Key);
+
+	// Proxies may already exist for keys on the client if they are replicated by extensions or other means, and
+	// happened to arrive before we got them.
+
+	if (auto&& EntryProxy = LocalEntryProxies.Find(Entry.Key))
+	{
+		if (EntryProxy->IsValid())
+		{
+			EntryProxy->Get()->NotifyCreation();
+		}
+	}
+
+	for (auto&& Keys = GetInvKeysForEntry(Entry.Key);
+		auto&& Key : Keys)
+	{
+		if (auto&& StackProxy = LocalStackProxies.Find(Key))
+		{
+			if (StackProxy->IsValid())
+			{
+				StackProxy->Get()->NotifyCreation();
+			}
+		}
+	}
 }
 
 void UFaerieItemStorage::PostContentChanged(const FKeyedInventoryEntry& Entry)
@@ -182,6 +205,7 @@ void UFaerieItemStorage::PostContentChanged(const FKeyedInventoryEntry& Entry)
 		return;
 	}
 
+	// Call updates on any entry and stack proxies
 	if (IsValidKey(Entry.Key))
 	{
 		Extensions->PostEntryChanged(this, Entry.Key);
@@ -189,15 +213,24 @@ void UFaerieItemStorage::PostContentChanged(const FKeyedInventoryEntry& Entry)
 		OnKeyUpdatedCallback.Broadcast(this, Entry.Key);
 		OnKeyUpdated.Broadcast(this, Entry.Key);
 
-		// Call updates on any local views
+		// Call update on the entry proxy
+		if (auto&& EntryProxy = LocalEntryProxies.Find(Entry.Key))
+		{
+			if (EntryProxy->IsValid())
+			{
+				EntryProxy->Get()->NotifyUpdate();
+			}
+		}
+
+		// Call updates on any stack proxies
 		for (auto&& Keys = GetInvKeysForEntry(Entry.Key);
 			auto&& Key : Keys)
 		{
-			if (auto&& Local = LocalCachedEntries.Find(Key))
+			if (auto&& StackProxy = LocalStackProxies.Find(Key))
 			{
-				if (Local->IsValid())
+				if (StackProxy->IsValid())
 				{
-					Local->Get()->NotifyUpdate();
+					StackProxy->Get()->NotifyUpdate();
 				}
 			}
 		}
@@ -220,14 +253,21 @@ void UFaerieItemStorage::PreContentRemoved(const FKeyedInventoryEntry& Entry)
 	OnKeyRemoved.Broadcast(this, Entry.Key);
 
 	// Cleanup local views.
-	EntryProxies.Remove(Entry.Key);
+
+	TWeakObjectPtr<UInventoryEntryProxy> EntryProxy;
+	LocalEntryProxies.RemoveAndCopyValue(Entry.Key, EntryProxy);
+	if (EntryProxy.IsValid())
+	{
+		EntryProxy->NotifyRemoval();
+	}
+
 	for (auto&& Stack : Entry.Value.Stacks)
 	{
-		TWeakObjectPtr<UInventoryStackProxy> Local;
-		LocalCachedEntries.RemoveAndCopyValue({Entry.Key, Stack.Key}, Local);
-		if (Local.IsValid())
+		TWeakObjectPtr<UInventoryStackProxy> StackProxy;
+		LocalStackProxies.RemoveAndCopyValue({Entry.Key, Stack.Key}, StackProxy);
+		if (StackProxy.IsValid())
 		{
-			Local->NotifyRemoval();
+			StackProxy->NotifyRemoval();
 		}
 	}
 }
@@ -244,17 +284,11 @@ FInventoryEntryView UFaerieItemStorage::GetEntryViewImpl(const FEntryKey Key) co
 
 UInventoryEntryProxy* UFaerieItemStorage::GetEntryProxyImpl(const FEntryKey Key) const
 {
-	if (!IsValidKey(Key))
+	if (auto&& ExistingProxy = LocalEntryProxies.Find(Key))
 	{
-		return nullptr;
-	}
-
-	if (EntryProxies.Contains(Key))
-	{
-		if (auto&& MaybeEntry = EntryProxies[Key];
-			MaybeEntry.IsValid())
+		if (ExistingProxy && ExistingProxy->IsValid())
 		{
-			return MaybeEntry.Get();
+			return ExistingProxy->Get();
 		}
 	}
 
@@ -262,16 +296,54 @@ UInventoryEntryProxy* UFaerieItemStorage::GetEntryProxyImpl(const FEntryKey Key)
 
 	const FName ProxyName = MakeUniqueObjectName(This, UInventoryEntryProxy::StaticClass(),
 												 *FString::Printf(TEXT("ENTRY_PROXY_%s"), *Key.ToString()));
-	auto&& Entry = NewObject<UInventoryEntryProxy>(This, UInventoryEntryProxy::StaticClass(), ProxyName);
-	check(IsValid(Entry));
+	UInventoryEntryProxy* NewEntryProxy = NewObject<UInventoryEntryProxy>(This, UInventoryEntryProxy::StaticClass(),
+																	ProxyName);
+	check(IsValid(NewEntryProxy));
 
-	Entry->Key = Key;
-	Entry->ItemStorage = This;
+	NewEntryProxy->Key = Key;
+	NewEntryProxy->ItemStorage = This;
 
-	This->EntryProxies.Add(Key, Entry);
+	if (IsValidKey(Key))
+	{
+		NewEntryProxy->NotifyCreation();
+	}
 
-	return Entry;
+	This->LocalEntryProxies.Add(Key, NewEntryProxy);
+
+	return NewEntryProxy;
 }
+
+UInventoryStackProxy* UFaerieItemStorage::GetStackProxyImpl(const FInventoryKey Key) const
+{
+	if (auto&& ExistingProxy = LocalStackProxies.Find(Key))
+	{
+		if (ExistingProxy && ExistingProxy->IsValid())
+		{
+			return ExistingProxy->Get();
+		}
+	}
+
+	ThisClass* This = const_cast<ThisClass*>(this);
+
+	const FName ProxyName = MakeUniqueObjectName(This, UInventoryStackProxy::StaticClass(),
+												 *FString::Printf(TEXT("ENTRY_PROXY_%s_%s"),
+												 *Key.EntryKey.ToString(), *Key.StackKey.ToString()));
+	UInventoryStackProxy* NewEntryProxy = NewObject<UInventoryStackProxy>(This, UInventoryStackProxy::StaticClass(), ProxyName);
+	check(IsValid(NewEntryProxy));
+
+	NewEntryProxy->ItemStorage = This;
+	NewEntryProxy->Key = Key;
+
+	if (IsValidKey(Key))
+	{
+		NewEntryProxy->NotifyCreation();
+	}
+
+	This->LocalStackProxies.Add(Key, NewEntryProxy);
+
+	return NewEntryProxy;
+}
+
 
 void UFaerieItemStorage::GetEntryImpl(const FEntryKey Key, FInventoryEntry& Entry) const
 {
@@ -536,43 +608,19 @@ bool UFaerieItemStorage::GetEntry(const FEntryKey Key, FInventoryEntry& Entry) c
 	return true;
 }
 
-bool UFaerieItemStorage::GetProxyForEntry(const FInventoryKey Key, UInventoryStackProxy*& Entry)
+UInventoryEntryProxy* UFaerieItemStorage::GetEntryProxy(const FEntryKey Key) const
 {
-	if (!IsValidKey(Key.EntryKey))
-	{
-		Entry = nullptr;
-		return false;
-	}
+	return GetEntryProxyImpl(Key);
+}
 
-	if (LocalCachedEntries.Contains(Key))
-	{
-		if (auto&& MaybeEntry = LocalCachedEntries[Key];
-			MaybeEntry.IsValid())
-		{
-			Entry = MaybeEntry.Get();
-			return true;
-		}
-	}
-
-	const FName ProxyName = MakeUniqueObjectName(this, UInventoryStackProxy::StaticClass(),
-	                                             *FString::Printf(TEXT("ENTRY_PROXY_%s_%s"),
-	                                             *Key.EntryKey.ToString(), *Key.StackKey.ToString()));
-	Entry = NewObject<UInventoryStackProxy>(this, UInventoryStackProxy::StaticClass(), ProxyName);
-	check(IsValid(Entry));
-
-	Entry->ItemStorage = this;
-	Entry->Key = Key;
-	Entry->NotifyCreation();
-
-	LocalCachedEntries.Add(Key, Entry);
-
-	return true;
+UInventoryStackProxy* UFaerieItemStorage::GetStackProxy_New(const FInventoryKey Key) const
+{
+	return GetStackProxyImpl(Key);
 }
 
 bool UFaerieItemStorage::GetStackProxy(const FInventoryKey Key, FFaerieItemProxy& Proxy)
 {
-	UInventoryStackProxy* StackProxy = nullptr;
-	GetProxyForEntry(Key, StackProxy);
+	UInventoryStackProxy* StackProxy = GetStackProxy_New(Key);
 	Proxy = {StackProxy};
 	return Proxy.IsValid();
 }
@@ -587,7 +635,7 @@ void UFaerieItemStorage::GetEntryArray(const TArray<FEntryKey>& Keys, TArray<FIn
 	}
 }
 
-FKeyedInventoryEntry UFaerieItemStorage::QueryFirst(const FStorageFilterFunc& Filter) const
+FKeyedInventoryEntry UFaerieItemStorage::QueryFirst(const Faerie::FStorageFilterFunc& Filter) const
 {
 	SCOPE_CYCLE_COUNTER(STAT_Storage_QueryFirst);
 
@@ -602,7 +650,7 @@ FKeyedInventoryEntry UFaerieItemStorage::QueryFirst(const FStorageFilterFunc& Fi
 	return FKeyedInventoryEntry();
 }
 
-void UFaerieItemStorage::QueryAll(const FFaerieItemStorageNativeQuery& Query, TArray<FKeyedInventoryEntry>& OutKeys) const
+void UFaerieItemStorage::QueryAll(const Faerie::FStorageQuery& Query, TArray<FKeyedInventoryEntry>& OutKeys) const
 {
 	SCOPE_CYCLE_COUNTER(STAT_Storage_QueryAll);
 
@@ -667,7 +715,7 @@ FEntryKey UFaerieItemStorage::QueryFirst(const FBlueprintStorageFilter& Filter) 
 
 void UFaerieItemStorage::QueryAll(const FFaerieItemStorageBlueprintQuery& Query, TArray<FEntryKey>& OutKeys) const
 {
-	FFaerieItemStorageNativeQuery NativeQuery;
+	Faerie::FStorageQuery NativeQuery;
 	if (Query.Filter.IsBound())
 	{
 		NativeQuery.Filter.BindLambda(

@@ -9,7 +9,7 @@
 class IFaerieItemOwnerInterface;
 class UFaerieItem;
 
-// @todo Eventually this should not be BlueprintType, once all API's use FFaerieItemProxy
+// @todo Eventually this should not be BlueprintType, once all APIs use FFaerieItemProxy
 UINTERFACE(BlueprintType, meta = (CannotImplementInterfaceInBlueprint))
 class FAERIEITEMDATA_API UFaerieItemDataProxy : public UInterface
 {
@@ -45,28 +45,28 @@ public:
 };
 
 
-// This struct contains a weak Interface pointer to an proxy for a FaerieItem somewhere. This struct should never be
+// This struct contains a weak pointer to a proxy of a FaerieItem somewhere. This struct should never be
 // serialized, and will not keep the proxy it points to alive.
 // Access to the referenced item data is always const. Mutable access must be granted by the owner of the data.
-// @todo maybe this shouldn't be a Weak proxy? if this doesn't keep them alive, what does?
+// @todo maybe this shouldn't be a Weak proxy? If this doesn't keep them alive, what does?
 USTRUCT(BlueprintType, meta = (HasNativeMake = "/Script/FaerieItemData.FaerieItemProxyUtils.ToWeakProxy"))
 struct FAERIEITEMDATA_API FFaerieItemProxy
 {
 	GENERATED_BODY()
 
-	FFaerieItemProxy() {}
+	FFaerieItemProxy() = default;
 
 	FFaerieItemProxy(TYPE_OF_NULLPTR) {}
 
 	FFaerieItemProxy(const IFaerieItemDataProxy* Interface)
-	  : Proxy(const_cast<IFaerieItemDataProxy*>(Interface)) {}
+	  : Proxy(Interface->_getUObject()) {}
 
 	FFaerieItemProxy(const TScriptInterface<IFaerieItemDataProxy>& Interface)
-	  : Proxy(Interface.GetInterface()) {}
+	  : Proxy(Interface.GetObject()) {}
 
 private:
-	// @todo this *should* be a TWeakInterfacePtr<const IFaerieItemDataProxy>, but TWeakInterfacePtr doesn't wanna compile that
-	TWeakInterfacePtr<IFaerieItemDataProxy> Proxy = nullptr;
+	UPROPERTY()
+	TWeakObjectPtr<const UObject> Proxy;
 
 public:
 	bool IsValid() const
@@ -74,20 +74,16 @@ public:
 		return Proxy.IsValid();
 	}
 
-	TScriptInterface<const IFaerieItemDataProxy> GetInterface() const
-	{
-		return Proxy.ToScriptInterface();
-	}
-
 	const UObject* GetObject() const
 	{
-		return Proxy.GetObject();
+		return Proxy.Get();
 	}
 
 	const UFaerieItem* GetItemObject() const;
 	int32 GetCopies() const;
+	TScriptInterface<IFaerieItemOwnerInterface> GetOwner() const;
 
-	const IFaerieItemDataProxy* operator->() const { return Proxy.Get(); }
+	const IFaerieItemDataProxy* operator->() const { return Cast<IFaerieItemDataProxy>(Proxy.Get()); }
 
 	friend bool operator==(const FFaerieItemProxy& Lhs, const FFaerieItemProxy& Rhs) { return Lhs.Proxy == Rhs.Proxy; }
 	friend bool operator!=(const FFaerieItemProxy& Lhs, const FFaerieItemProxy& Rhs) { return !(Lhs == Rhs); }

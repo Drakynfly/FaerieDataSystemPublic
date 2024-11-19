@@ -21,5 +21,5 @@ struct FFaerieEquipmentSlotConfig
 	TObjectPtr<UFaerieEquipmentSlotDescription> SlotDescription;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Config")
-	bool SingleItemSlot;
+	bool SingleItemSlot = true;
 };

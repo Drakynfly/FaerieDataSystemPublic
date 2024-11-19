@@ -12,7 +12,7 @@
 
 TSoftClassPtr<UFaerieCardBase> UFaerieCardGenerator::GetCardClassFromProxy(const FFaerieItemProxy Proxy, const TSubclassOf<UCustomCardClass> Type) const
 {
-	auto&& Item = Proxy.GetInterface()->GetItemObject();
+	auto&& Item = Proxy.GetItemObject();
 
 	if (!IsValid(Item))
 	{
