@@ -153,16 +153,3 @@ FInventoryKeyHandle UInventoryStackProxy::GetHandle() const
 {
 	return { ItemStorage, Key };
 }
-
-void UFaerieClientItemProxy::InitializeProxy(UFaerieItemStorage* InItemStorage, const FInventoryKey InInventoryKey)
-{
-	ItemStorage = InItemStorage;
-	Key = InInventoryKey;
-	ItemStorage->GetOnKeyAdded().AddUObject(this, &ThisClass::NotifyCreation);
-}
-
-void UFaerieClientItemProxy::NotifyCreation(UFaerieItemStorage* Storage, const FEntryKey InKey)
-{
-	OnClientItemUpdatedNative.Broadcast(this);
-	OnClientItemUpdated.Broadcast(this);
-}

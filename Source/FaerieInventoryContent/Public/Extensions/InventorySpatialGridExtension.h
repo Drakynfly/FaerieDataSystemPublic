@@ -25,7 +25,7 @@ struct FSpatialItemPlacement
 		Rotation(Rotation) {}
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "SpatialItemPlacement")
-	FIntPoint Origin = FIntPoint::ZeroValue;
+	FIntPoint Origin = FIntPoint::NoneValue;
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "SpatialItemPlacement")
 	ESpatialItemRotation Rotation = ESpatialItemRotation::None;
@@ -150,6 +150,7 @@ protected:
 	virtual EEventExtensionResponse AllowsAddition(const UFaerieItemContainerBase* Container, FFaerieItemStackView Stack) override;
 	virtual void PostAddition(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) override;
 	virtual void PostRemoval(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) override;
+	virtual void PreCommittedRemoval(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) override;
 	//~ UItemContainerExtensionBase
 
 	void PreEntryReplicatedRemove(const FSpatialKeyedEntry& Entry);
@@ -165,6 +166,7 @@ private:
 	void RemoveItemsForEntry(const FEntryKey& Key);
 
 public:
+	FSpatialItemPlacement NextPlacement;
 	bool CanAddItemToGrid(const UFaerieShapeToken* ShapeToken) const;
 
 	bool MoveItem(const FInventoryKey& Key, const FIntPoint& TargetPoint);
@@ -173,6 +175,8 @@ public:
 	// @todo probably split into two functions. one with rotation check, one without. public API probably doesn't need to see the rotation check!
 	bool FitsInGrid(const FFaerieGridShapeConstView& Shape, const FSpatialItemPlacement& PlacementData, TConstArrayView<FInventoryKey> ExcludedKeys = {}, FIntPoint* OutCandidate = nullptr) const;
 
+	bool FitsInGridAnyRotation(const FFaerieGridShapeConstView& Shape, FSpatialItemPlacement& PlacementData, TConstArrayView<FInventoryKey> ExcludedKeys = {}, FIntPoint* OutCandidate = nullptr) const;
+	
 	FSpatialItemPlacement FindFirstEmptyLocation(const FFaerieGridShape& Shape) const;
 
 	FFaerieGridShapeConstView GetItemShape(FEntryKey Key) const;

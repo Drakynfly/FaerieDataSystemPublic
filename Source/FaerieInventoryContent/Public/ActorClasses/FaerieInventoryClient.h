@@ -226,3 +226,15 @@ struct FFaerieClientAction_RequestRotateSpatialEntry : public FFaerieClientActio
 
 	// @todo should also pass a 90 degree / 180 degree parameter...
 };
+
+USTRUCT(BlueprintType)
+struct FFaerieClientAction_RequestMoveEquipmentSlotToSpatialInventory : public FFaerieClientAction_RequestMoveEquipmentSlotToInventory
+{
+	GENERATED_BODY()
+
+	virtual bool Server_Execute(const UFaerieInventoryClient* Client) const override;
+	
+	UPROPERTY(BlueprintReadWrite, Category = "RequestMoveEquipmentSlotToInventory")
+	FIntPoint TargetPoint;
+
+};

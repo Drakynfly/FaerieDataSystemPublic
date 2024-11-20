@@ -185,7 +185,13 @@ void UInventorySpatialGridExtension::PostAddition(const UFaerieItemContainerBase
 }
 
 void UInventorySpatialGridExtension::PostRemoval(const UFaerieItemContainerBase* Container,
-												const Faerie::Inventory::FEventLog& Event)
+	const Faerie::Inventory::FEventLog& Event)
+{
+	Super::PostRemoval(Container, Event);
+}
+
+void UInventorySpatialGridExtension::PreCommittedRemoval(const UFaerieItemContainerBase* Container,
+														const Faerie::Inventory::FEventLog& Event)
 {
 	if (const UFaerieItemStorage* ItemStorage = Cast<UFaerieItemStorage>(Container))
 	{
@@ -209,6 +215,8 @@ void UInventorySpatialGridExtension::PostRemoval(const UFaerieItemContainerBase*
 		}
 	}
 }
+
+
 
 void UInventorySpatialGridExtension::PreEntryReplicatedRemove(const FSpatialKeyedEntry& Entry)
 {
@@ -261,7 +269,7 @@ bool UInventorySpatialGridExtension::AddItemToGrid(const FInventoryKey& Key, con
 
 	const FFaerieGridShape Shape = ShapeToken ? ShapeToken->GetShape() : FFaerieGridShape::MakeSquare(1);
 
-	const FSpatialItemPlacement DesiredItemPlacement = FindFirstEmptyLocation(Shape);
+	const FSpatialItemPlacement DesiredItemPlacement = NextPlacement.Origin == FIntPoint::NoneValue ? FindFirstEmptyLocation(Shape) : NextPlacement;
 
 	if (DesiredItemPlacement.Origin == FIntPoint::NoneValue)
 	{
@@ -275,6 +283,7 @@ bool UInventorySpatialGridExtension::AddItemToGrid(const FInventoryKey& Key, con
 	{
 		OccupiedCells[Ravel(Point)] = true;
 	}
+	NextPlacement = FSpatialItemPlacement();
 	return true;
 }
 
@@ -365,6 +374,21 @@ bool UInventorySpatialGridExtension::FitsInGrid(const FFaerieGridShapeConstView&
 	}
 
 	return true;
+}
+
+bool UInventorySpatialGridExtension::FitsInGridAnyRotation(const FFaerieGridShapeConstView& Shape,
+	FSpatialItemPlacement& PlacementData, TConstArrayView<FInventoryKey> ExcludedKeys,
+	FIntPoint* OutCandidate) const
+{
+	for(const auto Rotation : TEnumRange<ESpatialItemRotation>())
+	{
+		PlacementData.Rotation = Rotation;
+		if(FitsInGrid(Shape, PlacementData, ExcludedKeys, OutCandidate))
+		{
+			return true;
+		}
+	}
+	return false;
 }
 
 FSpatialItemPlacement UInventorySpatialGridExtension::FindFirstEmptyLocation(const FFaerieGridShape& Shape) const

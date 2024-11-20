@@ -3,8 +3,11 @@
 #include "ActorClasses/FaerieInventoryClient.h"
 #include "FaerieEquipmentSlot.h"
 #include "FaerieItemStorage.h"
+#include "FileCache.h"
 #include "Extensions/InventoryEjectionHandlerExtension.h"
 #include "Extensions/InventorySpatialGridExtension.h"
+#include "Internationalization/TextPackageNamespaceUtil.h"
+#include "Tokens/FaerieShapeToken.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FaerieInventoryClient)
 
@@ -246,5 +249,26 @@ bool FFaerieClientAction_RequestRotateSpatialEntry::Server_Execute(const UFaerie
 		return SpatialExtension->RotateItem(Key);
 	}
 
+	return false;
+}
+
+bool FFaerieClientAction_RequestMoveEquipmentSlotToSpatialInventory::Server_Execute(
+	const UFaerieInventoryClient* Client) const
+{
+	if (auto&& SpatialExtension = ToStorage->GetExtension<UInventorySpatialGridExtension>())
+	{
+		auto Shape = Slot->GetItemObject()->GetToken<UFaerieShapeToken>();
+		auto Placement = FSpatialItemPlacement();
+		Placement.Origin = TargetPoint;
+		if(SpatialExtension->FitsInGridAnyRotation(Shape->GetShape(), Placement))
+		{
+			SpatialExtension->NextPlacement = Placement;
+			if(FFaerieClientAction_RequestMoveEquipmentSlotToInventory::Server_Execute(Client))
+			{
+				return true;
+			}		
+		}
+	}
+	
 	return false;
 }

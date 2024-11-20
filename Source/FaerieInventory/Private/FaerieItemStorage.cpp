@@ -455,6 +455,8 @@ Faerie::Inventory::FEventLog UFaerieItemStorage::RemoveFromEntryImpl(const FEntr
 	}
 	// Close Mutable scope
 
+	Extensions->PreCommittedRemoval(this, Event);
+
 	if (Remove)
 	{
 		UE_LOG(LogFaerieItemStorage, Log, TEXT("Removing entire entry at: '%s'"), *Key.ToString());
@@ -515,6 +517,8 @@ Faerie::Inventory::FEventLog UFaerieItemStorage::RemoveFromStackImpl(const FInve
 		}
 	}
 	// Close Mutable scope
+
+	Extensions->PreCommittedRemoval(this, Event);
 
 	if (Remove)
 	{
