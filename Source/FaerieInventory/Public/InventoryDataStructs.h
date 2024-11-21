@@ -242,6 +242,10 @@ private:
 	// Internal count of how many stacks we've made. Used to track key creation. Only valid on the server.
 	Faerie::TKeyGen<FStackKey> KeyGen;
 
+	int32 GetStackIndex(const FStackKey& Key) const;
+	FKeyedStack* GetStackPtr(const FStackKey& Key);
+	const FKeyedStack* GetStackPtr(const FStackKey& Key) const;
+
 public:
 	int32 GetStack(const FStackKey& Key) const;
 
@@ -262,6 +266,10 @@ public:
 	// Remove the amount from any number of stacks. Can optionally return the list of modified stacks, and/or just the removed stacks
 	// ReturnValue is 0 if Stack was successfully removed, or the remainder, if not.
 	int32 RemoveFromAnyStack(int32 Amount, TArray<FStackKey>* OutAllModifiedKeys = nullptr, TArray<FStackKey>* OutRemovedKeys = nullptr);
+
+	// Merge the amounts in two stacks, moving as much as possible from stack A to stack B.
+	// The remainder in stack A will be returned, if some remains.
+	int32 MergeStacks(FStackKey A, FStackKey B);
 
 	bool IsValid() const;
 
