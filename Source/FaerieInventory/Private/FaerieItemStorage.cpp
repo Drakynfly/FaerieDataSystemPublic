@@ -372,7 +372,7 @@ Faerie::Inventory::FEventLog UFaerieItemStorage::AddEntryImpl(const FInventoryEn
 
 	// Mutables cannot stack, due to, well, being mutable, meaning that each individual retains the ability to
 	// uniquely mutate from others.
-	if (!InEntry.ItemObject->IsDataMutable() && !ForceNewStack)
+	if (!InEntry.ItemObject->IsDataMutable())
 	{
 		Event.EntryTouched = QueryFirst(
 			[InEntry](const FFaerieItemProxy& Other)
@@ -388,7 +388,14 @@ Faerie::Inventory::FEventLog UFaerieItemStorage::AddEntryImpl(const FInventoryEn
 	if (Event.EntryTouched.IsValid())
 	{
 		const FInventoryContent::FScopedItemHandle& Entry = EntryMap.GetHandle(Event.EntryTouched);
-		Entry->AddToAnyStack(Event.Amount, &Event.StackKeys);
+		if (ForceNewStack)
+		{
+			Entry->AddToNewStacks(Event.Amount, &Event.StackKeys);
+		}
+		else
+		{
+			Entry->AddToAnyStack(Event.Amount, &Event.StackKeys);
+		}
 	}
 	else
 	{
