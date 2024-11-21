@@ -1,6 +1,7 @@
 ﻿// Copyright Guy (Drakynfly) Lundvall. All Rights Reserved.
 
 #include "Extensions/InventoryLoggerExtension.h"
+#include "FaerieItemContainerBase.h"
 
 #include "Net/UnrealNetwork.h"
 

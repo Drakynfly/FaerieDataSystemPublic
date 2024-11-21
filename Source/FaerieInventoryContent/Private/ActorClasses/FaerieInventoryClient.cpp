@@ -209,7 +209,7 @@ bool FFaerieClientAction_RequestMoveEquipmentSlotToInventory::Server_Execute(con
 		StackAmount = Slot->GetCopies();
 	}
 
-	if (!ToStorage->CanAddStack({Slot->GetItemObject(), StackAmount}))
+	if (!ToStorage->CanAddStack({Slot->GetItemObject(), StackAmount}, AddStackBehavior))
 	{
 		return false;
 	}
@@ -217,7 +217,7 @@ bool FFaerieClientAction_RequestMoveEquipmentSlotToInventory::Server_Execute(con
 	if (const FFaerieItemStack Stack = Slot->TakeItemFromSlot(StackAmount);
 		IsValid(Stack.Item))
 	{
-		return ToStorage->AddItemStack(Stack);
+		return ToStorage->AddItemStack(Stack, AddStackBehavior);
 	}
 
 	return false;

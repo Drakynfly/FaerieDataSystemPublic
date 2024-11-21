@@ -151,7 +151,8 @@ void UInventorySpatialGridExtension::DeinitializeExtension(const UFaerieItemCont
 }
 
 EEventExtensionResponse UInventorySpatialGridExtension::AllowsAddition(const UFaerieItemContainerBase* Container,
-																		const FFaerieItemStackView Stack)
+																	   const FFaerieItemStackView Stack,
+																	   EFaerieStorageAddStackBehavior)
 {
 	// @todo add boolean in config to allow items without a shape
 	if (!CanAddItemToGrid(Stack.Item->GetToken<UFaerieShapeToken>()))

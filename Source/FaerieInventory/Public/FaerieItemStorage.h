@@ -5,6 +5,7 @@
 #include "FaerieItemContainerBase.h"
 #include "ItemContainerEvent.h"
 #include "FaerieItemStack.h"
+#include "InventoryDataEnums.h"
 #include "InventoryDataStructs.h"
 
 #include "FaerieItemStorage.generated.h"
@@ -27,7 +28,6 @@ namespace Faerie
 	};
 }
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FEntryKeyEvent, UFaerieItemStorage*, Storage, FEntryKey, Key);
 DECLARE_DYNAMIC_DELEGATE_RetVal_OneParam(bool, FBlueprintStorageFilter, const FFaerieItemProxy&, Proxy);
 DECLARE_DYNAMIC_DELEGATE_RetVal_TwoParams(bool, FBlueprintStorageComparator, const FFaerieItemProxy&, A, const FFaerieItemProxy&, B);
 
@@ -36,21 +36,23 @@ struct FFaerieItemStorageBlueprintQuery
 {
 	GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadWrite, Category = "Faerie|ItemStorageQuery")
+	UPROPERTY(BlueprintReadWrite, Category = "ItemStorageQuery")
 	FBlueprintStorageFilter Filter;
 
-	UPROPERTY(BlueprintReadWrite, Category = "Faerie|ItemStorageQuery")
+	UPROPERTY(BlueprintReadWrite, Category = "ItemStorageQuery")
 	bool InvertFilter = false;
 
-	UPROPERTY(BlueprintReadWrite, Category = "Faerie|ItemStorageQuery")
+	UPROPERTY(BlueprintReadWrite, Category = "ItemStorageQuery")
 	FBlueprintStorageComparator Sort;
 
-	UPROPERTY(BlueprintReadWrite, Category = "Faerie|ItemStorageQuery")
+	UPROPERTY(BlueprintReadWrite, Category = "ItemStorageQuery")
 	bool Reverse = false;
 };
 
 class UInventoryEntryProxy;
 class UInventoryStackProxy;
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FEntryKeyEvent, UFaerieItemStorage*, Storage, FEntryKey, Key);
 
 /**
  *
@@ -101,8 +103,8 @@ private:
     void GetEntryImpl(FEntryKey Key, FInventoryEntry& Entry) const;
 
 	// Internal implementations for adding items, in various forms.
-	Faerie::Inventory::FEventLog AddEntryImpl(const FInventoryEntry& InEntry);
-	Faerie::Inventory::FEventLog AddEntryFromStackImpl(const FFaerieItemStack& InStack);
+	Faerie::Inventory::FEventLog AddEntryImpl(const FInventoryEntry& InEntry, bool ForceNewStack);
+	Faerie::Inventory::FEventLog AddEntryFromStackImpl(const FFaerieItemStack& InStack, bool ForceNewStack);
 
 	// Internal implementations for removing items, specifying an amount.
 	Faerie::Inventory::FEventLog RemoveFromEntryImpl(FEntryKey Key, int32 Amount, FFaerieInventoryTag Reason);
@@ -143,10 +145,10 @@ public:
 	bool IsValidKey(FInventoryKey Key) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Storage|Key")
-	bool ContainsItem(const UFaerieItem* Item) const;
+	bool ContainsItem(const UFaerieItem* Item, EFaerieItemEqualsCheck Method) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Storage|Key")
-	FEntryKey FindItem(const UFaerieItem* Item) const;
+	FEntryKey FindItem(const UFaerieItem* Item, EFaerieItemEqualsCheck Method) const;
 
 	// Utility function mainly used with inventories that are expected to only contain a single entry, e.g., pickups.
 	UFUNCTION(BlueprintCallable, Category = "Storage|Key")
@@ -200,7 +202,7 @@ public:
 	void QueryAll(const FFaerieItemStorageBlueprintQuery& Query, TArray<FEntryKey>& OutKeys) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Storage")
-	bool CanAddStack(FFaerieItemStackView Stack) const;
+	bool CanAddStack(FFaerieItemStackView Stack, EFaerieStorageAddStackBehavior AddStackBehavior) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Storage")
 	bool CanEditEntry(FEntryKey EntryKey) const;
@@ -220,11 +222,15 @@ public:
 
 	// Add a single raw item.
 	UFUNCTION(BlueprintCallable, Category = "Storage", BlueprintAuthorityOnly)
-	bool AddEntryFromItemObject(UFaerieItem* ItemObject);
+	bool AddEntryFromItemObject(UFaerieItem* ItemObject, EFaerieStorageAddStackBehavior AddStackBehavior);
 
 	// Add a single raw item.
 	UFUNCTION(BlueprintCallable, Category = "Storage", BlueprintAuthorityOnly)
-	bool AddItemStack(FFaerieItemStack ItemStack);
+	bool AddItemStack(const FFaerieItemStack& ItemStack, EFaerieStorageAddStackBehavior AddStackBehavior);
+
+	// Add a single raw item, and return the full data about the change.
+	UFUNCTION(BlueprintCallable, Category = "Storage", BlueprintAuthorityOnly, DisplayName = "Add Item Stack (with Log)")
+	FLoggedInventoryEvent AddItemStackWithLog(const FFaerieItemStack& ItemStack, EFaerieStorageAddStackBehavior AddStackBehavior);
 
 	/**
 	 * Removes the entry with this key if it exists.
@@ -269,10 +275,11 @@ public:
 	 * @return The key used by the ToStorage to store the entry.
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Storage", BlueprintAuthorityOnly)
-	FEntryKey MoveStack(UFaerieItemStorage* ToStorage, FInventoryKey Key, const int32 Amount = -1);
+	FEntryKey MoveStack(UFaerieItemStorage* ToStorage, FInventoryKey Key, const int32 Amount = -1,
+		EFaerieStorageAddStackBehavior AddStackBehavior = EFaerieStorageAddStackBehavior::AddToAnyStack);
 
 	UFUNCTION(BlueprintCallable, Category = "Storage", BlueprintAuthorityOnly)
-	FEntryKey MoveEntry(UFaerieItemStorage* ToStorage, FEntryKey Key);
+	FEntryKey MoveEntry(UFaerieItemStorage* ToStorage, FEntryKey Key, EFaerieStorageAddStackBehavior AddStackBehavior);
 
 	/** Call MoveEntry on all entries in this storage. */
 	UFUNCTION(BlueprintCallable, Category = "Storage", BlueprintAuthorityOnly)

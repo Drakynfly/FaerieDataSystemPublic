@@ -17,7 +17,7 @@ protected:
 	//~ UItemContainerExtensionBase
 	virtual void InitializeExtension(const UFaerieItemContainerBase* Container) override;
 	virtual void DeinitializeExtension(const UFaerieItemContainerBase* Container) override;
-	virtual EEventExtensionResponse AllowsAddition(const UFaerieItemContainerBase* Container, FFaerieItemStackView Stack) override;
+	virtual EEventExtensionResponse AllowsAddition(const UFaerieItemContainerBase* Container, FFaerieItemStackView Stack, EFaerieStorageAddStackBehavior AddStackBehavior) override;
 	virtual void PostAddition(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) override;
 	virtual void PostRemoval(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) override;
 	virtual void PostEntryChanged(const UFaerieItemContainerBase* Container, FEntryKey Key) override;
@@ -30,7 +30,7 @@ public:
 
 	// Retrieve the number of entries left to be filled.
 	UFUNCTION(BlueprintPure, Category = "Faerie|InventoryKey")
-	int32 GetRemainingStackCount() const;
+	int32 GetRemainingEntryCount() const;
 
 	// Retrieve the number of items that this inventory can still contain.
 	UFUNCTION(BlueprintPure, Category = "Faerie|InventoryKey")
@@ -52,7 +52,7 @@ protected:
 
 private:
 	UPROPERTY()
-	TMap<FEntryKey, int32> StackAmountCache;
+	TMap<FEntryKey, int32> EntryAmountCache;
 
 	UPROPERTY()
 	int32 CurrentTotalItemCopies = 0;

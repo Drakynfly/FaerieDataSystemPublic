@@ -8,6 +8,8 @@
 
 #include "ItemContainerExtensionBase.generated.h"
 
+enum class EFaerieStorageAddStackBehavior : uint8;
+
 namespace Faerie::Inventory
 {
 	class FEventLog;
@@ -51,7 +53,7 @@ protected:
 	virtual void DeinitializeExtension(const UFaerieItemContainerBase* Container) {}
 
 	/* Does this extension allow this item to be added to the container? */
-	virtual EEventExtensionResponse AllowsAddition(const UFaerieItemContainerBase* Container, FFaerieItemStackView Stack) { return EEventExtensionResponse::NoExplicitResponse; }
+	virtual EEventExtensionResponse AllowsAddition(const UFaerieItemContainerBase* Container, FFaerieItemStackView Stack, EFaerieStorageAddStackBehavior AddStackBehavior) { return EEventExtensionResponse::NoExplicitResponse; }
 
 	/* Allows us to react before an item is added */
 	virtual void PreAddition(const UFaerieItemContainerBase* Container, FFaerieItemStackView Stack) {}
@@ -100,7 +102,7 @@ public:
 	//~ UItemContainerExtensionBase
 	virtual void InitializeExtension(const UFaerieItemContainerBase* Container) override;
 	virtual void DeinitializeExtension(const UFaerieItemContainerBase* Container) override;
-	virtual EEventExtensionResponse AllowsAddition(const UFaerieItemContainerBase* Container, FFaerieItemStackView Stack) override;
+	virtual EEventExtensionResponse AllowsAddition(const UFaerieItemContainerBase* Container, FFaerieItemStackView Stack, EFaerieStorageAddStackBehavior AddStackBehavior) override;
 	virtual void PreAddition(const UFaerieItemContainerBase* Container, FFaerieItemStackView Stack) override;
 	virtual void PostAddition(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) override;
 	virtual EEventExtensionResponse AllowsRemoval(const UFaerieItemContainerBase* Container, FEntryKey Key, FFaerieInventoryTag Reason) const override;

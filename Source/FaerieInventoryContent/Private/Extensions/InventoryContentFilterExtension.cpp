@@ -6,7 +6,8 @@
 #include UE_INLINE_GENERATED_CPP_BY_NAME(InventoryContentFilterExtension)
 
 EEventExtensionResponse UInventoryContentFilterExtension::AllowsAddition(const UFaerieItemContainerBase* Container,
-                                                                         const FFaerieItemStackView Stack)
+                                                                         const FFaerieItemStackView Stack,
+                                                                         EFaerieStorageAddStackBehavior)
 {
 	if (ensure(IsValid(Filter)))
 	{

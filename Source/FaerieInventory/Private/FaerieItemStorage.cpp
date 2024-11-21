@@ -20,6 +20,11 @@ DECLARE_CYCLE_STAT(TEXT("Query (All)"), STAT_Storage_QueryAll, STATGROUP_FaerieI
 
 DEFINE_LOG_CATEGORY(LogFaerieItemStorage);
 
+bool IfOnlyNewStacks(const EFaerieStorageAddStackBehavior Behavior)
+{
+	return Behavior == EFaerieStorageAddStackBehavior::OnlyNewStacks;
+};
+
 void UFaerieItemStorage::PostInitProperties()
 {
 	Super::PostInitProperties();
@@ -140,7 +145,7 @@ void UFaerieItemStorage::OnItemMutated(const UFaerieItem* Item, const UFaerieIte
 
 FFaerieItemStack UFaerieItemStorage::Release(const FFaerieItemStackView Stack)
 {
-	const FEntryKey Key = FindItem(Stack.Item.Get());
+	const FEntryKey Key = FindItem(Stack.Item.Get(), EFaerieItemEqualsCheck::ComparePointers);
 	if (FFaerieItemStack OutStack;
 		TakeEntry(Key, OutStack, Faerie::Inventory::Tags::RemovalMoving, Stack.Copies))
 	{
@@ -154,7 +159,7 @@ bool UFaerieItemStorage::Possess(const FFaerieItemStack Stack)
 	if (!IsValid(Stack.Item) ||
 		Stack.Copies < 1) return false;
 
-	return AddEntryFromStackImpl(Stack).Success;
+	return AddEntryFromStackImpl(Stack, false).Success;
 }
 
 void UFaerieItemStorage::PostContentAdded(const FKeyedInventoryEntry& Entry)
@@ -351,7 +356,7 @@ void UFaerieItemStorage::GetEntryImpl(const FEntryKey Key, FInventoryEntry& Entr
 	Entry = EntryMap[Key];
 }
 
-Faerie::Inventory::FEventLog UFaerieItemStorage::AddEntryImpl(const FInventoryEntry& InEntry)
+Faerie::Inventory::FEventLog UFaerieItemStorage::AddEntryImpl(const FInventoryEntry& InEntry, const bool ForceNewStack)
 {
 	if (!ensureAlwaysMsgf(InEntry.IsValid(), TEXT("AddEntryImpl was passed an invalid entry.")))
 	{
@@ -367,7 +372,7 @@ Faerie::Inventory::FEventLog UFaerieItemStorage::AddEntryImpl(const FInventoryEn
 
 	// Mutables cannot stack, due to, well, being mutable, meaning that each individual retains the ability to
 	// uniquely mutate from others.
-	if (!InEntry.ItemObject->IsDataMutable())
+	if (!InEntry.ItemObject->IsDataMutable() && !ForceNewStack)
 	{
 		Event.EntryTouched = QueryFirst(
 			[InEntry](const FFaerieItemProxy& Other)
@@ -405,14 +410,14 @@ Faerie::Inventory::FEventLog UFaerieItemStorage::AddEntryImpl(const FInventoryEn
 	return Event;
 }
 
-Faerie::Inventory::FEventLog UFaerieItemStorage::AddEntryFromStackImpl(const FFaerieItemStack& InStack)
+Faerie::Inventory::FEventLog UFaerieItemStorage::AddEntryFromStackImpl(const FFaerieItemStack& InStack, const bool ForceNewStack)
 {
 	FInventoryEntry Entry;
 	Entry.ItemObject = InStack.Item;
 	Entry.Limit = UFaerieStackLimiterToken::GetItemStackLimit(Entry.ItemObject);
 	Entry.AddToAnyStack(InStack.Copies);
 
-	return AddEntryImpl(Entry);
+	return AddEntryImpl(Entry, ForceNewStack);
 }
 
 Faerie::Inventory::FEventLog UFaerieItemStorage::RemoveFromEntryImpl(const FEntryKey Key, const int32 Amount,
@@ -579,18 +584,41 @@ bool UFaerieItemStorage::IsValidKey(const FInventoryKey Key) const
 	return GetEntryViewImpl(Key.EntryKey).Get<const FInventoryEntry>().Stacks.FindByKey(Key.StackKey) != nullptr;
 }
 
-bool UFaerieItemStorage::ContainsItem(const UFaerieItem* Item) const
+bool UFaerieItemStorage::ContainsItem(const UFaerieItem* Item, const EFaerieItemEqualsCheck Method) const
 {
-	return FindItem(Item).IsValid();
+	return FindItem(Item, Method).IsValid();
 }
 
-FEntryKey UFaerieItemStorage::FindItem(const UFaerieItem* Item) const
+FEntryKey UFaerieItemStorage::FindItem(const UFaerieItem* Item, const EFaerieItemEqualsCheck Method) const
 {
-	return QueryFirst(
-		[Item](const FFaerieItemProxy& Proxy)
+	if (!IsValid(Item))
+	{
+		return FEntryKey();
+	}
+
+	switch (Method)
+	{
+	case EFaerieItemEqualsCheck::ComparePointers:
+		for (const FKeyedInventoryEntry& Entry : EntryMap)
 		{
-			return Proxy.GetItemObject() == Item;
-		}).Key;
+			if (Entry.Value.ItemObject == Item)
+			{
+				return Entry.Key;
+			}
+		}
+		break;
+	case EFaerieItemEqualsCheck::UseCompareWith:
+		for (const FKeyedInventoryEntry& Entry : EntryMap)
+		{
+			if (Entry.Value.ItemObject->CompareWith(Item))
+			{
+				return Entry.Key;
+			}
+		}
+		break;
+	}
+
+	return FEntryKey();
 }
 
 FInventoryKey UFaerieItemStorage::GetFirstKey() const
@@ -742,7 +770,7 @@ void UFaerieItemStorage::QueryAll(const FFaerieItemStorageBlueprintQuery& Query,
 	Algo::Transform(Entries, OutKeys, &FKeyedInventoryEntry::Key);
 }
 
-bool UFaerieItemStorage::CanAddStack(const FFaerieItemStackView Stack) const
+bool UFaerieItemStorage::CanAddStack(const FFaerieItemStackView Stack, const EFaerieStorageAddStackBehavior AddStackBehavior) const
 {
 	if (!Stack.Item.IsValid() ||
 		Stack.Copies < 1)
@@ -750,19 +778,23 @@ bool UFaerieItemStorage::CanAddStack(const FFaerieItemStackView Stack) const
 		return false;
 	}
 
-	// Prevent recursive storage
-	// @todo this only checks one layer of depth. Theoretically, this storage token could point to some other ItemStorage,
-	// which in turn has an item that points to us, which will crash the Extensions code when the item is possessed,
-	// but honestly, I don't feel like fixing that unless it becomes an problem.
-	if (auto&& StorageToken = Stack.Item->GetToken<UFaerieItemContainerToken>())
+	if (Stack.Item->IsDataMutable())
 	{
-		if (StorageToken->GetItemContainer() == this)
+		// Prevent recursive storage for mutable items
+		// @todo this only checks one layer of depth. Theoretically, these storage tokens could point to other ItemStorages,
+		// which in turn has an item that points to us, which will crash the Extensions code when the item is possessed.
+		// But honestly, I don't feel like fixing that unless it becomes a problem.
+		const TSet<UFaerieItemContainerBase*> ContainerSet = UFaerieItemContainerToken::GetAllContainersInItem(Stack.Item.Get());
+		for (auto&& Container : ContainerSet)
 		{
-			return false;
+			if (Container == this)
+			{
+				return false;
+			}
 		}
 	}
 
-	switch (Extensions->AllowsAddition(this, Stack))
+	switch (Extensions->AllowsAddition(this, Stack, AddStackBehavior))
 	{
 	case EEventExtensionResponse::NoExplicitResponse:
 	case EEventExtensionResponse::Allowed:				return true;
@@ -801,9 +833,9 @@ bool UFaerieItemStorage::CanRemoveStack(const FInventoryKey Key, const FFaerieIn
 	/*	 STORAGE API - AUTHORITY ONLY   */
 	/**---------------------------------*/
 
-bool UFaerieItemStorage::AddEntryFromItemObject(UFaerieItem* ItemObject)
+bool UFaerieItemStorage::AddEntryFromItemObject(UFaerieItem* ItemObject, const EFaerieStorageAddStackBehavior AddStackBehavior)
 {
-	if (!CanAddStack({ItemObject, 1}))
+	if (!CanAddStack({ItemObject, 1}, AddStackBehavior))
 	{
 		return false;
 	}
@@ -813,17 +845,27 @@ bool UFaerieItemStorage::AddEntryFromItemObject(UFaerieItem* ItemObject)
 	Entry.Limit = UFaerieStackLimiterToken::GetItemStackLimit(ItemObject);
 	Entry.AddToAnyStack(1);
 
-	return AddEntryImpl(Entry).Success;
+	return AddEntryImpl(Entry, IfOnlyNewStacks(AddStackBehavior)).Success;
 }
 
-bool UFaerieItemStorage::AddItemStack(const FFaerieItemStack ItemStack)
+bool UFaerieItemStorage::AddItemStack(const FFaerieItemStack& ItemStack, const EFaerieStorageAddStackBehavior AddStackBehavior)
 {
-	if (!CanAddStack(ItemStack))
+	if (!CanAddStack(ItemStack, AddStackBehavior))
 	{
 		return false;
 	}
 
-	return AddEntryFromStackImpl(ItemStack).Success;
+	return AddEntryFromStackImpl(ItemStack, IfOnlyNewStacks(AddStackBehavior)).Success;
+}
+
+FLoggedInventoryEvent UFaerieItemStorage::AddItemStackWithLog(const FFaerieItemStack& ItemStack, const EFaerieStorageAddStackBehavior AddStackBehavior)
+{
+	if (!CanAddStack(ItemStack, AddStackBehavior))
+	{
+		return { this, Faerie::Inventory::FEventLog::AdditionFailed("Refused by CanAddStack") };
+	}
+
+	return {this, AddEntryFromStackImpl(ItemStack, IfOnlyNewStacks(AddStackBehavior)) };
 }
 
 bool UFaerieItemStorage::RemoveEntry(const FEntryKey Key, const FFaerieInventoryTag RemovalTag, const int32 Amount)
@@ -924,7 +966,7 @@ void UFaerieItemStorage::Clear(FFaerieInventoryTag RemovalTag)
 #endif
 }
 
-FEntryKey UFaerieItemStorage::MoveStack(UFaerieItemStorage* ToStorage, const FInventoryKey Key, const int32 Amount)
+FEntryKey UFaerieItemStorage::MoveStack(UFaerieItemStorage* ToStorage, const FInventoryKey Key, const int32 Amount, const EFaerieStorageAddStackBehavior AddStackBehavior)
 {
 	if (!IsValid(ToStorage) ||
 		!IsValidKey(Key.EntryKey) ||
@@ -948,7 +990,7 @@ FEntryKey UFaerieItemStorage::MoveStack(UFaerieItemStorage* ToStorage, const FIn
 	ItemStack.Item = Entry.ItemObject;
 	ItemStack.Copies = Stack == Faerie::ItemData::UnlimitedStack ? Entry.StackSum() : FMath::Min(Stack, Entry.StackSum());
 
-	if (!ToStorage->CanAddStack(ItemStack))
+	if (!ToStorage->CanAddStack(ItemStack, AddStackBehavior))
 	{
 		return FEntryKey::InvalidKey;
 	}
@@ -962,10 +1004,10 @@ FEntryKey UFaerieItemStorage::MoveStack(UFaerieItemStorage* ToStorage, const FIn
 
 	ItemStack.Copies = Removed.Amount;
 
-	return ToStorage->AddEntryFromStackImpl(ItemStack).EntryTouched;
+	return ToStorage->AddEntryFromStackImpl(ItemStack, IfOnlyNewStacks(AddStackBehavior)).EntryTouched;
 }
 
-FEntryKey UFaerieItemStorage::MoveEntry(UFaerieItemStorage* ToStorage, const FEntryKey Key)
+FEntryKey UFaerieItemStorage::MoveEntry(UFaerieItemStorage* ToStorage, const FEntryKey Key, const EFaerieStorageAddStackBehavior AddStackBehavior)
 {
 	if (!IsValid(ToStorage) ||
 		!IsValidKey(Key) ||
@@ -980,7 +1022,7 @@ FEntryKey UFaerieItemStorage::MoveEntry(UFaerieItemStorage* ToStorage, const FEn
 		return FEntryKey::InvalidKey;
 	}
 
-	if (!ToStorage->CanAddStack(EntryView.Get<const FInventoryEntry>().ToItemStackView()))
+	if (!ToStorage->CanAddStack(EntryView.Get<const FInventoryEntry>().ToItemStackView(), AddStackBehavior))
 	{
 		return FEntryKey::InvalidKey;
 	}
@@ -992,14 +1034,17 @@ FEntryKey UFaerieItemStorage::MoveEntry(UFaerieItemStorage* ToStorage, const FEn
 		return FEntryKey::InvalidKey;
 	}
 
-	return ToStorage->AddEntryFromStackImpl({const_cast<UFaerieItem*>(Result.Item.Get()), Result.Amount}).EntryTouched;
+	FFaerieItemStack Stack;
+	Stack.Item = const_cast<UFaerieItem*>(Result.Item.Get());
+	Stack.Copies = Result.Amount;
+	return ToStorage->AddEntryFromStackImpl(Stack, IfOnlyNewStacks(AddStackBehavior)).EntryTouched;
 }
 
 void UFaerieItemStorage::Dump(UFaerieItemStorage* ToStorage)
 {
 	for (const FKeyedInventoryEntry& Element : EntryMap)
 	{
-		MoveEntry(ToStorage, Element.Key);
+		MoveEntry(ToStorage, Element.Key, EFaerieStorageAddStackBehavior::AddToAnyStack);
 	}
 }
 

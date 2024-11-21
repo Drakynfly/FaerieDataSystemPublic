@@ -4,6 +4,7 @@
 
 #include "StructUtils/InstancedStruct.h"
 #include "Components/ActorComponent.h"
+#include "InventoryDataEnums.h"
 #include "InventoryDataStructs.h"
 #include "FaerieInventoryClient.generated.h"
 
@@ -192,6 +193,9 @@ struct FFaerieClientAction_RequestMoveEquipmentSlotToInventory : public FFaerieC
 
 	UPROPERTY(BlueprintReadWrite, Category = "RequestMoveEquipmentSlotToInventory")
 	int32 Amount = -1;
+
+	UPROPERTY(BlueprintReadWrite, Category = "RequestMoveEquipmentSlotToInventory")
+	EFaerieStorageAddStackBehavior AddStackBehavior;
 };
 
 USTRUCT(BlueprintType)

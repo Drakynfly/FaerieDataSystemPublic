@@ -102,7 +102,7 @@ protected:
     //~ UItemContainerExtensionBase
     virtual void InitializeExtension(const UFaerieItemContainerBase* Container) override;
     virtual void DeinitializeExtension(const UFaerieItemContainerBase* Container) override;
-    virtual EEventExtensionResponse AllowsAddition(const UFaerieItemContainerBase* Container, FFaerieItemStackView Stack) override;
+    virtual EEventExtensionResponse AllowsAddition(const UFaerieItemContainerBase* Container, FFaerieItemStackView Stack, EFaerieStorageAddStackBehavior AddStackBehavior) override;
     virtual void PostAddition(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) override;
     virtual void PostRemoval(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) override;
     virtual void PostEntryChanged(const UFaerieItemContainerBase* Container, FEntryKey Key) override;

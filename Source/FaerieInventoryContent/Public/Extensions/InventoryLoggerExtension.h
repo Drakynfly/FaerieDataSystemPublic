@@ -3,56 +3,8 @@
 #pragma once
 
 #include "ItemContainerExtensionBase.h"
-#include "FaerieItemContainerBase.h"
 #include "ItemContainerEvent.h"
 #include "InventoryLoggerExtension.generated.h"
-
-USTRUCT(BlueprintType, meta = (HasNativeBreak = "/Script/FaerieInventoryContent.LoggedInventoryEventLibrary.BreakLoggedInventoryEvent"))
-struct FLoggedInventoryEvent
-{
-	GENERATED_BODY()
-
-	// Which storage logged this event
-	UPROPERTY()
-	TWeakObjectPtr<const UFaerieItemContainerBase> Container = nullptr;
-
-	// The logged event
-	Faerie::Inventory::FEventLog Event;
-
-	friend bool operator==(const FLoggedInventoryEvent& Lhs, const FLoggedInventoryEvent& Rhs)
-	{
-		return Lhs.Container == Rhs.Container && Lhs.Event == Rhs.Event;
-	}
-
-	friend bool operator!=(const FLoggedInventoryEvent& Lhs, const FLoggedInventoryEvent& Rhs)
-	{
-		return !(Lhs == Rhs);
-	}
-
-	friend FArchive& operator<<(FArchive& Ar, FLoggedInventoryEvent& Val)
-	{
-		Ar << Val.Container;
-		Ar << Val.Event;
-		return Ar;
-	}
-
-	bool NetSerialize(FArchive& Ar, class UPackageMap* Map, bool& bOutSuccess)
-	{
-		Ar << *this;
-		bOutSuccess = true;
-		return true;
-	}
-};
-
-template<>
-struct TStructOpsTypeTraits<FLoggedInventoryEvent> : public TStructOpsTypeTraitsBase2<FLoggedInventoryEvent>
-{
-	enum
-	{
-		WithNetSerializer = true,
-	};
-};
-
 
 using FInventoryEventLoggedNative = TMulticastDelegate<void(const FLoggedInventoryEvent&)>;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FInventoryEventLogged, const FLoggedInventoryEvent&, LoggedEvent);
