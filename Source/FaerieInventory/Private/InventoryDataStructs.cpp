@@ -67,57 +67,57 @@ void FInventoryEntry::SetStack(const FStackKey& Key, const int32 Stack)
 	}
 }
 
-int32 FInventoryEntry::AddToAnyStack(int32 Stack, TArray<FStackKey>* OutAddedKeys)
+void FInventoryEntry::AddToAnyStack(int32 Amount, TArray<FStackKey>* OutAddedKeys)
 {
 	// Fill existing stacks first
 	for (auto& KeyedStack : Stacks)
 	{
 		if (Limit == Faerie::ItemData::UnlimitedStack)
 		{
-			KeyedStack.Stack += Stack;
-			Stack = 0;
+			KeyedStack.Stack += Amount;
 			break;
 		}
 
 		if (KeyedStack.Stack < Limit)
 		{
 			auto&& AddToStack = Limit - KeyedStack.Stack;
-			Stack -= AddToStack;
+			Amount -= AddToStack;
 			KeyedStack.Stack += AddToStack;
 		}
 	}
 
-	// We have dispersed the incoming stack among existing ones.
-	if (Stack == 0)
+	// We have dispersed the incoming stack among existing ones. If there is stack remaining, create new stacks.
+	if (Amount > 0)
 	{
-		return Stack;
+		return AddToNewStacks(Amount, OutAddedKeys);
 	}
+}
 
+void FInventoryEntry::AddToNewStacks(int32 Amount, TArray<FStackKey>* OutAddedKeys)
+{
 	TArray<FStackKey> AddedStacks;
 
 	if (Limit == Faerie::ItemData::UnlimitedStack)
 	{
 		const FStackKey NewKey = AddedStacks.Add_GetRef(KeyGen.NextKey());
-		Stacks.Add({NewKey, Stack});
+		Stacks.Add({NewKey, Amount});
 	}
 	else
 	{
 		// Split the incoming stack into as many more as are required
-		while (Stack > 0)
+		while (Amount > 0)
 		{
 			const FStackKey NewKey = AddedStacks.Add_GetRef(KeyGen.NextKey());
-			const int32 NewStack = FMath::Min(Stack, Limit);
-			Stack -= NewStack;
+			const int32 NewStack = FMath::Min(Amount, Limit);
+			Amount -= NewStack;
 			Stacks.Add({NewKey, NewStack});
 		}
 	}
 
 	if (OutAddedKeys)
 	{
-		*OutAddedKeys = AddedStacks;
+		OutAddedKeys->Append(AddedStacks);
 	}
-
-	return Stack;
 }
 
 int32 FInventoryEntry::RemoveFromAnyStack(int32 Amount, TArray<FStackKey>* OutAllModifiedKeys, TArray<FStackKey>* OutRemovedKeys)

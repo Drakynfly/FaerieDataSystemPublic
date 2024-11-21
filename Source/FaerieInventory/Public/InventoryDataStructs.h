@@ -253,7 +253,11 @@ public:
 
 	// Add the Amount to the stacks, adding new stacks as needed. Can optionally return the list of added stacks.
 	// ReturnValue is 0 if Stack was successfully added, or the remainder, otherwise.
-	int32 AddToAnyStack(int32 Stack, TArray<FStackKey>* OutAddedKeys = nullptr);
+	void AddToAnyStack(int32 Amount, TArray<FStackKey>* OutAddedKeys = nullptr);
+
+	// Add the Amount as new stacks. Can optionally return the list of added stacks.
+	// ReturnValue is 0 if Stack was successfully added, or the remainder, otherwise.
+	void AddToNewStacks(int32 Amount, TArray<FStackKey>* OutAddedKeys = nullptr);
 
 	// Remove the amount from any number of stacks. Can optionally return the list of modified stacks, and/or just the removed stacks
 	// ReturnValue is 0 if Stack was successfully removed, or the remainder, if not.
