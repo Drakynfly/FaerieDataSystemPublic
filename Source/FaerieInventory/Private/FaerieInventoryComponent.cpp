@@ -62,6 +62,32 @@ void UFaerieInventoryComponent::ReadyForReplication()
 	}
 }
 
+UItemContainerExtensionGroup* UFaerieInventoryComponent::GetExtensionGroup() const
+{
+	return ItemStorage->GetExtensionGroup();
+}
+
+bool UFaerieInventoryComponent::AddExtension(UItemContainerExtensionBase* Extension)
+{
+	if (ItemStorage->AddExtension(Extension))
+	{
+		AddReplicatedSubObject(Extension);
+		return true;
+	}
+	return false;
+}
+
+bool UFaerieInventoryComponent::RemoveExtension(UItemContainerExtensionBase* Extension)
+{
+	if (!ensure(IsValid(Extension)))
+	{
+		return false;
+	}
+
+	RemoveReplicatedSubObject(Extension);
+	return ItemStorage->RemoveExtension(Extension);
+}
+
 void UFaerieInventoryComponent::PostEntryAdded(UFaerieItemStorage* Storage, const FEntryKey Key)
 {
 #if WITH_EDITOR
@@ -102,31 +128,4 @@ void UFaerieInventoryComponent::PreEntryRemoved(UFaerieItemStorage* Storage, con
 		UE_LOG(LogFaerieInventoryComponent, Log, TEXT("Server Received PreContentRemoved"))
 	}
 #endif
-}
-
-bool UFaerieInventoryComponent::GetExtensionChecked(const TSubclassOf<UItemContainerExtensionBase> ExtensionClass,
-                                                    UItemContainerExtensionBase*& Extension) const
-{
-	if (!ItemStorage) return false;
-	return ItemStorage->GetExtensionChecked(ExtensionClass, Extension);
-}
-
-UItemContainerExtensionBase* UFaerieInventoryComponent::AddExtension(const TSubclassOf<UItemContainerExtensionBase> ExtensionClass)
-{
-	if (!ensure(IsValid(ExtensionClass)))
-	{
-		return nullptr;
-	}
-
-	if (!ensure(ExtensionClass != UItemContainerExtensionBase::StaticClass()))
-	{
-		return nullptr;
-	}
-
-	UItemContainerExtensionBase* NewExtension = NewObject<UItemContainerExtensionBase>(ItemStorage, ExtensionClass);
-	NewExtension->SetIdentifier();
-	ItemStorage->AddExtension(NewExtension);
-	AddReplicatedSubObject(NewExtension);
-
-	return NewExtension;
 }

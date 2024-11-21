@@ -211,6 +211,11 @@ void UItemContainerExtensionGroup::PostEntryChanged(const UFaerieItemContainerBa
 		});
 }
 
+UItemContainerExtensionGroup* UItemContainerExtensionGroup::GetExtensionGroup() const
+{
+	return const_cast<UItemContainerExtensionGroup*>(this);
+}
+
 void UItemContainerExtensionGroup::ForEachExtension(const TFunctionRef<void(UItemContainerExtensionBase*)>& Func)
 {
 	for (auto&& Extension : Extensions)
@@ -319,13 +324,6 @@ UItemContainerExtensionBase* UItemContainerExtensionGroup::GetExtension(const TS
 	}
 
 	return nullptr;
-}
-
-bool UItemContainerExtensionGroup::GetExtensionChecked(const TSubclassOf<UItemContainerExtensionBase> ExtensionClass,
-													   UItemContainerExtensionBase*& Extension) const
-{
-	Extension = GetExtension(ExtensionClass);
-	return IsValid(Extension);
 }
 
 #undef LOCTEXT_NAMESPACE

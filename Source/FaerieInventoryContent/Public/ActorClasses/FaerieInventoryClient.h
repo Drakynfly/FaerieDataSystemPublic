@@ -195,7 +195,7 @@ struct FFaerieClientAction_RequestMoveEquipmentSlotToInventory : public FFaerieC
 	int32 Amount = -1;
 
 	UPROPERTY(BlueprintReadWrite, Category = "RequestMoveEquipmentSlotToInventory")
-	EFaerieStorageAddStackBehavior AddStackBehavior;
+	EFaerieStorageAddStackBehavior AddStackBehavior = EFaerieStorageAddStackBehavior::AddToAnyStack;
 };
 
 USTRUCT(BlueprintType)

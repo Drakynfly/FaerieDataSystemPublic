@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "FaerieContainerExtensionInterface.h"
 #include "FaerieEquipmentSlotConfig.h"
 #include "FaerieSlotTag.h"
 #include "InventoryDataStructs.h"
@@ -41,9 +42,14 @@ struct FFaerieEquipmentSaveData
 using FEquipmentChangedEventNative = TMulticastDelegate<void(UFaerieEquipmentSlot*)>;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FEquipmentChangedEvent, UFaerieEquipmentSlot*, Slot);
 
+/*
+ * An actor component that manages an array of Equipment Slots, which can each store a single item entry.
+ * A group of extensions is shared with all slots. Extension Interface calls on this object only apply to extension shared
+ * between all slots. Slot-specific extensions must be requested from the slot itself.
+ */
 UCLASS(Blueprintable, ClassGroup = ("Faerie"), meta = (BlueprintSpawnableComponent),
 	HideCategories = (Collision, ComponentTick, Replication, ComponentReplication, Activation, Sockets, Navigation))
-class FAERIEEQUIPMENT_API UFaerieEquipmentManager : public UActorComponent
+class FAERIEEQUIPMENT_API UFaerieEquipmentManager : public UActorComponent, public IFaerieContainerExtensionInterface
 {
 	GENERATED_BODY()
 
@@ -62,6 +68,12 @@ public:
 	virtual void OnComponentCreated() override;
 	virtual void ReadyForReplication() override;
 	//~ UActorComponent
+
+	//~ IFaerieContainerExtensionInterface
+	virtual UItemContainerExtensionGroup* GetExtensionGroup() const override final;
+	virtual bool AddExtension(UItemContainerExtensionBase* Extension) override;
+	virtual bool RemoveExtension(UItemContainerExtensionBase* Extension) override;
+	//~ IFaerieContainerExtensionInterface
 
 private:
 	void AddDefaultSlots();
@@ -109,27 +121,6 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Storage|EquipmentManager")
 	UItemContainerExtensionGroup* GetExtensions() const { return ExtensionGroup; }
-
-	// Has extension by class. This only checks for extensions applied to *all* slots. Slot-specific extensions must be
-	// requested from the slot itself using FindSlot + HasExtension
-	UFUNCTION(BlueprintCallable, Category = "Storage|EquipmentManager")
-	bool HasExtension(TSubclassOf<UItemContainerExtensionBase> ExtensionClass) const;
-
-	// Gets an extension by class. This only checks for extensions applied to *all* slots. Slot-specific extensions must be
-	// requested from the slot itself using FindSlot + GetExtension
-	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Faerie|EquipmentManager",
-	meta = (DeterminesOutputType = ExtensionClass, DynamicOutputParam = Extension, ExpandBoolAsExecs = "ReturnValue"))
-	bool GetExtension(UPARAM(meta = (AllowAbstract = "false")) TSubclassOf<UItemContainerExtensionBase> ExtensionClass,
-		UItemContainerExtensionBase*& Extension) const;
-
-	// Add a new extension of the given class, and return the result. If an extension of this class already exists, it
-	// will be returned instead.
-	UFUNCTION(BlueprintCallable, Category = "Faerie|EquipmentManager", BlueprintAuthorityOnly, meta = (DeterminesOutputType = "ExtensionClass"))
-	UItemContainerExtensionBase* AddExtension(TSubclassOf<UItemContainerExtensionBase> ExtensionClass);
-
-	// Removes any existing extension(s) of the given class.
-	UFUNCTION(BlueprintCallable, Category = "Faerie|EquipmentManager", BlueprintAuthorityOnly)
-	bool RemoveExtension(TSubclassOf<UItemContainerExtensionBase> ExtensionClass);
 
 	// Add a new extension of the given class, and return the result. If an extension of this class already exists, it
 	// will be returned instead. Adds only to the slot at the ID

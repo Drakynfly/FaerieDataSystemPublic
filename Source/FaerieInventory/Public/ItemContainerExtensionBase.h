@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "FaerieContainerExtensionInterface.h"
 #include "NetSupportedObject.h"
 
 #include "InventoryDataStructs.h"
@@ -84,7 +85,7 @@ protected:
  * A collection of extensions that implements the interface of the base class to defer to others.
  */
 UCLASS()
-class FAERIEINVENTORY_API UItemContainerExtensionGroup final : public UItemContainerExtensionBase
+class FAERIEINVENTORY_API UItemContainerExtensionGroup final : public UItemContainerExtensionBase, public IFaerieContainerExtensionInterface
 {
 	GENERATED_BODY()
 
@@ -111,33 +112,16 @@ public:
 	virtual void PostEntryChanged(const UFaerieItemContainerBase* Container, FEntryKey Key) override;
 	//~ UItemContainerExtensionBase
 
+	//~ IFaerieContainerExtensionInterface
+	virtual UItemContainerExtensionGroup* GetExtensionGroup() const override;
+	virtual bool AddExtension(UItemContainerExtensionBase* Extension) override;
+	virtual bool RemoveExtension(UItemContainerExtensionBase* Extension) override;
+	virtual bool HasExtension(TSubclassOf<UItemContainerExtensionBase> ExtensionClass) const override;
+	virtual UItemContainerExtensionBase* GetExtension(TSubclassOf<UItemContainerExtensionBase> ExtensionClass) const override;
+	//~ IFaerieContainerExtensionInterface
+
 private:
 	void ForEachExtension(const TFunctionRef<void(UItemContainerExtensionBase*)>& Func);
-
-public:
-	// Try to add an extension to this storage. This will only fail if the extension pointer is invalid or the extension
-	// is Unique, and one already exists of its class.
-	bool AddExtension(UItemContainerExtensionBase* Extension);
-
-	bool RemoveExtension(UItemContainerExtensionBase* Extension);
-
-	// Has extension by class
-	UFUNCTION(BlueprintCallable, Category = "Faerie|ExtensionGroup")
-	bool HasExtension(TSubclassOf<UItemContainerExtensionBase> ExtensionClass) const;
-
-	// Get extension by class
-	UFUNCTION(BlueprintCallable, Category = "Faerie|ExtensionGroup", meta = (DeterminesOutputType = ExtensionClass))
-	UItemContainerExtensionBase* GetExtension(UPARAM(meta = (AllowAbstract = "false")) TSubclassOf<UItemContainerExtensionBase> ExtensionClass) const;
-
-	template <typename TExtensionClass> TExtensionClass* GetExtension() const
-	{
-		return Cast<TExtensionClass>(GetExtension(TExtensionClass::StaticClass()));
-	}
-
-	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Faerie|ExtensionGroup",
-		meta = (DeterminesOutputType = ExtensionClass, DynamicOutputParam = Extension, ExpandBoolAsExecs = "ReturnValue"))
-	bool GetExtensionChecked(UPARAM(meta = (AllowAbstract = "false")) TSubclassOf<UItemContainerExtensionBase> ExtensionClass,
-		UItemContainerExtensionBase*& Extension) const;
 
 private:
 	// Containers pointing to this group

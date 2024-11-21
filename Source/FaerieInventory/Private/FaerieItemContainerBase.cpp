@@ -40,10 +40,25 @@ bool UFaerieItemContainerBase::Possess(FFaerieItemStack Stack)
 	return false;
 }
 
+UItemContainerExtensionGroup* UFaerieItemContainerBase::GetExtensionGroup() const
+{
+	return Extensions;
+}
+
+bool UFaerieItemContainerBase::AddExtension(UItemContainerExtensionBase* Extension)
+{
+	if (Extensions->AddExtension(Extension))
+	{
+		TryApplyUnclaimedSaveData(Extension);
+		return true;
+	}
+	return false;
+}
+
 void UFaerieItemContainerBase::RavelExtensionData(TMap<FGuid, FInstancedStruct>& Data) const
 {
 	Extensions->ForEachExtension(
-		[this, &Data](UItemContainerExtensionBase* Extension)
+		[this, &Data](const UItemContainerExtensionBase* Extension)
 		{
 			const FGuid Identifier = Extension->GetIdentifier();
 			if (!ensure(Identifier.IsValid())) return;
@@ -163,35 +178,4 @@ void UFaerieItemContainerBase::TakeOwnership(UFaerieItem* Item)
 			Container->AddExtension(Extensions);
 		}
 	}
-}
-
-bool UFaerieItemContainerBase::AddExtension(UItemContainerExtensionBase* Extension)
-{
-	if (Extensions->AddExtension(Extension))
-	{
-		TryApplyUnclaimedSaveData(Extension);
-		return true;
-	}
-	return false;
-}
-
-bool UFaerieItemContainerBase::RemoveExtension(UItemContainerExtensionBase* Extension)
-{
-	return Extensions->RemoveExtension(Extension);
-}
-
-bool UFaerieItemContainerBase::HasExtension(const TSubclassOf<UItemContainerExtensionBase> ExtensionClass) const
-{
-	return Extensions->HasExtension(ExtensionClass);
-}
-
-UItemContainerExtensionBase* UFaerieItemContainerBase::GetExtension(const TSubclassOf<UItemContainerExtensionBase> ExtensionClass) const
-{
-	return Extensions->GetExtension(ExtensionClass);
-}
-
-bool UFaerieItemContainerBase::GetExtensionChecked(const TSubclassOf<UItemContainerExtensionBase> ExtensionClass,
-													UItemContainerExtensionBase*& Extension) const
-{
-	return Extensions->GetExtensionChecked(ExtensionClass, Extension);
 }
