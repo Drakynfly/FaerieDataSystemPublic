@@ -387,7 +387,7 @@ Faerie::Inventory::FEventLog UFaerieItemStorage::AddEntryImpl(const FInventoryEn
 	// Try to fill up the stacks of existing entries first, before creating a new entry.
 	if (Event.EntryTouched.IsValid())
 	{
-		const FInventoryContent::FScopedItemHandle& Entry = EntryMap.GetHandle(Event.EntryTouched);
+		const FInventoryContent::FScopedItemHandle Entry = EntryMap.GetHandle(Event.EntryTouched);
 		if (ForceNewStack)
 		{
 			Entry->AddToNewStacks(Event.Amount, &Event.StackKeys);
@@ -447,7 +447,7 @@ Faerie::Inventory::FEventLog UFaerieItemStorage::RemoveFromEntryImpl(const FEntr
 
 	// Open Mutable Scope
 	{
-		const FInventoryContent::FScopedItemHandle& Handle = EntryMap.GetHandle(Key);
+		const FInventoryContent::FScopedItemHandle Handle = EntryMap.GetHandle(Key);
 
 		Event.Item = Handle->ItemObject;
 		const int32 Sum = Handle->StackSum();
@@ -499,7 +499,7 @@ Faerie::Inventory::FEventLog UFaerieItemStorage::RemoveFromStackImpl(const FInve
 
 	// Open Mutable Scope
 	{
-		auto&& Handle = EntryMap.GetHandle(Key.EntryKey);
+		const FInventoryContent::FScopedItemHandle Handle = EntryMap.GetHandle(Key.EntryKey);
 
 		Event.Item = Handle->ItemObject;
 
@@ -1045,6 +1045,30 @@ FEntryKey UFaerieItemStorage::MoveEntry(UFaerieItemStorage* ToStorage, const FEn
 	Stack.Item = const_cast<UFaerieItem*>(Result.Item.Get());
 	Stack.Copies = Result.Amount;
 	return ToStorage->AddEntryFromStackImpl(Stack, IfOnlyNewStacks(AddStackBehavior)).EntryTouched;
+}
+
+bool UFaerieItemStorage::MergeStacks(const FEntryKey Entry, const FStackKey StackA, const FStackKey StackB)
+{
+	if (!IsValidKey(Entry) ||
+		!CanEditEntry(Entry))
+	{
+		return false;
+	}
+
+	auto&& EntryView = GetEntryViewImpl(Entry);
+	const FKeyedStack* KeyedStackB = EntryView.Get<const FInventoryEntry>().Stacks.FindByKey(StackB);
+
+	// Ensure both stacks exist and B isn't already full
+	if (!EntryView.Get<const FInventoryEntry>().Stacks.FindByKey(StackA) ||
+		!KeyedStackB ||
+		KeyedStackB->Stack == EntryView.Get<const FInventoryEntry>().Limit)
+	{
+		return false;
+	}
+
+	const FInventoryContent::FScopedItemHandle Handle = EntryMap.GetHandle(Entry);
+	Handle->MergeStacks(StackA, StackB);
+	return true;
 }
 
 void UFaerieItemStorage::Dump(UFaerieItemStorage* ToStorage)

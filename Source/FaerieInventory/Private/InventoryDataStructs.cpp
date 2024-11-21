@@ -17,9 +17,34 @@ LLM_DEFINE_TAG(ItemStorage, NAME_None, NAME_None, GET_STATFNAME(STAT_StorageLLM)
 
 FEntryKey FEntryKey::InvalidKey;
 
+int32 FInventoryEntry::GetStackIndex(const FStackKey& Key) const
+{
+	return Algo::BinarySearchBy(Stacks, Key, &FKeyedStack::Key);
+}
+
+FKeyedStack* FInventoryEntry::GetStackPtr(const FStackKey& Key)
+{
+	if (const int32 StackIndex = GetStackIndex(Key);
+		StackIndex != INDEX_NONE)
+	{
+		return &Stacks[StackIndex];
+	}
+	return nullptr;
+}
+
+const FKeyedStack* FInventoryEntry::GetStackPtr(const FStackKey& Key) const
+{
+	if (const int32 StackIndex = GetStackIndex(Key);
+		StackIndex != INDEX_NONE)
+	{
+		return &Stacks[StackIndex];
+	}
+	return nullptr;
+}
+
 int32 FInventoryEntry::GetStack(const FStackKey& Key) const
 {
-	if (auto&& KeyedStack = Stacks.FindByKey(Key))
+	if (auto&& KeyedStack = GetStackPtr(Key))
 	{
 		return KeyedStack->Stack;
 	}
@@ -49,15 +74,15 @@ void FInventoryEntry::SetStack(const FStackKey& Key, const int32 Stack)
 {
 	if (Stack <= 0)
 	{
-		if (const int32 StackIndex = Algo::BinarySearchBy(Stacks, Key, &FKeyedStack::Key);
-			Stacks.IsValidIndex(StackIndex))
+		if (const int32 StackIndex = GetStackIndex(Key);
+			StackIndex != INDEX_NONE)
 		{
 			Stacks.RemoveAt(StackIndex);
 		}
 		return;
 	}
 
-	if (auto&& KeyedStack = Stacks.FindByKey(Key))
+	if (auto&& KeyedStack = GetStackPtr(Key))
 	{
 		KeyedStack->Stack = Stack;
 	}
@@ -157,6 +182,22 @@ int32 FInventoryEntry::RemoveFromAnyStack(int32 Amount, TArray<FStackKey>* OutAl
 	}
 
 	return Amount; // Return the remainder, if we didn't remove it all.
+}
+
+int32 FInventoryEntry::MergeStacks(const FStackKey A, const FStackKey B)
+{
+	const int32 StackIndexA = GetStackIndex(A);
+	FKeyedStack& StackA = Stacks[StackIndexA];
+	FKeyedStack& StackB = *GetStackPtr(B);
+	const int32 Merging = FMath::Min(StackA.Stack, Limit - StackB.Stack);
+	StackA.Stack -= Merging;
+	StackB.Stack += Merging;
+	if (StackA.Stack == 0)
+	{
+		Stacks.RemoveAt(StackIndexA);
+		return 0;
+	}
+	return StackA.Stack;
 }
 
 bool FInventoryEntry::IsValid() const

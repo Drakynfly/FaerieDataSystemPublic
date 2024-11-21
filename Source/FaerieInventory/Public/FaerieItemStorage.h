@@ -281,6 +281,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Storage", BlueprintAuthorityOnly)
 	FEntryKey MoveEntry(UFaerieItemStorage* ToStorage, FEntryKey Key, EFaerieStorageAddStackBehavior AddStackBehavior);
 
+	UFUNCTION(BlueprintCallable, Category = "Storage", BlueprintAuthorityOnly)
+	bool MergeStacks(FEntryKey Entry, FStackKey StackA, FStackKey StackB);
+
 	/** Call MoveEntry on all entries in this storage. */
 	UFUNCTION(BlueprintCallable, Category = "Storage", BlueprintAuthorityOnly)
 	void Dump(UFaerieItemStorage* ToStorage);
