@@ -1072,6 +1072,7 @@ bool UFaerieItemStorage::MergeStacks(const FEntryKey Entry, const FStackKey Stac
 
 	const FInventoryContent::FScopedItemHandle Handle = EntryMap.GetHandle(Entry);
 	Handle->MergeStacks(StackA, StackB);
+
 	return true;
 }
 

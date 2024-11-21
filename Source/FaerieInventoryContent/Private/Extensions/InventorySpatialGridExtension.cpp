@@ -110,7 +110,7 @@ void UInventorySpatialGridExtension::PostInitProperties()
 void UInventorySpatialGridExtension::InitializeExtension(const UFaerieItemContainerBase* Container)
 {
 	checkf(!IsValid(InitializedContainer), TEXT("InventorySpatialGridExtension doesn't support multi-initialization!"))
-	InitializedContainer = Container;
+	InitializedContainer = const_cast<UFaerieItemContainerBase*>(Container);
 	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, InitializedContainer, this);
 
 	// Add all existing items to the grid on startup.
@@ -151,8 +151,8 @@ void UInventorySpatialGridExtension::DeinitializeExtension(const UFaerieItemCont
 }
 
 EEventExtensionResponse UInventorySpatialGridExtension::AllowsAddition(const UFaerieItemContainerBase* Container,
-																	   const FFaerieItemStackView Stack,
-																	   EFaerieStorageAddStackBehavior)
+																	const FFaerieItemStackView Stack,
+																	EFaerieStorageAddStackBehavior)
 {
 	// @todo add boolean in config to allow items without a shape
 	if (!CanAddItemToGrid(Stack.Item->GetToken<UFaerieShapeToken>()))
@@ -212,11 +212,42 @@ void UInventorySpatialGridExtension::PreCommittedRemoval(const UFaerieItemContai
 				{
 					RemoveItem(Key);
 				}
+				else
+				{
+					PostEntryReplicatedChange({ Key, GetEntryPlacementData(Key) });
+				}
 			}
 		}
 	}
 }
 
+void UInventorySpatialGridExtension::PostEntryChanged(const UFaerieItemContainerBase* Container, FEntryKey Key)
+{
+	// Create a temporary array to store keys that need to be removed
+	TArray<FInventoryKey> KeysToRemove;
+
+	// get keys to remove
+	for(const auto& SpatialEntry : SpatialEntries)
+	{
+		if(!Cast<UFaerieItemStorage>(InitializedContainer)->IsValidKey(SpatialEntry.Key))
+		{
+			KeysToRemove.Add(SpatialEntry.Key);
+		} else
+		{
+			SpatialEntryChangedDelegateNative.Broadcast(SpatialEntry.Key, ESpatialEventType::ItemChanged);
+			SpatialEntryChangedDelegate.Broadcast(SpatialEntry.Key, ESpatialEventType::ItemChanged);
+		}
+	}
+
+	// remove the stored keys
+	for(const FInventoryKey& KeyToRemove : KeysToRemove)
+	{
+		SpatialEntries.Remove(KeyToRemove);
+		SpatialEntryChangedDelegateNative.Broadcast(KeyToRemove, ESpatialEventType::ItemRemoved);
+		SpatialEntryChangedDelegate.Broadcast(KeyToRemove, ESpatialEventType::ItemRemoved);
+	}
+	SpatialEntries.MarkArrayDirty();
+}
 
 
 void UInventorySpatialGridExtension::PreEntryReplicatedRemove(const FSpatialKeyedEntry& Entry)
@@ -240,8 +271,11 @@ void UInventorySpatialGridExtension::PostEntryReplicatedAdd(const FSpatialKeyedE
 
 void UInventorySpatialGridExtension::PostEntryReplicatedChange(const FSpatialKeyedEntry& Entry)
 {
-	SpatialEntryChangedDelegateNative.Broadcast(Entry.Key, ESpatialEventType::ItemChanged);
-	SpatialEntryChangedDelegate.Broadcast(Entry.Key, ESpatialEventType::ItemChanged);
+	if(Cast<UFaerieItemStorage>(InitializedContainer)->IsValidKey(Entry.Key))
+	{
+		SpatialEntryChangedDelegateNative.Broadcast(Entry.Key, ESpatialEventType::ItemChanged);
+		SpatialEntryChangedDelegate.Broadcast(Entry.Key, ESpatialEventType::ItemChanged);
+	}
 }
 
 void UInventorySpatialGridExtension::OnRep_GridSize()
@@ -504,11 +538,20 @@ bool UInventorySpatialGridExtension::MoveItem(const FInventoryKey& Key, const FI
 		{
 			const FFaerieGridShapeConstView ItemShape = GetItemShape(Key.EntryKey);
 
+			// Create placement at target point
+			FSpatialItemPlacement TargetPlacement = Placement;
+			TargetPlacement.Origin = TargetPoint;
 			// Get the rotated shape based on current entry rotation so we can correctly get items that would overlap
-			const FFaerieGridShape Translated = ApplyPlacement(ItemShape, Placement);
+			FFaerieGridShape Translated = ApplyPlacement(ItemShape, TargetPlacement);
 
 			if (FSpatialKeyedEntry* OverlappingItem = FindOverlappingItem(Translated, Key))
 			{
+				if(OverlappingItem->Key.EntryKey == Key.EntryKey)
+				{
+					Cast<UFaerieItemStorage>(InitializedContainer)->MergeStacks(Key.EntryKey, Key.StackKey, OverlappingItem->Key.StackKey);
+					return true;
+				}
+
 				if (TrySwapItems(
 					Key, Placement,
 					OverlappingItem->Key, OverlappingItem->Value))

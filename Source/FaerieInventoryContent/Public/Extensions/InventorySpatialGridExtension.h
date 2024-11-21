@@ -151,6 +151,7 @@ protected:
 	virtual void PostAddition(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) override;
 	virtual void PostRemoval(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) override;
 	virtual void PreCommittedRemoval(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) override;
+	virtual void PostEntryChanged(const UFaerieItemContainerBase* Container, FEntryKey Key) override;
 	//~ UItemContainerExtensionBase
 
 	void PreEntryReplicatedRemove(const FSpatialKeyedEntry& Entry);
@@ -235,5 +236,5 @@ private:
 	 * (Or use UInventoryReplicatedDataExtensionBase). Until then, we can safely assume we only worry about one container.
 	 */
 	UPROPERTY(Replicated)
-	TObjectPtr<const UFaerieItemContainerBase> InitializedContainer;
+	TObjectPtr<UFaerieItemContainerBase> InitializedContainer;
 };
