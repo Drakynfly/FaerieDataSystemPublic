@@ -7,6 +7,7 @@
 #include "FaerieItem.h"
 #include "FaerieItemTemplate.h"
 #include "FlakesStructs.h"
+#include "InventoryDataEnums.h"
 #include "ItemContainerEvent.h"
 #include "ItemContainerExtensionBase.h"
 #include "Net/UnrealNetwork.h"
@@ -188,7 +189,9 @@ bool UFaerieEquipmentSlot::CouldSetInSlot(const FFaerieItemStackView View) const
 		return false;
 	}
 
-	if (Extensions->AllowsAddition(this, View) == EEventExtensionResponse::Disallowed)
+	static constexpr EFaerieStorageAddStackBehavior SlotAddBehavior = EFaerieStorageAddStackBehavior::OnlyNewStacks;
+
+	if (Extensions->AllowsAddition(this, View, SlotAddBehavior) == EEventExtensionResponse::Disallowed)
 	{
 		return false;
 	}
@@ -219,7 +222,9 @@ bool UFaerieEquipmentSlot::CanSetInSlot(const FFaerieItemStackView View) const
 		}
 	}
 
-	if (Extensions->AllowsAddition(this, View) == EEventExtensionResponse::Disallowed)
+	static constexpr EFaerieStorageAddStackBehavior SlotAddBehavior = EFaerieStorageAddStackBehavior::OnlyNewStacks;
+
+	if (Extensions->AllowsAddition(this, View, SlotAddBehavior) == EEventExtensionResponse::Disallowed)
 	{
 		return false;
 	}

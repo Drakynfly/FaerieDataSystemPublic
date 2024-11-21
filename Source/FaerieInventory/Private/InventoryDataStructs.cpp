@@ -3,6 +3,7 @@
 // ReSharper disable CppMemberFunctionMayBeConst
 #include "InventoryDataStructs.h"
 #include "FaerieItemStorage.h"
+#include "InventoryDataEnums.h"
 #include "HAL/LowLevelMemStats.h"
 #include "Tokens/FaerieStackLimiterToken.h"
 

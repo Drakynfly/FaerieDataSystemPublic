@@ -19,8 +19,8 @@ class FAERIEITEMDATA_API UFaerieItemDataProxy : public UInterface
 /**
  * Item Data Proxies are objects to pass around item data, without breaking ownership.
  * There are multiple implementations for various purposes, but their primary point is to allow API's to be created
- * without having to worry about the various forms items can come in. Just declare a function that takes in an
- * ItemDataProxies and most anything can call that function.
+ * without having to worry about the various forms items can come in. Just declare a function that takes an
+ * IFaerieItemDataProxy or its struct form FFaerieItemProxy and most anything can call that function.
  */
 class FAERIEITEMDATA_API IFaerieItemDataProxy
 {
@@ -48,7 +48,6 @@ public:
 // This struct contains a weak pointer to a proxy of a FaerieItem somewhere. This struct should never be
 // serialized, and will not keep the proxy it points to alive.
 // Access to the referenced item data is always const. Mutable access must be granted by the owner of the data.
-// @todo maybe this shouldn't be a Weak proxy? If this doesn't keep them alive, what does?
 USTRUCT(BlueprintType, meta = (HasNativeMake = "/Script/FaerieItemData.FaerieItemProxyUtils.ToWeakProxy"))
 struct FAERIEITEMDATA_API FFaerieItemProxy
 {

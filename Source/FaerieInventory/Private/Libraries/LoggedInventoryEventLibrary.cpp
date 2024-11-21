@@ -1,7 +1,7 @@
 ﻿// Copyright Guy (Drakynfly) Lundvall. All Rights Reserved.
 
 #include "Libraries/LoggedInventoryEventLibrary.h"
-#include "Extensions/InventoryLoggerExtension.h"
+#include "ItemContainerEvent.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(LoggedInventoryEventLibrary)
 

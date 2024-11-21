@@ -77,11 +77,14 @@ void UInventoryCapacityExtension::DeinitializeExtension(const UFaerieItemContain
 	HandleStateChanged();
 }
 
-EEventExtensionResponse UInventoryCapacityExtension::AllowsAddition(const UFaerieItemContainerBase* Container, const FFaerieItemStackView Stack)
+EEventExtensionResponse UInventoryCapacityExtension::AllowsAddition(const UFaerieItemContainerBase* Container,
+																	const FFaerieItemStackView Stack,
+																	EFaerieStorageAddStackBehavior)
 {
 	if (!CanContain(Stack))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("PreAddition: Cannot add Stack (Item: '%s' Copies: %i)"), Stack.Item.IsValid() ? *Stack.Item->GetName() : TEXT("null"), Stack.Copies);
+		UE_LOG(LogTemp, Warning, TEXT("PreAddition: Cannot add Stack (Item: '%s' Copies: %i)"),
+			Stack.Item.IsValid() ? *Stack.Item->GetName() : TEXT("null"), Stack.Copies);
 		return EEventExtensionResponse::Disallowed;
 	}
 

@@ -89,7 +89,7 @@ UEquipmentVisualizer* UEquipmentVisualizationUpdater::GetVisualizer(const UFaeri
 		return nullptr;
 	}
 
-	if (auto&& Relevants = Container->GetExtension<URelevantActorsExtension>())
+	if (auto&& Relevants = GetExtension<URelevantActorsExtension>(Container))
 	{
 		if (auto&& Pawn = Relevants->FindActor<APawn>())
 		{
@@ -150,7 +150,7 @@ void UEquipmentVisualizationUpdater::CreateNewVisualImpl(const UFaerieItemContai
 		return;
 	}
 
-	auto&& SlotExtension = Container->GetExtension<UVisualSlotExtension>();
+	auto&& SlotExtension = GetExtension<UVisualSlotExtension>(Container);
 	if (!IsValid(SlotExtension))
 	{
 		UE_LOG(LogEquipmentManager, Warning, TEXT("No slot extension for container!"))

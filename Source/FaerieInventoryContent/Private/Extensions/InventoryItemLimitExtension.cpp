@@ -25,13 +25,14 @@ void UInventoryItemLimitExtension::DeinitializeExtension(const UFaerieItemContai
 		[this](const FEntryKey Key)
 		{
 			int32 Value = 0;
-			StackAmountCache.RemoveAndCopyValue(Key, Value);
+			EntryAmountCache.RemoveAndCopyValue(Key, Value);
 			CurrentTotalItemCopies -= Value;
 		});
 }
 
 EEventExtensionResponse UInventoryItemLimitExtension::AllowsAddition(const UFaerieItemContainerBase* Container,
-                                                                     const FFaerieItemStackView Stack)
+                                                                     const FFaerieItemStackView Stack,
+                                                                     const EFaerieStorageAddStackBehavior)
 {
 	if (!CanContain(Stack))
 	{
@@ -66,13 +67,13 @@ int32 UInventoryItemLimitExtension::GetTotalItemCount() const
 	return CurrentTotalItemCopies;
 }
 
-int32 UInventoryItemLimitExtension::GetRemainingStackCount() const
+int32 UInventoryItemLimitExtension::GetRemainingEntryCount() const
 {
 	if (MaxEntries <= 0)
 	{
 		return Faerie::ItemData::UnlimitedStack;
 	}
-	return MaxEntries - StackAmountCache.Num();
+	return MaxEntries - EntryAmountCache.Num();
 }
 
 int32 UInventoryItemLimitExtension::GetRemainingTotalItemCount() const
@@ -88,7 +89,8 @@ bool UInventoryItemLimitExtension::CanContain(const FFaerieItemStackView Stack) 
 {
 	if (MaxEntries > 0)
 	{
-		if (StackAmountCache.Num() >= MaxEntries)
+		// Maximum entries reached check
+		if (EntryAmountCache.Num() >= MaxEntries)
 		{
 			return false;
 		}
@@ -96,6 +98,7 @@ bool UInventoryItemLimitExtension::CanContain(const FFaerieItemStackView Stack) 
 
 	if (MaxTotalItemCopies > 0)
 	{
+		// Maximum total item reached check
 		if (CurrentTotalItemCopies + Stack.Copies > MaxTotalItemCopies)
 		{
 			return false;
@@ -109,27 +112,22 @@ void UInventoryItemLimitExtension::UpdateCacheForEntry(const UFaerieItemContaine
 {
 	if (!ensure(IsValid(Container))) return;
 
-	const int32* PrevStackCache = StackAmountCache.Find(Key);
+	int32 PrevEntryAmount = 0;
+	if (auto&& ExistingCache = EntryAmountCache.Find(Key))
+	{
+		PrevEntryAmount = *ExistingCache;
+	}
 
 	if (!Container->IsValidKey(Key))
 	{
-		if (PrevStackCache)
-		{
-			CurrentTotalItemCopies -= *PrevStackCache;
-			StackAmountCache.Remove(Key);
-		}
+		CurrentTotalItemCopies -= PrevEntryAmount;
+		EntryAmountCache.Remove(Key);
 		return;
 	}
 
 	const int32 StackAtKey = Container->GetStack(Key);
+	const int32 Diff = StackAtKey - PrevEntryAmount;
 
-	int32 Diff = StackAtKey;
-
-	if (PrevStackCache)
-	{
-		Diff -= *PrevStackCache;
-	}
-
-	StackAmountCache.Add(Key, StackAtKey);
+	EntryAmountCache.Add(Key, StackAtKey);
 	CurrentTotalItemCopies += Diff;
 }

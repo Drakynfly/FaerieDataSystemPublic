@@ -18,7 +18,7 @@ class FAERIEINVENTORYCONTENT_API UInventoryContentFilterExtension : public UItem
 
 public:
 	//~ UItemContainerExtensionBase
-	virtual EEventExtensionResponse AllowsAddition(const UFaerieItemContainerBase* Container, FFaerieItemStackView Stack) override;
+	virtual EEventExtensionResponse AllowsAddition(const UFaerieItemContainerBase* Container, FFaerieItemStackView Stack, EFaerieStorageAddStackBehavior AddStackBehavior) override;
 	//~ UItemContainerExtensionBase
 
 protected:

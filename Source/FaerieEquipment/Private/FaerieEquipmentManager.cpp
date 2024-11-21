@@ -63,6 +63,11 @@ void UFaerieEquipmentManager::ReadyForReplication()
 	AddSubobjectsForReplication();
 }
 
+UItemContainerExtensionGroup* UFaerieEquipmentManager::GetExtensionGroup() const
+{
+	return ExtensionGroup;
+}
+
 void UFaerieEquipmentManager::AddDefaultSlots()
 {
 	if (!Slots.IsEmpty())
@@ -232,55 +237,25 @@ UFaerieEquipmentSlot* UFaerieEquipmentManager::FindSlot(const FFaerieSlotTag Slo
 	return nullptr;
 }
 
-bool UFaerieEquipmentManager::HasExtension(const TSubclassOf<UItemContainerExtensionBase> ExtensionClass) const
+bool UFaerieEquipmentManager::AddExtension(UItemContainerExtensionBase* Extension)
 {
-	return ExtensionGroup->HasExtension(ExtensionClass);
-}
-
-bool UFaerieEquipmentManager::GetExtension(const TSubclassOf<UItemContainerExtensionBase> ExtensionClass,
-										   UItemContainerExtensionBase*& Extension) const
-{
-	Extension = ExtensionGroup->GetExtension(ExtensionClass);
-	return IsValid(Extension);
-}
-
-UItemContainerExtensionBase* UFaerieEquipmentManager::AddExtension(const TSubclassOf<UItemContainerExtensionBase> ExtensionClass)
-{
-	if (!ensure(
-			IsValid(ExtensionClass) &&
-			ExtensionClass != UItemContainerExtensionBase::StaticClass()))
+	if (ExtensionGroup->AddExtension(Extension))
 	{
-		return nullptr;
+		AddReplicatedSubObject(Extension);
+		return true;
 	}
-
-	UItemContainerExtensionBase* NewExtension = NewObject<UItemContainerExtensionBase>(ExtensionGroup, ExtensionClass);
-	NewExtension->SetIdentifier();
-	ExtensionGroup->AddExtension(NewExtension);
-	AddReplicatedSubObject(NewExtension);
-
-	return NewExtension;
+	return false;
 }
 
-bool UFaerieEquipmentManager::RemoveExtension(const TSubclassOf<UItemContainerExtensionBase> ExtensionClass)
+bool UFaerieEquipmentManager::RemoveExtension(UItemContainerExtensionBase* Extension)
 {
-	if (!ensure(
-			IsValid(ExtensionClass) &&
-			ExtensionClass != UItemContainerExtensionBase::StaticClass()))
+	if (!ensure(IsValid(Extension)))
 	{
 		return false;
 	}
 
-	UItemContainerExtensionBase* Extension = nullptr;
-	GetExtension(ExtensionClass, Extension);
-	if (!IsValid(Extension))
-	{
-		return false;
-	}
-
-	ExtensionGroup->RemoveExtension(Extension);
 	RemoveReplicatedSubObject(Extension);
-
-	return true;
+	return ExtensionGroup->RemoveExtension(Extension);
 }
 
 UItemContainerExtensionBase* UFaerieEquipmentManager::AddExtensionToSlot(const FFaerieSlotTag SlotID,

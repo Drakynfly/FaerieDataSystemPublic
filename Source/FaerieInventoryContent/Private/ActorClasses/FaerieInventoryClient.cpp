@@ -212,7 +212,7 @@ bool FFaerieClientAction_RequestMoveEquipmentSlotToInventory::Server_Execute(con
 		StackAmount = Slot->GetCopies();
 	}
 
-	if (!ToStorage->CanAddStack({Slot->GetItemObject(), StackAmount}))
+	if (!ToStorage->CanAddStack({Slot->GetItemObject(), StackAmount}, AddStackBehavior))
 	{
 		return false;
 	}
@@ -220,7 +220,7 @@ bool FFaerieClientAction_RequestMoveEquipmentSlotToInventory::Server_Execute(con
 	if (const FFaerieItemStack Stack = Slot->TakeItemFromSlot(StackAmount);
 		IsValid(Stack.Item))
 	{
-		return ToStorage->AddItemStack(Stack);
+		return ToStorage->AddItemStack(Stack, AddStackBehavior);
 	}
 
 	return false;
@@ -231,7 +231,7 @@ bool FFaerieClientAction_RequestMoveItemBetweenSpatialSlots::Server_Execute(cons
 	if (!IsValid(Storage)) return false;
 	if (!Client->CanAccessStorage(Storage)) return false;
 
-	if (auto&& SpatialExtension = Storage->GetExtension<UInventorySpatialGridExtension>())
+	if (auto&& SpatialExtension = GetExtension<UInventorySpatialGridExtension>(Storage))
 	{
 		return SpatialExtension->MoveItem(TargetKey, DragEnd);
 	}
@@ -244,7 +244,7 @@ bool FFaerieClientAction_RequestRotateSpatialEntry::Server_Execute(const UFaerie
 	if (!IsValid(Storage)) return false;
 	if (!Client->CanAccessStorage(Storage)) return false;
 
-	if (auto&& SpatialExtension = Storage->GetExtension<UInventorySpatialGridExtension>())
+	if (auto&& SpatialExtension = GetExtension<UInventorySpatialGridExtension>(Storage))
 	{
 		return SpatialExtension->RotateItem(Key);
 	}

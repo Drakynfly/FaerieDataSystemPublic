@@ -3,7 +3,7 @@
 #pragma once
 
 #include "NetSupportedObject.h"
-#include "FaerieItemDataProxy.h"
+#include "FaerieContainerExtensionInterface.h"
 #include "FaerieItemOwnerInterface.h"
 #include "InventoryDataStructs.h"
 #include "FaerieItemContainerBase.generated.h"
@@ -14,7 +14,7 @@ class UItemContainerExtensionBase;
  * Base class for objects that store FaerieItems
  */
 UCLASS(Abstract)
-class FAERIEINVENTORY_API UFaerieItemContainerBase : public UNetSupportedObject, public IFaerieItemOwnerInterface
+class FAERIEINVENTORY_API UFaerieItemContainerBase : public UNetSupportedObject, public IFaerieItemOwnerInterface, public IFaerieContainerExtensionInterface
 {
 	GENERATED_BODY()
 
@@ -27,6 +27,11 @@ public:
 	virtual FFaerieItemStack Release(FFaerieItemStackView Stack) override;
 	virtual bool Possess(FFaerieItemStack Stack) override;
 	//~ IFaerieItemOwnerInterface
+
+	//~ IFaerieContainerExtensionInterface
+	virtual UItemContainerExtensionGroup* GetExtensionGroup() const override final;
+	virtual bool AddExtension(UItemContainerExtensionBase* Extension) override;
+	//~ IFaerieContainerExtensionInterface
 
 
 	/**------------------------------*/
@@ -71,33 +76,8 @@ protected:
 
 
 	/**------------------------------*/
-	/*		 EXTENSIONS SYSTEM		 */
+	/*			 VARIABLES			 */
 	/**------------------------------*/
-
-public:
-	// Try to add an extension to this storage. This will only fail if the extension pointer is invalid or the extension
-	// is Unique, and one already exists of its class.
-	bool AddExtension(UItemContainerExtensionBase* Extension);
-
-	bool RemoveExtension(UItemContainerExtensionBase* Extension);
-
-	// Has extension by class
-	UFUNCTION(BlueprintCallable, Category = "Storage|Extensions")
-	bool HasExtension(TSubclassOf<UItemContainerExtensionBase> ExtensionClass) const;
-
-	// Get extension by class
-	UFUNCTION(BlueprintCallable, Category = "Storage|Extensions", meta = (DeterminesOutputType = ExtensionClass))
-	UItemContainerExtensionBase* GetExtension(UPARAM(meta = (AllowAbstract = "false")) TSubclassOf<UItemContainerExtensionBase> ExtensionClass) const;
-
-	template <typename TExtensionClass> TExtensionClass* GetExtension() const
-	{
-		return Cast<TExtensionClass>(GetExtension(TExtensionClass::StaticClass()));
-	}
-
-	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Storage|Extensions",
-		meta = (DeterminesOutputType = ExtensionClass, DynamicOutputParam = Extension, ExpandBoolAsExecs = "ReturnValue"))
-	bool GetExtensionChecked(UPARAM(meta = (AllowAbstract = "false")) TSubclassOf<UItemContainerExtensionBase> ExtensionClass,
-		UItemContainerExtensionBase*& Extension) const;
 
 protected:
 	// Subobject responsible for adding to or customizing container behavior.

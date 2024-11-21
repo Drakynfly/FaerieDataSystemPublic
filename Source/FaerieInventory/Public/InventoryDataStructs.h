@@ -11,27 +11,7 @@
 #include "StructUtils/StructView.h"
 #include "InventoryDataStructs.generated.h"
 
-/**
- * This enum holds the flags to bitwise equivalate inventory entries.
- */
-UENUM(BlueprintType, Meta = (Bitflags, UseEnumValuesAsMaskValuesInEditor))
-enum class EEntryEquivalencyFlags : uint8
-{
-	None = 0 UMETA(Hidden),
-
-	// When set, all generated data will be checked.
-	Test_ItemData = 1 << 0 UMETA(DisplayName = "Item Data"),
-
-	// When set, stack sums will be checked.
-	Test_StackSum = 1 << 1 UMETA(DisplayName = "Stack Sum"),
-
-	// When set, stack limit will be checked.
-	Test_Limit = 1 << 2 UMETA(DisplayName = "Limit"),
-
-	// When set, all other flags are considered set.
-	All = Test_ItemData | Test_StackSum | Test_Limit UMETA(Hidden),
-};
-ENUM_CLASS_FLAGS(EEntryEquivalencyFlags)
+enum class EEntryEquivalencyFlags : uint8;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogInventoryStructs, Log, All)
 

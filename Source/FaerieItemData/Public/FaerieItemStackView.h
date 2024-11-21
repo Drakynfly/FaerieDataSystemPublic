@@ -26,7 +26,7 @@ struct FAERIEITEMDATA_API FFaerieItemStackView
 	  : Item(Proxy.GetItemObject()),
 		Copies(Proxy.GetCopies()) {}
 
-	FFaerieItemStackView(const FFaerieItemStack Stack)
+	FFaerieItemStackView(const FFaerieItemStack& Stack)
 	  : Item(Stack.Item),
 		Copies(Stack.Copies) {}
 

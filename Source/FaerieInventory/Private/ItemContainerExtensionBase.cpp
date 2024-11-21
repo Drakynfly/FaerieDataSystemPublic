@@ -108,7 +108,8 @@ void UItemContainerExtensionGroup::DeinitializeExtension(const UFaerieItemContai
 }
 
 EEventExtensionResponse UItemContainerExtensionGroup::AllowsAddition(const UFaerieItemContainerBase* Container,
-																	 const FFaerieItemStackView Stack)
+																	 const FFaerieItemStackView Stack,
+																	 const EFaerieStorageAddStackBehavior AddStackBehavior)
 {
 	EEventExtensionResponse Response = EEventExtensionResponse::NoExplicitResponse;
 
@@ -117,7 +118,7 @@ EEventExtensionResponse UItemContainerExtensionGroup::AllowsAddition(const UFaer
 	{
 		if (!ensure(IsValid(Extension))) continue;
 
-		switch (Extension->AllowsAddition(Container, Stack))
+		switch (Extension->AllowsAddition(Container, Stack, AddStackBehavior))
 		{
 		case EEventExtensionResponse::NoExplicitResponse:
 			break;
@@ -219,6 +220,11 @@ void UItemContainerExtensionGroup::PostEntryChanged(const UFaerieItemContainerBa
 		{
 			Extension->PostEntryChanged(Container, Key);
 		});
+}
+
+UItemContainerExtensionGroup* UItemContainerExtensionGroup::GetExtensionGroup() const
+{
+	return const_cast<UItemContainerExtensionGroup*>(this);
 }
 
 void UItemContainerExtensionGroup::ForEachExtension(const TFunctionRef<void(UItemContainerExtensionBase*)>& Func)
@@ -329,13 +335,6 @@ UItemContainerExtensionBase* UItemContainerExtensionGroup::GetExtension(const TS
 	}
 
 	return nullptr;
-}
-
-bool UItemContainerExtensionGroup::GetExtensionChecked(const TSubclassOf<UItemContainerExtensionBase> ExtensionClass,
-													   UItemContainerExtensionBase*& Extension) const
-{
-	Extension = GetExtension(ExtensionClass);
-	return IsValid(Extension);
 }
 
 #undef LOCTEXT_NAMESPACE

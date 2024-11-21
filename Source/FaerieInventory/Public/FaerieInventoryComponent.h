@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "FaerieContainerExtensionInterface.h"
 #include "InventoryDataStructs.h"
 #include "Components/ActorComponent.h"
 
@@ -19,7 +20,7 @@ DECLARE_LOG_CATEGORY_EXTERN(LogFaerieInventoryComponent, Log, All);
  */
 UCLASS(ClassGroup = ("Faerie"), meta = (BlueprintSpawnableComponent, ChildCannotTick),
 	HideCategories = (Collision, ComponentTick, Replication, ComponentReplication, Activation, Sockets, Navigation))
-class FAERIEINVENTORY_API UFaerieInventoryComponent : public UActorComponent
+class FAERIEINVENTORY_API UFaerieInventoryComponent : public UActorComponent, public IFaerieContainerExtensionInterface
 {
 	GENERATED_BODY()
 
@@ -33,6 +34,12 @@ public:
 	virtual void ReadyForReplication() override;
 	//~ UActorComponent
 
+	//~ IFaerieContainerExtensionInterface
+	virtual UItemContainerExtensionGroup* GetExtensionGroup() const override final;
+	virtual bool AddExtension(UItemContainerExtensionBase* Extension) override;
+	virtual bool RemoveExtension(UItemContainerExtensionBase* Extension) override;
+	//~ IFaerieContainerExtensionInterface
+
 	virtual void PostEntryAdded(UFaerieItemStorage* Storage, FEntryKey Key);
 	virtual void PostEntryChanged(UFaerieItemStorage* Storage, FEntryKey Key);
 	virtual void PreEntryRemoved(UFaerieItemStorage* Storage, FEntryKey Key);
@@ -45,16 +52,6 @@ public:
 public:
 	UFUNCTION(BlueprintCallable, Category = "Faerie|InventoryComponent")
 	UFaerieItemStorage* GetStorage() const { return ItemStorage; }
-
-	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Faerie|InventoryComponent",
-		meta = (DeterminesOutputType = ExtensionClass, DynamicOutputParam = Extension, ExpandBoolAsExecs = "ReturnValue"))
-	bool GetExtensionChecked(UPARAM(meta = (AllowAbstract = "false")) TSubclassOf<UItemContainerExtensionBase> ExtensionClass,
-		UItemContainerExtensionBase*& Extension) const;
-
-	// Add a new extension of the given class, and return the result. If an extension of this class already exists, it
-	// will be returned instead.
-	UFUNCTION(BlueprintCallable, Category = "Faerie|InventoryComponent", BlueprintAuthorityOnly, meta = (DeterminesOutputType = "ExtensionClass"))
-	UItemContainerExtensionBase* AddExtension(TSubclassOf<UItemContainerExtensionBase> ExtensionClass);
 
 
 	/**-------------*/

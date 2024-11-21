@@ -5,6 +5,7 @@
 #include "GameplayTagContainer.h"
 #include "TypedGameplayTags.h"
 #include "InventoryDataStructs.h"
+#include "ItemContainerEvent.generated.h"
 
 namespace Faerie::Inventory
 {
@@ -95,3 +96,52 @@ namespace Faerie::Inventory
 		FDateTime Timestamp;
 	};
 }
+
+/*
+ * Blueprint wrapper of Faerie::Inventory::FEventLog
+ */
+USTRUCT(BlueprintType, meta = (HasNativeBreak = "/Script/FaerieInventory.LoggedInventoryEventLibrary.BreakLoggedInventoryEvent"))
+struct FAERIEINVENTORY_API FLoggedInventoryEvent
+{
+	GENERATED_BODY()
+
+	// Which storage logged this event
+	UPROPERTY()
+	TWeakObjectPtr<const class UFaerieItemContainerBase> Container = nullptr;
+
+	// The logged event
+	Faerie::Inventory::FEventLog Event;
+
+	friend bool operator==(const FLoggedInventoryEvent& Lhs, const FLoggedInventoryEvent& Rhs)
+	{
+		return Lhs.Container == Rhs.Container && Lhs.Event == Rhs.Event;
+	}
+
+	friend bool operator!=(const FLoggedInventoryEvent& Lhs, const FLoggedInventoryEvent& Rhs)
+	{
+		return !(Lhs == Rhs);
+	}
+
+	friend FArchive& operator<<(FArchive& Ar, FLoggedInventoryEvent& Val)
+	{
+		Ar << Val.Container;
+		Ar << Val.Event;
+		return Ar;
+	}
+
+	bool NetSerialize(FArchive& Ar, class UPackageMap* Map, bool& bOutSuccess)
+	{
+		Ar << *this;
+		bOutSuccess = true;
+		return true;
+	}
+};
+
+template<>
+struct TStructOpsTypeTraits<FLoggedInventoryEvent> : public TStructOpsTypeTraitsBase2<FLoggedInventoryEvent>
+{
+	enum
+	{
+		WithNetSerializer = true,
+	};
+};
