@@ -102,9 +102,8 @@ private:
 	// @todo this copies the entry. Kinda wonky, should be used minimally, if at all.
     void GetEntryImpl(FEntryKey Key, FInventoryEntry& Entry) const;
 
-	// Internal implementations for adding items, in various forms.
-	Faerie::Inventory::FEventLog AddEntryImpl(const FInventoryEntry& InEntry, bool ForceNewStack);
-	Faerie::Inventory::FEventLog AddEntryFromStackImpl(const FFaerieItemStack& InStack, bool ForceNewStack);
+	// Internal implementation for adding items.
+	Faerie::Inventory::FEventLog AddStackImpl(const FFaerieItemStack& InStack, bool ForceNewStack);
 
 	// Internal implementations for removing items, specifying an amount.
 	Faerie::Inventory::FEventLog RemoveFromEntryImpl(FEntryKey Key, int32 Amount, FFaerieInventoryTag Reason);
