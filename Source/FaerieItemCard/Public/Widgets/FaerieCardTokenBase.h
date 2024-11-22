@@ -13,14 +13,14 @@ struct FItemCardSparseClassData
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditDefaultsOnly, Category = "Item Card Class Data", meta = (AllowAbstract = true))
+	UPROPERTY(EditDefaultsOnly, Category = "ItemCardSparseClassData", meta = (AllowAbstract = true))
 	TSubclassOf<UFaerieItemToken> TokenClass;
 };
 
 /**
  *
  */
-UCLASS(SparseClassDataTypes = "ItemCardSparseClassData")
+UCLASS(Abstract, SparseClassDataTypes = "ItemCardSparseClassData")
 class FAERIEITEMCARD_API UFaerieCardTokenBase : public UUserWidget
 {
 	GENERATED_BODY()

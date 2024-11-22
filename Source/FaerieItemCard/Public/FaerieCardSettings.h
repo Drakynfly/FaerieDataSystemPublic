@@ -21,6 +21,10 @@ public:
 	virtual FName GetCategoryName() const override;
 	// End UDeveloperSettings implementation
 
+	// Disable to prevent UFaerieCardSubsystem being created
+	UPROPERTY(Config, EditAnywhere, Category = "Generator")
+	bool CreateCardGeneratorPlayerSubsystems = true;
+
 	UPROPERTY(Config, EditAnywhere, Category = "Classes")
 	TMap<TSubclassOf<UCustomCardClass>, TSoftClassPtr<UFaerieCardBase>> DefaultClasses;
 };

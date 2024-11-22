@@ -2,18 +2,18 @@
 
 #pragma once
 
-#include "InventoryUIAction.h"
 #include "Blueprint/IUserObjectListEntry.h"
 #include "Blueprint/UserWidget.h"
-#include "EntryDisplayBase.generated.h"
+#include "FaerieItemStackWidgetBase.generated.h"
 
+class UInventoryContentsBase;
 class UInventoryStackProxy;
 
 /**
  * Responsible for displaying a single inventory entry in an entry list widget.
  */
 UCLASS(Abstract)
-class FAERIEINVENTORYCONTENT_API UEntryDisplayBase : public UUserWidget, public IUserObjectListEntry
+class FAERIEINVENTORYCONTENT_API UFaerieItemStackWidgetBase : public UUserWidget, public IUserObjectListEntry
 {
 	GENERATED_BODY()
 

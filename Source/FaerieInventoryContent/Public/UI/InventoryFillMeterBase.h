@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include "InventoryContentsBase.h"
 #include "Blueprint/UserWidget.h"
 #include "InventoryFillMeterBase.generated.h"
 

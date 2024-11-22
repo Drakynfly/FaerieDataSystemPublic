@@ -26,14 +26,14 @@ namespace Faerie::Card
 	struct FAsyncGeneration
 	{
 		FAsyncGeneration(APlayerController* Player, const FFaerieItemProxy ItemProxy,
-									const TSubclassOf<UCustomCardClass> Type, const FFaerieCardGenerationResult& Callback)
+						 const TSubclassOf<UCustomCardClass>& Type, const FFaerieCardGenerationResult& Callback)
 		  : Player(Player),
 			Proxy(ItemProxy),
 			CardType(Type),
 			Callback(Callback) {}
 
 		FAsyncGeneration(APlayerController* Player, const FFaerieItemProxy ItemProxy,
-									const TSubclassOf<UCustomCardClass> Type, const FFaerieCardGenerationResultDynamic& InCallback)
+						 const TSubclassOf<UCustomCardClass>& Type, const FFaerieCardGenerationResultDynamic& InCallback)
 		  : Player(Player),
 			Proxy(ItemProxy),
 			CardType(Type)
@@ -66,7 +66,7 @@ class FAERIEITEMCARD_API UFaerieCardGenerator : public UObject
 	friend class UFaerieCardSubsystem;
 
 public:
-	TSoftClassPtr<UFaerieCardBase> GetCardClassFromProxy(FFaerieItemProxy Proxy, TSubclassOf<UCustomCardClass> Type) const;
+	TSoftClassPtr<UFaerieCardBase> GetCardClassFromProxy(FFaerieItemProxy Proxy, const TSubclassOf<UCustomCardClass>& Type) const;
 
 	UFaerieCardBase* Generate(const Faerie::Card::FSyncGeneration& Params);
 	void GenerateAsync(const Faerie::Card::FAsyncGeneration& Params);
