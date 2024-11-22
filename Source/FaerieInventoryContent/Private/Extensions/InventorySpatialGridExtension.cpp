@@ -558,6 +558,8 @@ bool UInventorySpatialGridExtension::MoveItem(const FInventoryKey& Key, const FI
 				{
 					// @todo this is gross
 					SpatialEntries.MarkItemDirty(*OverlappingItem);
+					//Had to broadcast the change for the UI, since EditItem isnt privy to the second items change I think it has to be done here, revisit?
+					PostEntryReplicatedChange(*OverlappingItem);
 					return true;
 				}
 				return false;
