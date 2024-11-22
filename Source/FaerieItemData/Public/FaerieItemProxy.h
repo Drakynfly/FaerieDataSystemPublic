@@ -60,6 +60,11 @@ struct FAERIEITEMDATA_API FFaerieItemProxy
 	FFaerieItemProxy(const IFaerieItemDataProxy* Interface)
 	  : Proxy(Interface->_getUObject()) {}
 
+	template<typename T>
+	FFaerieItemProxy(const TObjectPtr<T> DerivedProxy, 
+					 typename std::enable_if<std::is_base_of<IFaerieItemDataProxy, T>::value>::type* = nullptr)
+		: Proxy(DerivedProxy) {}
+
 	FFaerieItemProxy(const TScriptInterface<IFaerieItemDataProxy>& Interface)
 	  : Proxy(Interface.GetObject()) {}
 

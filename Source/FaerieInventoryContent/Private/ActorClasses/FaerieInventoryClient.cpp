@@ -255,45 +255,54 @@ bool FFaerieClientAction_RequestRotateSpatialEntry::Server_Execute(const UFaerie
 bool FFaerieClientAction_RequestMoveEquipmentSlotToSpatialInventory::Server_Execute(
 	const UFaerieInventoryClient* Client) const
 {
-	if (!IsValid(Slot)) return false;
-	if (!Slot->IsFilled()) return false;
-	if (!Client->CanAccessSlot(Slot)) return false;
-	if (!IsValid(ToStorage)) return false;
-	if (!Client->CanAccessStorage(ToStorage)) return false;
-	
-	if (auto&& SpatialExtension = GetExtension<UInventorySpatialGridExtension>(ToStorage))
+	// Validate Slot and Storage access
+	if (!IsValid(Slot) || !Slot->IsFilled() || !Client->CanAccessSlot(Slot) ||
+		!IsValid(ToStorage) || !Client->CanAccessStorage(ToStorage))
 	{
-		auto Shape = Slot->GetItemObject()->GetToken<UFaerieShapeToken>();
-		auto Placement = FSpatialItemPlacement();
-		Placement.Origin = TargetPoint;
-		FLoggedInventoryEvent EventLog;
-		if(SpatialExtension->FitsInGridAnyRotation(Shape->GetShape(), Placement))
+		return false;
+	}
+
+	// Fetch the Spatial Extension and ensure it exists
+	if (auto* SpatialExtension = GetExtension<UInventorySpatialGridExtension>(ToStorage))
+	{
+		// Retrieve the item's shape and prepare placement data
+		const auto* Shape = Slot->GetItemObject()->GetToken<UFaerieShapeToken>();
+		if (!Shape) 
 		{
-			int32 StackAmount = Amount;
+			return false;
+		}
 
-			// We should verify that we can perform this move here first, before we call AddItemStack (even tho it does it too),
-			// Otherwise we would have to remove the Item from the slot, and then add it back again if the Add failed :/
-			if (StackAmount == Faerie::ItemData::UnlimitedStack)
+		if (FSpatialItemPlacement Placement{ TargetPoint };
+			!SpatialExtension->FitsInGridAnyRotation(Shape->GetShape(), Placement))
+		{
+			return false;
+		}
+
+		// Determine the stack amount to transfer
+		int32 StackAmount = (Amount == Faerie::ItemData::UnlimitedStack) ? Slot->GetCopies() : Amount;
+
+		// Verify if the storage can accommodate the stack
+		if (!ToStorage->CanAddStack({ Slot->GetItemObject(), StackAmount }, EFaerieStorageAddStackBehavior::OnlyNewStacks))
+		{
+			return false;
+		}
+
+		// Attempt to transfer the item stack
+		if (const FFaerieItemStack Stack = Slot->TakeItemFromSlot(StackAmount); IsValid(Stack.Item))
+		{
+			const auto [Container, EventLog] = ToStorage->AddItemStackWithLog(
+				Stack, EFaerieStorageAddStackBehavior::OnlyNewStacks);
+
+			FInventoryKey TargetKey{ EventLog.EntryTouched, EventLog.StackKeys.Last() };
+
+			if (ToStorage->IsValidKey(TargetKey))
 			{
-				StackAmount = Slot->GetCopies();
+				SpatialExtension->MoveItem(TargetKey, TargetPoint);
+				return true;
 			}
-
-			if (!ToStorage->CanAddStack({Slot->GetItemObject(), StackAmount}, EFaerieStorageAddStackBehavior::OnlyNewStacks))
-			{
-				return false;
-			}
-
-			if (const FFaerieItemStack Stack = Slot->TakeItemFromSlot(StackAmount);
-				IsValid(Stack.Item))
-			{
-				EventLog = ToStorage->AddItemStackWithLog(Stack, EFaerieStorageAddStackBehavior::OnlyNewStacks);
-				const auto InvKeys = ToStorage->GetInvKeysForEntry(EventLog.Event.EntryTouched);
-				auto LatestEntry = InvKeys.Last();
-				SpatialExtension->MoveItem(LatestEntry, TargetPoint);
-			}
-
-			return false;	
 		}
 	}
+
 	return false;
 }
+

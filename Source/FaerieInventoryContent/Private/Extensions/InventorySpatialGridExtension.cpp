@@ -139,13 +139,9 @@ void UInventorySpatialGridExtension::InitializeExtension(const UFaerieItemContai
 
 void UInventorySpatialGridExtension::DeinitializeExtension(const UFaerieItemContainerBase* Container)
 {
-	// Remove all entries for this container on shutdown.
-	Container->ForEachKey(
-		[this](const FEntryKey Key)
-		{
-			RemoveItemsForEntry(Key);
-		});
-
+	// Remove all entries for this container on shutdown
+	OccupiedCells.Reset();
+	SpatialEntries.Items.Reset();
 	InitializedContainer = nullptr;
 	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, InitializedContainer, this);
 }
@@ -223,9 +219,9 @@ void UInventorySpatialGridExtension::PostEntryChanged(const UFaerieItemContainer
 	TArray<FInventoryKey> KeysToRemove;
 
 	// get keys to remove
-	for(const auto& SpatialEntry : SpatialEntries)
+	for (const auto& SpatialEntry : SpatialEntries)
 	{
-		if(const UFaerieItemStorage* Storage = Cast<UFaerieItemStorage>(InitializedContainer); !Storage->IsValidKey(SpatialEntry.Key))
+		if (const UFaerieItemStorage* Storage = Cast<UFaerieItemStorage>(InitializedContainer); !Storage->IsValidKey(SpatialEntry.Key))
 		{
 			KeysToRemove.Add(SpatialEntry.Key);
 		} else
@@ -236,7 +232,7 @@ void UInventorySpatialGridExtension::PostEntryChanged(const UFaerieItemContainer
 	}
 
 	// remove the stored keys
-	for(const FInventoryKey& KeyToRemove : KeysToRemove)
+	for (const FInventoryKey& KeyToRemove : KeysToRemove)
 	{
 		SpatialEntries.Remove(KeyToRemove);
 		SpatialEntryChangedDelegateNative.Broadcast(KeyToRemove, ESpatialEventType::ItemRemoved);
@@ -267,7 +263,7 @@ void UInventorySpatialGridExtension::PostEntryReplicatedAdd(const FSpatialKeyedE
 
 void UInventorySpatialGridExtension::PostEntryReplicatedChange(const FSpatialKeyedEntry& Entry)
 {
-	if(const UFaerieItemStorage* Storage = Cast<UFaerieItemStorage>(InitializedContainer); Storage->IsValidKey(Entry.Key))
+	if (const UFaerieItemStorage* Storage = Cast<UFaerieItemStorage>(InitializedContainer); Storage->IsValidKey(Entry.Key))
 	{
 		SpatialEntryChangedDelegateNative.Broadcast(Entry.Key, ESpatialEventType::ItemChanged);
 		SpatialEntryChangedDelegate.Broadcast(Entry.Key, ESpatialEventType::ItemChanged);
@@ -317,9 +313,17 @@ bool UInventorySpatialGridExtension::AddItemToGrid(const FInventoryKey& Key, con
 	return true;
 }
 
-void UInventorySpatialGridExtension::RemoveItem(const FInventoryKey& Key)
+void UInventorySpatialGridExtension::RemoveItem(const FInventoryKey& Key, const FFaerieGridShape& Shape)
 {
-	SpatialEntries.Remove(Key);
+	if(const auto TargetPlacement = SpatialEntries.Find(Key))
+	{
+		for (const FFaerieGridShape Translated = ApplyPlacement(Shape, *TargetPlacement);
+			const FIntPoint& Point : Translated.Points)
+		{
+			OccupiedCells[Ravel(Point)] = false;
+		}
+		SpatialEntries.Remove(Key);
+	}
 }
 
 void UInventorySpatialGridExtension::RemoveItemBatch(const TArray<FInventoryKey>& AffectedKeys,
@@ -339,32 +343,7 @@ void UInventorySpatialGridExtension::RemoveItemBatch(const TArray<FInventoryKey>
 	}
 	for (auto&& InvKey : AffectedKeys)
 	{
-		RemoveItem(InvKey);
-	}
-}
-
-void UInventorySpatialGridExtension::RemoveItemsForEntry(const FEntryKey& Key)
-{
-	auto&& ItemShape = GetItemShape(Key);
-
-	TArray<FInventoryKey> Keys;
-	for (auto&& Element : SpatialEntries)
-	{
-		if (Element.Key.EntryKey == Key)
-		{
-			Keys.Add(Element.Key);
-
-			for (const FFaerieGridShape Translated = ApplyPlacement(ItemShape, Element.Value);
-				 const FIntPoint& Point : Translated.Points)
-			{
-				OccupiedCells[Ravel(Point)] = false;
-			}
-		}
-	}
-
-	for (auto&& InvKey : Keys)
-	{
-		RemoveItem(InvKey);
+		SpatialEntries.Remove(InvKey);
 	}
 }
 
@@ -431,10 +410,10 @@ bool UInventorySpatialGridExtension::FitsInGridAnyRotation(const FFaerieGridShap
 	FSpatialItemPlacement& PlacementData, TConstArrayView<FInventoryKey> ExcludedKeys,
 	FIntPoint* OutCandidate) const
 {
-	for(const auto Rotation : TEnumRange<ESpatialItemRotation>())
+	for (const auto Rotation : TEnumRange<ESpatialItemRotation>())
 	{
 		PlacementData.Rotation = Rotation;
-		if(FitsInGrid(Shape, PlacementData, ExcludedKeys, OutCandidate))
+		if (FitsInGrid(Shape, PlacementData, ExcludedKeys, OutCandidate))
 		{
 			return true;
 		}
@@ -562,9 +541,9 @@ bool UInventorySpatialGridExtension::MoveItem(const FInventoryKey& Key, const FI
 
 			if (FSpatialKeyedEntry* OverlappingItem = FindOverlappingItem(Translated, Key))
 			{
-				if(OverlappingItem->Key.EntryKey == Key.EntryKey)
+				if (OverlappingItem->Key.EntryKey == Key.EntryKey)
 				{
-					if(UFaerieItemStorage* Storage = Cast<UFaerieItemStorage>(InitializedContainer); Storage->MergeStacks(Key.EntryKey, Key.StackKey, OverlappingItem->Key.StackKey))
+					if (UFaerieItemStorage* Storage = Cast<UFaerieItemStorage>(InitializedContainer); Storage->MergeStacks(Key.EntryKey, Key.StackKey, OverlappingItem->Key.StackKey))
 					{
 						return true;
 					}

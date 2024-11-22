@@ -162,9 +162,8 @@ protected:
 
 private:
 	bool AddItemToGrid(const FInventoryKey& Key, const UFaerieShapeToken* ShapeToken);
-	void RemoveItem(const FInventoryKey& Key);
+	void RemoveItem(const FInventoryKey& Key, const FFaerieGridShape& Shape);
 	void RemoveItemBatch(const TArray<FInventoryKey>& AffectedKeys, const FFaerieGridShape& ItemShape);
-	void RemoveItemsForEntry(const FEntryKey& Key);
 
 public:
 	bool CanAddItemToGrid(const UFaerieShapeToken* ShapeToken) const;
