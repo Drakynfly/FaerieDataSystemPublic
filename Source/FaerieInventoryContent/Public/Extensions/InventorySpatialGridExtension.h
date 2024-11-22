@@ -150,7 +150,6 @@ protected:
 	virtual EEventExtensionResponse AllowsAddition(const UFaerieItemContainerBase* Container, FFaerieItemStackView Stack, EFaerieStorageAddStackBehavior AddStackBehavior) override;
 	virtual void PostAddition(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) override;
 	virtual void PostRemoval(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) override;
-	virtual void PreCommittedRemoval(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) override;
 	virtual void PostEntryChanged(const UFaerieItemContainerBase* Container, FEntryKey Key) override;
 	//~ UItemContainerExtensionBase
 
@@ -164,6 +163,7 @@ protected:
 private:
 	bool AddItemToGrid(const FInventoryKey& Key, const UFaerieShapeToken* ShapeToken);
 	void RemoveItem(const FInventoryKey& Key);
+	void RemoveItemBatch(const TArray<FInventoryKey>& AffectedKeys, const FFaerieGridShape& ItemShape);
 	void RemoveItemsForEntry(const FEntryKey& Key);
 
 public:

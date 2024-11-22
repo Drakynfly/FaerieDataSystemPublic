@@ -192,17 +192,6 @@ void UItemContainerExtensionGroup::PreRemoval(const UFaerieItemContainerBase* Co
 		});
 }
 
-
-void UItemContainerExtensionGroup::PreCommittedRemoval(const UFaerieItemContainerBase* Container,
-										   const Faerie::Inventory::FEventLog& Event)
-{
-	ForEachExtension(
-		[Container, Event](UItemContainerExtensionBase* Extension)
-		{
-			Extension->PreCommittedRemoval(Container, Event);
-		});
-}
-
 void UItemContainerExtensionGroup::PostRemoval(const UFaerieItemContainerBase* Container,
                                            const Faerie::Inventory::FEventLog& Event)
 {

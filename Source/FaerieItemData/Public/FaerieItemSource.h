@@ -42,8 +42,7 @@ public:
 	virtual FFaerieAssetInfo GetSourceInfo() const { return FFaerieAssetInfo(); }
 
 	// Creates an item with the given outer.
-	UFUNCTION(BlueprintCallable, Category = "Faerie|ItemSource")
-	virtual UFaerieItem* CreateItemInstance(UObject* Outer) const;
+	virtual UFaerieItem* CreateItemInstance(UObject* Outer = GetTransientPackage()) const;
 
 	// Creates an item that can utilize contextual data given to it by the requester of the item.
 	virtual UFaerieItem* CreateItemInstance(const UItemInstancingContext* Context) const;
