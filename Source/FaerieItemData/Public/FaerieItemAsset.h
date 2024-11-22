@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "UObject/Object.h"
 #include "FaerieItemSource.h"
 
 #include "FaerieItemAsset.generated.h"
@@ -32,7 +33,7 @@ public:
 	//~ IFaerieItemSource
 
 	// Get the item instance this asset represents.
-	UFUNCTION(BlueprintCallable, Category = "FaerieItemAsset")
+	UFUNCTION(BlueprintCallable, Category = "Faerie|ItemAsset")
 	UFaerieItem* GetItemInstance() const;
 
 #if WITH_EDITOR
