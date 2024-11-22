@@ -18,6 +18,7 @@ class FAERIEITEMCARD_API UFaerieCardBase : public UUserWidget
 
 public:
 	virtual void NativeConstruct() override;
+	static void AddReferencedObjects(UObject* InThis, FReferenceCollector& Collector);
 
 	void SetItemData(FFaerieItemProxy InItemProxy, bool bRefresh);
 

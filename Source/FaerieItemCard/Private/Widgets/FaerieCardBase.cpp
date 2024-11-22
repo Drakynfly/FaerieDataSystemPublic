@@ -14,6 +14,13 @@ void UFaerieCardBase::NativeConstruct()
 	}
 }
 
+void UFaerieCardBase::AddReferencedObjects(UObject* InThis, FReferenceCollector& Collector)
+{
+	const ThisClass* This = CastChecked<ThisClass>(InThis);
+	FWeakObjectPtr WeakPtr = This->ItemProxy.GetObject();
+	Collector.AddReferencedObject(WeakPtr);
+}
+
 void UFaerieCardBase::SetItemData(const FFaerieItemProxy InItemProxy, const bool bRefresh)
 {
 	ItemProxy = InItemProxy;
