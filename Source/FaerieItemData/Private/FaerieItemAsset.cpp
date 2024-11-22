@@ -18,7 +18,7 @@
 void UFaerieItemAsset::PreSave(FObjectPreSaveContext SaveContext)
 {
 #if WITH_EDITOR
-	if (!Item)
+	if (!IsValid(Item))
 	{
 		Item = NewObject<UFaerieItem>(this);
 	}
@@ -82,8 +82,19 @@ EDataValidationResult UFaerieItemAsset::IsDataValid(FDataValidationContext& Cont
 
 #endif
 
+bool UFaerieItemAsset::CanBeMutable() const
+{
+	if (IsValid(Item))
+	{
+		return Item->IsInstanceMutable();
+	}
+	return false;
+}
+
 FFaerieAssetInfo UFaerieItemAsset::GetSourceInfo() const
 {
+	if (!IsValidChecked(Item)) return FFaerieAssetInfo();
+
 	if (auto&& InfoToken = Item->GetToken<UFaerieInfoToken>())
 	{
 		return InfoToken->GetAssetInfo();
@@ -93,6 +104,8 @@ FFaerieAssetInfo UFaerieItemAsset::GetSourceInfo() const
 
 UFaerieItem* UFaerieItemAsset::CreateItemInstance(UObject* Outer) const
 {
+	if (!IsValidChecked(Item)) return nullptr;
+
 	UFaerieItem* NewInstance;
 
 	if (Item->IsDataMutable())
@@ -107,4 +120,10 @@ UFaerieItem* UFaerieItemAsset::CreateItemInstance(UObject* Outer) const
 	}
 
 	return NewInstance;
+}
+
+UFaerieItem* UFaerieItemAsset::GetItemInstance() const
+{
+	// Outer doesn't matter.
+	return CreateItemInstance(nullptr);
 }

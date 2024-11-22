@@ -99,8 +99,9 @@ void FInventoryEntry::AddToAnyStack(int32 Amount, TArray<FStackKey>* OutAddedKey
 	{
 		if (Limit == Faerie::ItemData::UnlimitedStack)
 		{
+			// This stack can contain the rest, add and return
 			KeyedStack.Stack += Amount;
-			break;
+			return;
 		}
 
 		if (KeyedStack.Stack < Limit)

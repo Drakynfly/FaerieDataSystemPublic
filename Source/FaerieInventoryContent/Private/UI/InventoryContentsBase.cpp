@@ -233,7 +233,7 @@ void UInventoryContentsBase::AddToSortOrder(const FInventoryKey Key, const bool 
 	{
 		if (!ActiveSortRule)
 		{
-			UE_LOG(LogInventoryContents, Warning, TEXT("ActiveSortRule is invalid. Content will not be sorted!"));
+			UE_LOG(LogInventoryContents, Verbose, TEXT("ActiveSortRule is invalid. Content will not be sorted!"));
 			if (SortedAndFilteredKeys.Find(Key) != INDEX_NONE)
 			{
 				if (WarnIfAlreadyExists)

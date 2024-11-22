@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "UObject/Object.h"
 #include "FaerieItemSource.h"
 
 #include "FaerieItemAsset.generated.h"
@@ -26,9 +27,14 @@ public:
 #endif
 
 	//~ IFaerieItemSource
+	virtual bool CanBeMutable() const override;
 	virtual FFaerieAssetInfo GetSourceInfo() const override;
 	virtual UFaerieItem* CreateItemInstance(UObject* Outer) const override;
 	//~ IFaerieItemSource
+
+	// Get the item instance this asset represents.
+	UFUNCTION(BlueprintCallable, Category = "Faerie|ItemAsset")
+	UFaerieItem* GetItemInstance() const;
 
 #if WITH_EDITOR
 	// Gets a const ptr to the archetype item this asset generates.

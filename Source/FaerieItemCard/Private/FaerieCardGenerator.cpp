@@ -10,14 +10,13 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FaerieCardGenerator)
 
-TSoftClassPtr<UFaerieCardBase> UFaerieCardGenerator::GetCardClassFromProxy(const FFaerieItemProxy Proxy, const TSubclassOf<UCustomCardClass> Type) const
+TSoftClassPtr<UFaerieCardBase> UFaerieCardGenerator::GetCardClassFromProxy(const FFaerieItemProxy Proxy, const TSubclassOf<UCustomCardClass>& Type) const
 {
 	auto&& Item = Proxy.GetItemObject();
 
 	if (!IsValid(Item))
 	{
 		UE_LOG(LogFaerieItemCard, Warning, TEXT("Unable to determine card class: Invalid Item!"))
-
 		return nullptr;
 	}
 
@@ -31,6 +30,7 @@ TSoftClassPtr<UFaerieCardBase> UFaerieCardGenerator::GetCardClassFromProxy(const
 
 		UE_LOG(LogFaerieItemCard, Warning, TEXT("CustomCard token contained invalid class (%s). Reverting to default!"), *Type->GetName())
 	}
+
 	if (auto&& Class = DefaultClasses.Find(Type))
 	{
 		return *Class;

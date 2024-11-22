@@ -6,6 +6,12 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FaerieCardSubsystem)
 
+bool UFaerieCardSubsystem::ShouldCreateSubsystem(UObject* Outer) const
+{
+	auto&& CardSettings = GetDefault<UFaerieCardSettings>();
+	return Super::ShouldCreateSubsystem(Outer) && CardSettings->CreateCardGeneratorPlayerSubsystems;
+}
+
 void UFaerieCardSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
