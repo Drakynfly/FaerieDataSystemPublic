@@ -269,7 +269,6 @@ bool FFaerieClientAction_RequestMoveEquipmentSlotToSpatialInventory::Server_Exec
 		FLoggedInventoryEvent EventLog;
 		if(SpatialExtension->FitsInGridAnyRotation(Shape->GetShape(), Placement))
 		{
-			//SpatialExtension->NextPlacement = Placement;
 			int32 StackAmount = Amount;
 
 			// We should verify that we can perform this move here first, before we call AddItemStack (even tho it does it too),

@@ -304,7 +304,7 @@ bool UInventorySpatialGridExtension::AddItemToGrid(const FInventoryKey& Key, con
 
 	const FFaerieGridShape Shape = ShapeToken ? ShapeToken->GetShape() : FFaerieGridShape::MakeSquare(1);
 
-	const FSpatialItemPlacement DesiredItemPlacement = NextPlacement.Origin == FIntPoint::NoneValue ? FindFirstEmptyLocation(Shape) : NextPlacement;
+	const FSpatialItemPlacement DesiredItemPlacement = FindFirstEmptyLocation(Shape);
 
 	if (DesiredItemPlacement.Origin == FIntPoint::NoneValue)
 	{
@@ -318,7 +318,6 @@ bool UInventorySpatialGridExtension::AddItemToGrid(const FInventoryKey& Key, con
 	{
 		OccupiedCells[Ravel(Point)] = true;
 	}
-	NextPlacement = FSpatialItemPlacement();
 	return true;
 }
 

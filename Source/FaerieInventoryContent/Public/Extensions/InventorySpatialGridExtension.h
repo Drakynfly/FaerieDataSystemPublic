@@ -167,7 +167,6 @@ private:
 	void RemoveItemsForEntry(const FEntryKey& Key);
 
 public:
-	FSpatialItemPlacement NextPlacement;
 	bool CanAddItemToGrid(const UFaerieShapeToken* ShapeToken) const;
 
 	bool MoveItem(const FInventoryKey& Key, const FIntPoint& TargetPoint);
