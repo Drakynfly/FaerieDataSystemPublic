@@ -229,7 +229,7 @@ void UInventorySpatialGridExtension::PostEntryChanged(const UFaerieItemContainer
 	// get keys to remove
 	for(const auto& SpatialEntry : SpatialEntries)
 	{
-		if(!Cast<UFaerieItemStorage>(InitializedContainer)->IsValidKey(SpatialEntry.Key))
+		if(const UFaerieItemStorage* Storage = Cast<UFaerieItemStorage>(InitializedContainer); !Storage->IsValidKey(SpatialEntry.Key))
 		{
 			KeysToRemove.Add(SpatialEntry.Key);
 		} else
@@ -271,7 +271,7 @@ void UInventorySpatialGridExtension::PostEntryReplicatedAdd(const FSpatialKeyedE
 
 void UInventorySpatialGridExtension::PostEntryReplicatedChange(const FSpatialKeyedEntry& Entry)
 {
-	if(Cast<UFaerieItemStorage>(InitializedContainer)->IsValidKey(Entry.Key))
+	if(const UFaerieItemStorage* Storage = Cast<UFaerieItemStorage>(InitializedContainer); Storage->IsValidKey(Entry.Key))
 	{
 		SpatialEntryChangedDelegateNative.Broadcast(Entry.Key, ESpatialEventType::ItemChanged);
 		SpatialEntryChangedDelegate.Broadcast(Entry.Key, ESpatialEventType::ItemChanged);
@@ -547,8 +547,10 @@ bool UInventorySpatialGridExtension::MoveItem(const FInventoryKey& Key, const FI
 			{
 				if(OverlappingItem->Key.EntryKey == Key.EntryKey)
 				{
-					Cast<UFaerieItemStorage>(InitializedContainer)->MergeStacks(Key.EntryKey, Key.StackKey, OverlappingItem->Key.StackKey);
-					return true;
+					if(UFaerieItemStorage* Storage = Cast<UFaerieItemStorage>(InitializedContainer); Storage->MergeStacks(Key.EntryKey, Key.StackKey, OverlappingItem->Key.StackKey)
+					{
+						return true;
+					}
 				}
 
 				if (TrySwapItems(
