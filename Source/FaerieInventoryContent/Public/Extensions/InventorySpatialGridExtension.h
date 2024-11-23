@@ -8,7 +8,6 @@
 #include "InventorySpatialGridExtension.generated.h"
 
 class UInventorySpatialGridExtension;
-class UFaerieShapeToken;
 
 USTRUCT(BlueprintType)
 struct FSpatialItemPlacement
@@ -161,22 +160,24 @@ protected:
 	virtual void OnRep_GridSize();
 
 private:
-	bool AddItemToGrid(const FInventoryKey& Key, const UFaerieShapeToken* ShapeToken);
-	void RemoveItem(const FInventoryKey& Key, const FFaerieGridShape& Shape);
-	void RemoveItemBatch(const TArray<FInventoryKey>& AffectedKeys, const FFaerieGridShape& ItemShape);
+	bool AddItemToGrid(const FInventoryKey& Key, const UFaerieItem* Item);
+	void RemoveItem(const FInventoryKey& Key, const FFaerieGridShapeConstView& Shape);
+	void RemoveItemBatch(const TArray<FInventoryKey>& AffectedKeys, const FFaerieGridShapeConstView& ItemShape);
+
+	// Gets a shape from a shape token on the item, or returns a single cell at 0,0 for items with no token.
+	FFaerieGridShape GetItemShape_Impl(const UFaerieItem* Item) const;
 
 public:
-	bool CanAddItemToGrid(const UFaerieShapeToken* ShapeToken) const;
+	bool CanAddItemToGrid(const FFaerieGridShapeConstView& Shape) const;
 
 	bool MoveItem(const FInventoryKey& Key, const FIntPoint& TargetPoint);
 	bool RotateItem(const FInventoryKey& Key);
 
-	// @todo probably split into two functions. one with rotation check, one without. public API probably doesn't need to see the rotation check!
 	bool FitsInGrid(const FFaerieGridShapeConstView& Shape, const FSpatialItemPlacement& PlacementData, TConstArrayView<FInventoryKey> ExcludedKeys = {}, FIntPoint* OutCandidate = nullptr) const;
 
 	bool FitsInGridAnyRotation(const FFaerieGridShapeConstView& Shape, FSpatialItemPlacement& PlacementData, TConstArrayView<FInventoryKey> ExcludedKeys = {}, FIntPoint* OutCandidate = nullptr) const;
-	
-	FSpatialItemPlacement FindFirstEmptyLocation(const FFaerieGridShape& Shape) const;
+
+	FSpatialItemPlacement FindFirstEmptyLocation(const FFaerieGridShapeConstView& Shape) const;
 
 	FFaerieGridShapeConstView GetItemShape(FEntryKey Key) const;
 
@@ -232,6 +233,7 @@ private:
 	/*
 	 * @todo we do not support multiple containers. FSpatialContent would need to be refactored to allow that.
 	 * (Or use UInventoryReplicatedDataExtensionBase). Until then, we can safely assume we only worry about one container.
+	 * @todo2, additionally, this class is tied to UFaerieItemStorage. Initializing with other types isn't supported. Safeguard this?
 	 */
 	UPROPERTY(Replicated)
 	TObjectPtr<UFaerieItemContainerBase> InitializedContainer;

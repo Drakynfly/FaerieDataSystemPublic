@@ -29,7 +29,6 @@ public:
 	//~ IFaerieItemSource
 	virtual bool CanBeMutable() const override;
 	virtual FFaerieAssetInfo GetSourceInfo() const override;
-	UFUNCTION(BlueprintCallable, Category = "FaerieItemAsset|Initialization")
 	virtual UFaerieItem* CreateItemInstance(UObject* Outer) const override;
 	//~ IFaerieItemSource
 

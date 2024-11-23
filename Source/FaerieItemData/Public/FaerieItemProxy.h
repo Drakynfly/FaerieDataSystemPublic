@@ -64,7 +64,8 @@ struct FAERIEITEMDATA_API FFaerieItemProxy
 		typename TDataProxyType
 		UE_REQUIRES(TIsDerivedFrom<TDataProxyType, IFaerieItemDataProxy>::Value)
 	>
-	FFaerieItemProxy(const TObjectPtr<TDataProxyType> Interface) : Proxy(Interface) {}
+	FFaerieItemProxy(const TObjectPtr<TDataProxyType> Interface)
+	  : Proxy(Interface) {}
 
 	FFaerieItemProxy(const TScriptInterface<IFaerieItemDataProxy>& Interface)
 	  : Proxy(Interface.GetObject()) {}

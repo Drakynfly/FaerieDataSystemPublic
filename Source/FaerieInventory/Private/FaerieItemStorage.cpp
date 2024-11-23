@@ -464,7 +464,7 @@ Faerie::Inventory::FEventLog UFaerieItemStorage::RemoveFromEntryImpl(const FEntr
 		}
 	}
 	// Close Mutable scope
-	
+
 	if (Remove)
 	{
 		UE_LOG(LogFaerieItemStorage, Log, TEXT("Removing entire entry at: '%s'"), *Key.ToString());
@@ -525,7 +525,7 @@ Faerie::Inventory::FEventLog UFaerieItemStorage::RemoveFromStackImpl(const FInve
 		}
 	}
 	// Close Mutable scope
-	
+
 	if (Remove)
 	{
 		UE_LOG(LogFaerieItemStorage, Log, TEXT("Removing entire stack at: '%s'"), *Key.ToString());
