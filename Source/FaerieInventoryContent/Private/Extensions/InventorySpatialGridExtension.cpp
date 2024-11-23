@@ -184,8 +184,6 @@ void UInventorySpatialGridExtension::PostAddition(const UFaerieItemContainerBase
 void UInventorySpatialGridExtension::PostRemoval(const UFaerieItemContainerBase* Container,
 												 const Faerie::Inventory::FEventLog& Event)
 {
-	const FFaerieGridShape Shape = GetItemShape_Impl(Event.Item.Get());
-
 	if (const UFaerieItemStorage* ItemStorage = Cast<UFaerieItemStorage>(Container))
 	{
 		TArray<FInventoryKey> KeysToDelete;
@@ -201,7 +199,7 @@ void UInventorySpatialGridExtension::PostRemoval(const UFaerieItemContainerBase*
 				PostEntryReplicatedChange({ CurrentKey, GetEntryPlacementData(CurrentKey) });
 			}
 		}
-		RemoveItemBatch(KeysToDelete, Shape);
+		RemoveItemBatch(KeysToDelete, Event.Item.Get());
 	}
 }
 
@@ -307,10 +305,11 @@ bool UInventorySpatialGridExtension::AddItemToGrid(const FInventoryKey& Key, con
 	return true;
 }
 
-void UInventorySpatialGridExtension::RemoveItem(const FInventoryKey& Key, const FFaerieGridShapeConstView& Shape)
+void UInventorySpatialGridExtension::RemoveItem(const FInventoryKey& Key, const UFaerieItem* Item)
 {
 	if (const auto TargetPlacement = SpatialEntries.Find(Key))
 	{
+		const FFaerieGridShape Shape = GetItemShape_Impl(Item);
 		for (const FFaerieGridShape Translated = ApplyPlacement(Shape, *TargetPlacement);
 			const FIntPoint& Point : Translated.Points)
 		{
@@ -320,15 +319,16 @@ void UInventorySpatialGridExtension::RemoveItem(const FInventoryKey& Key, const 
 	}
 }
 
-void UInventorySpatialGridExtension::RemoveItemBatch(const TArray<FInventoryKey>& AffectedKeys,
-	const FFaerieGridShapeConstView& ItemShape)
+void UInventorySpatialGridExtension::RemoveItemBatch(const TArray<FInventoryKey>& AffectedKeys, const UFaerieItem* Item)
 {
+	const FFaerieGridShape Shape = GetItemShape_Impl(Item);
+
 	TArray<FInventoryKey> Keys;
 	for (auto&& Element : SpatialEntries)
 	{
 		if (AffectedKeys.Contains(Element.Key))
 		{
-			for (const FFaerieGridShape Translated = ApplyPlacement(ItemShape, Element.Value);
+			for (const FFaerieGridShape Translated = ApplyPlacement(Shape, Element.Value);
 				 const FIntPoint& Point : Translated.Points)
 			{
 				OccupiedCells[Ravel(Point)] = false;

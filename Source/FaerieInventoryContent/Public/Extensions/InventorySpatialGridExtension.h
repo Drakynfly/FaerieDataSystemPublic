@@ -161,8 +161,8 @@ protected:
 
 private:
 	bool AddItemToGrid(const FInventoryKey& Key, const UFaerieItem* Item);
-	void RemoveItem(const FInventoryKey& Key, const FFaerieGridShapeConstView& Shape);
-	void RemoveItemBatch(const TArray<FInventoryKey>& AffectedKeys, const FFaerieGridShapeConstView& ItemShape);
+	void RemoveItem(const FInventoryKey& Key, const UFaerieItem* Item);
+	void RemoveItemBatch(const TArray<FInventoryKey>& AffectedKeys, const UFaerieItem* Item);
 
 	// Gets a shape from a shape token on the item, or returns a single cell at 0,0 for items with no token.
 	FFaerieGridShape GetItemShape_Impl(const UFaerieItem* Item) const;
