@@ -263,7 +263,7 @@ bool FFaerieClientAction_RequestMoveEquipmentSlotToSpatialInventory::Server_Exec
 	}
 
 	// Fetch the Spatial Extension and ensure it exists
-	if (auto* SpatialExtension = GetExtension<UInventorySpatialGridExtension>(ToStorage))
+	if (auto&& SpatialExtension = GetExtension<UInventorySpatialGridExtension>(ToStorage))
 	{
 		// Retrieve the item's shape and prepare placement data
 		const auto* Shape = Slot->GetItemObject()->GetToken<UFaerieShapeToken>();
