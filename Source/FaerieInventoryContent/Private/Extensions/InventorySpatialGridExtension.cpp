@@ -184,32 +184,23 @@ void UInventorySpatialGridExtension::PostAddition(const UFaerieItemContainerBase
 void UInventorySpatialGridExtension::PostRemoval(const UFaerieItemContainerBase* Container,
 	const Faerie::Inventory::FEventLog& Event)
 {
-	
 	const UFaerieItem* AffectedItem = Event.Item.Get();
 	const FFaerieGridShape Shape = AffectedItem->GetToken<UFaerieShapeToken>()->GetShape();
-	TArray<FInventoryKey> AffectedKeys;
-	AffectedKeys.Reserve(Event.StackKeys.Num());
-	Algo::Transform(Event.StackKeys, AffectedKeys, [&Event](const FStackKey& Stack) {
-		return FInventoryKey{Event.EntryTouched, Stack};
-	});
-	
+
 	if (const UFaerieItemStorage* ItemStorage = Cast<UFaerieItemStorage>(Container))
 	{
-		FInventoryKey Key;
-		Key.EntryKey = Event.EntryTouched;
-
-		for (const FStackKey& StackKey : Event.StackKeys)
+		TArray<FInventoryKey> KeysToDelete;
+		for(auto&& StackKey : Event.StackKeys)
 		{
-			Key.StackKey = StackKey;
-			if (!ItemStorage->IsValidKey(Key))
+			if (FInventoryKey CurrentKey{Event.EntryTouched, StackKey}; !ItemStorage->IsValidKey(CurrentKey))
 			{
-				RemoveItemBatch(AffectedKeys, Shape);
-			}
-			else
+				KeysToDelete.Add(CurrentKey);
+			} else
 			{
-				PostEntryReplicatedChange({ Key, GetEntryPlacementData(Key) });
+				PostEntryReplicatedChange({ CurrentKey, GetEntryPlacementData(CurrentKey) });
 			}
 		}
+		RemoveItemBatch(KeysToDelete, Shape);
 	}
 }
 
