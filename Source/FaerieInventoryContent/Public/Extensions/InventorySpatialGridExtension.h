@@ -179,7 +179,7 @@ public:
 
 	FSpatialItemPlacement FindFirstEmptyLocation(const FFaerieGridShapeConstView& Shape) const;
 
-	FFaerieGridShapeConstView GetItemShape(FEntryKey Key) const;
+	FFaerieGridShape GetItemShape(FEntryKey Key) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Faerie|Grid")
 	FSpatialItemPlacement GetEntryPlacementData(const FInventoryKey& Key) const;

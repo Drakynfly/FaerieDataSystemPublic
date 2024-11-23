@@ -255,6 +255,7 @@ bool FFaerieClientAction_RequestMoveEquipmentSlotToSpatialInventory::Server_Exec
 	// Validate Slot and Storage access
 	if (!IsValid(Slot) ||
 		!Slot->IsFilled() ||
+		TargetPoint != FIntPoint::NoneValue ||
 		!Client->CanAccessSlot(Slot) ||
 		!IsValid(ToStorage) ||
 		!Client->CanAccessStorage(ToStorage))
@@ -306,7 +307,7 @@ bool FFaerieClientAction_RequestMoveEquipmentSlotToSpatialInventory::Server_Exec
 
 		const FInventoryKey TargetKey(Event.Event.EntryTouched, Event.Event.StackKeys.Last());
 
-		// Finally, move item to cell, client requested.
+		// Finally, move item to the cell client requested.
 		return SpatialExtension->MoveItem(TargetKey, TargetPoint);
 	}
 

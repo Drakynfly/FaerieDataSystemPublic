@@ -237,9 +237,9 @@ struct FFaerieClientAction_RequestMoveEquipmentSlotToSpatialInventory : public F
 	GENERATED_BODY()
 
 	virtual bool Server_Execute(const UFaerieInventoryClient* Client) const override;
-	
+
 	UPROPERTY(BlueprintReadWrite, Category = "RequestMoveEquipmentSlotToSpatialInventory")
-	FIntPoint TargetPoint;
+	FIntPoint TargetPoint = FIntPoint::NoneValue;
 
 	UPROPERTY(BlueprintReadWrite, Category = "RequestMoveEquipmentSlotToSpatialInventory")
 	TObjectPtr<UFaerieEquipmentSlot> Slot = nullptr;
@@ -252,5 +252,4 @@ struct FFaerieClientAction_RequestMoveEquipmentSlotToSpatialInventory : public F
 
 	UPROPERTY(BlueprintReadWrite, Category = "RequestMoveEquipmentSlotToSpatialInventory")
 	EFaerieStorageAddStackBehavior AddStackBehavior = EFaerieStorageAddStackBehavior::OnlyNewStacks;
-
 };

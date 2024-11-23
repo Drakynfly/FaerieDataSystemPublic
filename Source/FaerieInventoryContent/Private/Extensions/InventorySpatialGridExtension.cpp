@@ -487,7 +487,7 @@ FSpatialItemPlacement UInventorySpatialGridExtension::FindFirstEmptyLocation(con
 	return FSpatialItemPlacement{FIntPoint::NoneValue};
 }
 
-FFaerieGridShapeConstView UInventorySpatialGridExtension::GetItemShape(const FEntryKey Key) const
+FFaerieGridShape UInventorySpatialGridExtension::GetItemShape(const FEntryKey Key) const
 {
 	if (IsValid(InitializedContainer))
 	{
@@ -495,7 +495,7 @@ FFaerieGridShapeConstView UInventorySpatialGridExtension::GetItemShape(const FEn
 		return GetItemShape_Impl(View.Item.Get());
 	}
 
-	return FFaerieGridShapeConstView{};
+	return FFaerieGridShape();
 }
 
 void UInventorySpatialGridExtension::SetGridSize(const FIntPoint NewGridSize)

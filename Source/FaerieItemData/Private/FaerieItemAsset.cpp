@@ -122,8 +122,22 @@ UFaerieItem* UFaerieItemAsset::CreateItemInstance(UObject* Outer) const
 	return NewInstance;
 }
 
-UFaerieItem* UFaerieItemAsset::GetItemInstance() const
+UFaerieItem* UFaerieItemAsset::GetItemInstance(const bool MutableInstance) const
 {
-	// Outer doesn't matter.
-	return CreateItemInstance(nullptr);
+	if (!IsValidChecked(Item)) return nullptr;
+
+	UFaerieItem* NewInstance;
+
+	if (Item->IsDataMutable() || MutableInstance)
+	{
+		// Make a copy of the static item stored in this asset if we might need to modify the data
+		NewInstance = Item->CreateDuplicate();
+	}
+	else
+	{
+		// If the item is not mutable, we can just reference the single copy of it.
+		NewInstance = Item;
+	}
+
+	return NewInstance;
 }
