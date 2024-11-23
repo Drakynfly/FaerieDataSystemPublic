@@ -14,7 +14,7 @@ class UFaerieItemTemplate;
 /**
  * A basic item definition. Used to generate generic items with no procedural data.
  */
-UCLASS(Const)
+UCLASS(BlueprintType, Const)
 class FAERIEITEMDATA_API UFaerieItemAsset : public UObject, public IFaerieItemSource
 {
 	GENERATED_BODY()
@@ -29,6 +29,7 @@ public:
 	//~ IFaerieItemSource
 	virtual bool CanBeMutable() const override;
 	virtual FFaerieAssetInfo GetSourceInfo() const override;
+	UFUNCTION(BlueprintCallable, Category = "FaerieItemAsset|Initialization")
 	virtual UFaerieItem* CreateItemInstance(UObject* Outer) const override;
 	//~ IFaerieItemSource
 

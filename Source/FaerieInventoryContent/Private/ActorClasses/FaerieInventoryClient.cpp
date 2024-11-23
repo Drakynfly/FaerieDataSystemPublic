@@ -3,8 +3,11 @@
 #include "ActorClasses/FaerieInventoryClient.h"
 #include "FaerieEquipmentSlot.h"
 #include "FaerieItemStorage.h"
+#include "FileCache.h"
 #include "Extensions/InventoryEjectionHandlerExtension.h"
 #include "Extensions/InventorySpatialGridExtension.h"
+#include "Internationalization/TextPackageNamespaceUtil.h"
+#include "Tokens/FaerieShapeToken.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FaerieInventoryClient)
 
@@ -248,3 +251,58 @@ bool FFaerieClientAction_RequestRotateSpatialEntry::Server_Execute(const UFaerie
 
 	return false;
 }
+
+bool FFaerieClientAction_RequestMoveEquipmentSlotToSpatialInventory::Server_Execute(
+	const UFaerieInventoryClient* Client) const
+{
+	// Validate Slot and Storage access
+	if (!IsValid(Slot) || !Slot->IsFilled() || !Client->CanAccessSlot(Slot) ||
+		!IsValid(ToStorage) || !Client->CanAccessStorage(ToStorage))
+	{
+		return false;
+	}
+
+	// Fetch the Spatial Extension and ensure it exists
+	if (auto&& SpatialExtension = GetExtension<UInventorySpatialGridExtension>(ToStorage))
+	{
+		// Retrieve the item's shape and prepare placement data
+		const auto* Shape = Slot->GetItemObject()->GetToken<UFaerieShapeToken>();
+		if (!Shape) 
+		{
+			return false;
+		}
+
+		if (FSpatialItemPlacement Placement{ TargetPoint };
+			!SpatialExtension->FitsInGridAnyRotation(Shape->GetShape(), Placement))
+		{
+			return false;
+		}
+
+		// Determine the stack amount to transfer
+		int32 StackAmount = (Amount == Faerie::ItemData::UnlimitedStack) ? Slot->GetCopies() : Amount;
+
+		// Verify if the storage can accommodate the stack
+		if (!ToStorage->CanAddStack({ Slot->GetItemObject(), StackAmount }, EFaerieStorageAddStackBehavior::OnlyNewStacks))
+		{
+			return false;
+		}
+
+		// Attempt to transfer the item stack
+		if (const FFaerieItemStack Stack = Slot->TakeItemFromSlot(StackAmount); IsValid(Stack.Item))
+		{
+			const auto [Container, EventLog] = ToStorage->AddItemStackWithLog(
+				Stack, EFaerieStorageAddStackBehavior::OnlyNewStacks);
+
+			FInventoryKey TargetKey{ EventLog.EntryTouched, EventLog.StackKeys.Last() };
+
+			if (ToStorage->IsValidKey(TargetKey))
+			{
+				SpatialExtension->MoveItem(TargetKey, TargetPoint);
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+

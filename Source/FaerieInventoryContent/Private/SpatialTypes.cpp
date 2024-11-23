@@ -174,8 +174,8 @@ void FFaerieGridShape::RotateAroundInline_90(const FIntPoint& PivotPoint)
 		// Trade places
 		Swap(Point.X, Point.Y);
 
-		// Flip Y
-		Point.Y *= -1;
+		// Flip X - Clockwise
+		Point.X *= -1;
 
 		// Remove rebase
 		Point += PivotPoint;
@@ -221,8 +221,8 @@ void FFaerieGridShape::RotateAroundInline_270(const FIntPoint& PivotPoint)
 		// Trade places
 		Swap(Point.X, Point.Y);
 
-		// Flip X
-		Point.X *= -1;
+		// Flip Y - Clockwise
+		Point.Y *= -1;
 
 		// Remove rebase
 		Point += PivotPoint;
