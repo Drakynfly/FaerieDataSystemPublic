@@ -6,6 +6,7 @@
 
 #include "FaerieItemDataComparator.h"
 #include "FaerieItemDataFilter.h"
+#include "FaerieInventoryStatics.h"
 
 #include "Components/PanelWidget.h"
 

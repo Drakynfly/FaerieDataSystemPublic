@@ -14,4 +14,17 @@ namespace Faerie::Inventory
 				return A.ItemObject->GetLastModified() < B.ItemObject->GetLastModified();
 			});
 	}
+
+	void BreakKeyedEntriesIntoInventoryKeys(const TArray<FKeyedInventoryEntry>& Entries, TArray<FInventoryKey>& OutKeys)
+	{
+		OutKeys.Empty(Entries.Num());
+
+		for (auto&& Entry : Entries)
+		{
+			for (auto&& Stack : Entry.Value.Stacks)
+			{
+				OutKeys.Add({Entry.Key, Stack.Key});
+			}
+		}
+	}
 }

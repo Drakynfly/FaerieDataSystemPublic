@@ -362,19 +362,3 @@ void FInventoryContent::PostEntryReplicatedChange(const FKeyedInventoryEntry& En
 		ChangeListener->PostContentChanged(Entry);
 	}
 }
-
-namespace Faerie::Inventory
-{
-	void BreakKeyedEntriesIntoInventoryKeys(const TArray<FKeyedInventoryEntry>& Entries, TArray<FInventoryKey>& OutKeys)
-	{
-		OutKeys.Empty(Entries.Num());
-
-		for (auto&& Entry : Entries)
-		{
-			for (auto&& Stack : Entry.Value.Stacks)
-			{
-				OutKeys.Add({Entry.Key, Stack.Key});
-			}
-		}
-	}
-}

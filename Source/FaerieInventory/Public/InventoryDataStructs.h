@@ -440,11 +440,6 @@ struct FAERIEINVENTORY_API FInventoryKeyHandle
 	FInventoryKey Key;
 };
 
-namespace Faerie::Inventory
-{
-	FAERIEINVENTORY_API void BreakKeyedEntriesIntoInventoryKeys(const TArray<FKeyedInventoryEntry>& Entries, TArray<FInventoryKey>& OutKeys);
-}
-
 /**
  * Struct to hold the data to save/load an inventory state from.
  */
