@@ -25,7 +25,7 @@ struct FSpatialItemPlacement
 		Rotation(Rotation) {}
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "SpatialItemPlacement")
-	FIntPoint Origin = FIntPoint::ZeroValue;
+	FIntPoint Origin = FIntPoint::NoneValue;
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "SpatialItemPlacement")
 	ESpatialItemRotation Rotation = ESpatialItemRotation::None;
@@ -150,6 +150,7 @@ protected:
 	virtual EEventExtensionResponse AllowsAddition(const UFaerieItemContainerBase* Container, FFaerieItemStackView Stack, EFaerieStorageAddStackBehavior AddStackBehavior) override;
 	virtual void PostAddition(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) override;
 	virtual void PostRemoval(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) override;
+	virtual void PostEntryChanged(const UFaerieItemContainerBase* Container, FEntryKey Key) override;
 	//~ UItemContainerExtensionBase
 
 	void PreEntryReplicatedRemove(const FSpatialKeyedEntry& Entry);
@@ -161,8 +162,8 @@ protected:
 
 private:
 	bool AddItemToGrid(const FInventoryKey& Key, const UFaerieShapeToken* ShapeToken);
-	void RemoveItem(const FInventoryKey& Key);
-	void RemoveItemsForEntry(const FEntryKey& Key);
+	void RemoveItem(const FInventoryKey& Key, const FFaerieGridShape& Shape);
+	void RemoveItemBatch(const TArray<FInventoryKey>& AffectedKeys, const FFaerieGridShape& ItemShape);
 
 public:
 	bool CanAddItemToGrid(const UFaerieShapeToken* ShapeToken) const;
@@ -173,6 +174,8 @@ public:
 	// @todo probably split into two functions. one with rotation check, one without. public API probably doesn't need to see the rotation check!
 	bool FitsInGrid(const FFaerieGridShapeConstView& Shape, const FSpatialItemPlacement& PlacementData, TConstArrayView<FInventoryKey> ExcludedKeys = {}, FIntPoint* OutCandidate = nullptr) const;
 
+	bool FitsInGridAnyRotation(const FFaerieGridShapeConstView& Shape, FSpatialItemPlacement& PlacementData, TConstArrayView<FInventoryKey> ExcludedKeys = {}, FIntPoint* OutCandidate = nullptr) const;
+	
 	FSpatialItemPlacement FindFirstEmptyLocation(const FFaerieGridShape& Shape) const;
 
 	FFaerieGridShapeConstView GetItemShape(FEntryKey Key) const;
@@ -231,5 +234,5 @@ private:
 	 * (Or use UInventoryReplicatedDataExtensionBase). Until then, we can safely assume we only worry about one container.
 	 */
 	UPROPERTY(Replicated)
-	TObjectPtr<const UFaerieItemContainerBase> InitializedContainer;
+	TObjectPtr<UFaerieItemContainerBase> InitializedContainer;
 };

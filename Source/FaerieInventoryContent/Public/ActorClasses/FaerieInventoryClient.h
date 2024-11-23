@@ -230,3 +230,27 @@ struct FFaerieClientAction_RequestRotateSpatialEntry : public FFaerieClientActio
 
 	// @todo should also pass a 90 degree / 180 degree parameter...
 };
+
+USTRUCT(BlueprintType)
+struct FFaerieClientAction_RequestMoveEquipmentSlotToSpatialInventory : public FFaerieClientActionBase
+{
+	GENERATED_BODY()
+
+	virtual bool Server_Execute(const UFaerieInventoryClient* Client) const override;
+	
+	UPROPERTY(BlueprintReadWrite, Category = "RequestMoveEquipmentSlotToSpatialInventory")
+	FIntPoint TargetPoint;
+
+	UPROPERTY(BlueprintReadWrite, Category = "RequestMoveEquipmentSlotToSpatialInventory")
+	TObjectPtr<UFaerieEquipmentSlot> Slot = nullptr;
+
+	UPROPERTY(BlueprintReadWrite, Category = "RequestMoveEquipmentSlotToSpatialInventory")
+	TObjectPtr<UFaerieItemStorage> ToStorage = nullptr;
+
+	UPROPERTY(BlueprintReadWrite, Category = "RequestMoveEquipmentSlotToSpatialInventory")
+	int32 Amount = -1;
+
+	UPROPERTY(BlueprintReadWrite, Category = "RequestMoveEquipmentSlotToSpatialInventory")
+	EFaerieStorageAddStackBehavior AddStackBehavior = EFaerieStorageAddStackBehavior::OnlyNewStacks;
+
+};
