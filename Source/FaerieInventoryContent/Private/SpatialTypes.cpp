@@ -36,7 +36,8 @@ FIntPoint FFaerieGridShape::GetSize() const
 		Size = Size.ComponentMax(Point);
 	}
 
-	return Size;
+	// Add one to account for 0-indexing of points
+	return Size + FIntPoint(1);
 }
 
 FInt32Rect FFaerieGridShape::GetBounds() const
