@@ -357,11 +357,17 @@ bool UInventorySpatialGridExtension::FitsInGrid(const FFaerieGridShapeConstView&
 			ExcludedIndices.Add(Ravel(Point));
 		}
 	}
-
+	FIntPoint MinPoint(TNumericLimits<int32>::Max(), TNumericLimits<int32>::Max());
+	FIntPoint MaxPoint(TNumericLimits<int32>::Min(), TNumericLimits<int32>::Min());
+	
 	// Check if all points in the shape fit within the grid and don't overlap with occupied cells
 	for (const FFaerieGridShape Translated = ApplyPlacement(Shape, PlacementData);
 		 const FIntPoint& Point : Translated.Points)
 	{
+		MinPoint.X = FMath::Min(MinPoint.X, Point.X);
+		MinPoint.Y = FMath::Min(MinPoint.Y, Point.Y);
+		MaxPoint.X = FMath::Max(MaxPoint.X, Point.X);
+		MaxPoint.Y = FMath::Max(MaxPoint.Y, Point.Y);
 		// Check if point is within grid bounds
 		if (Point.X < 0 || Point.X >= GridSize.X ||
 			Point.Y < 0 || Point.Y >= GridSize.Y)
@@ -375,9 +381,18 @@ bool UInventorySpatialGridExtension::FitsInGrid(const FFaerieGridShapeConstView&
 		{
 			if (OutCandidate)
 			{
-				// Skip past this occupied cell
-				OutCandidate->X = Point.X;
-				OutCandidate->Y = PlacementData.Origin.Y;
+				// Skip to next row if we're near the right edge
+				if (Point.X >= GridSize.X - MaxPoint.X + MinPoint.X)
+				{
+					OutCandidate->X = 0;
+					OutCandidate->Y = Point.Y + 1;
+				}
+				else
+				{
+					// Skip past the current shape's width
+					OutCandidate->X = Point.X + 1;
+					OutCandidate->Y = Point.Y;
+				}
 			}
 			return false;
 		}
@@ -423,12 +438,13 @@ FSpatialItemPlacement UInventorySpatialGridExtension::FindFirstEmptyLocation(con
 		}
 	}
 
-	int32 Min = TNumericLimits<int32>::Max();
-	int32 Max = TNumericLimits<int32>::Min();
+	FIntPoint FirstPoint = FIntPoint(TNumericLimits<int32>::Max(), TNumericLimits<int32>::Max());
 	for (const FIntPoint& Point : Shape.Points)
 	{
-		Min = FMath::Min(Min, Point.X);
-		Max = FMath::Max(Max, Point.X);
+		if (Point.Y < FirstPoint.Y || (Point.Y == FirstPoint.Y && Point.X < FirstPoint.X))
+		{
+			FirstPoint = Point;
+		}
 	}
 
 	FSpatialItemPlacement TestPlacement;
@@ -444,8 +460,13 @@ FSpatialItemPlacement UInventorySpatialGridExtension::FindFirstEmptyLocation(con
 			{
 				continue;
 			}
-			// Try each rotation at this potential origin point
-			TestPlacement.Origin = TestPoint;
+			
+			// Calculate the origin offset by the first point
+			TestPlacement.Origin = FIntPoint(
+				TestPoint.X - FirstPoint.X,
+				TestPoint.Y - FirstPoint.Y
+			);
+
 			for (const ESpatialItemRotation Rotation : RotationRange)
 			{
 				TestPlacement.Rotation = Rotation;
