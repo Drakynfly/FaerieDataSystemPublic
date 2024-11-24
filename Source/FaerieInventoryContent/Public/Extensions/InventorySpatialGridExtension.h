@@ -44,19 +44,19 @@ struct FSpatialItemPlacement
 struct FSpatialContent;
 
 USTRUCT(BlueprintType)
-struct FSpatialKeyedEntry : public FFastArraySerializerItem
+struct FSpatialKeyedStack : public FFastArraySerializerItem
 {
 	GENERATED_BODY()
 
-	FSpatialKeyedEntry() = default;
+	FSpatialKeyedStack() = default;
 
-	FSpatialKeyedEntry(const FInventoryKey Key, const FSpatialItemPlacement& Value)
+	FSpatialKeyedStack(const FInventoryKey Key, const FSpatialItemPlacement& Value)
 	  : Key(Key), Value(Value) {}
 
-	UPROPERTY(VisibleInstanceOnly, Category = "SpatialKeyedEntry")
+	UPROPERTY(VisibleInstanceOnly, Category = "SpatialKeyedStack")
 	FInventoryKey Key;
 
-	UPROPERTY(VisibleInstanceOnly, Category = "SpatialKeyedEntry")
+	UPROPERTY(VisibleInstanceOnly, Category = "SpatialKeyedStack")
 	FSpatialItemPlacement Value;
 
 	void PreReplicatedRemove(const FSpatialContent& InArraySerializer);
@@ -66,7 +66,7 @@ struct FSpatialKeyedEntry : public FFastArraySerializerItem
 
 USTRUCT(BlueprintType)
 struct FSpatialContent : public FFastArraySerializer,
-						public TBinarySearchOptimizedArray<FSpatialContent, FSpatialKeyedEntry>
+						public TBinarySearchOptimizedArray<FSpatialContent, FSpatialKeyedStack>
 {
 	GENERATED_BODY()
 
@@ -75,9 +75,9 @@ struct FSpatialContent : public FFastArraySerializer,
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = "SpatialContent")
-	TArray<FSpatialKeyedEntry> Items;
+	TArray<FSpatialKeyedStack> Items;
 
-	TArray<FSpatialKeyedEntry>& GetArray() { return Items; }
+	TArray<FSpatialKeyedStack>& GetArray() { return Items; }
 
 	/** Owning storage to send Fast Array callbacks to */
 	UPROPERTY()
@@ -86,13 +86,13 @@ private:
 public:
 	bool EditItem(FInventoryKey Key, const TFunctionRef<bool(FSpatialItemPlacement&)>& Func);
 
-	void PreEntryReplicatedRemove(const FSpatialKeyedEntry& Entry) const;
-	void PostEntryReplicatedAdd(const FSpatialKeyedEntry& Entry);
-	void PostEntryReplicatedChange(const FSpatialKeyedEntry& Entry) const;
+	void PreStackReplicatedRemove(const FSpatialKeyedStack& Stack) const;
+	void PostStackReplicatedAdd(const FSpatialKeyedStack& Stack);
+	void PostStackReplicatedChange(const FSpatialKeyedStack& Stack) const;
 
 	bool NetDeltaSerialize(FNetDeltaSerializeInfo& DeltaParms)
 	{
-		return Faerie::Hacks::FastArrayDeltaSerialize<FSpatialKeyedEntry, FSpatialContent>(Items, DeltaParms, *this);
+		return Faerie::Hacks::FastArrayDeltaSerialize<FSpatialKeyedStack, FSpatialContent>(Items, DeltaParms, *this);
 	}
 
 	void Insert(FInventoryKey Key, const FSpatialItemPlacement& Value);
@@ -100,7 +100,7 @@ public:
 	void Remove(FInventoryKey Key);
 
 	// Only const iteration is allowed.
-	using TRangedForConstIterator = TArray<FSpatialKeyedEntry>::RangedForConstIteratorType;
+	using TRangedForConstIterator = TArray<FSpatialKeyedStack>::RangedForConstIteratorType;
 	FORCEINLINE TRangedForConstIterator begin() const { return TRangedForConstIterator(Items.begin()); }
 	FORCEINLINE TRangedForConstIterator end() const { return TRangedForConstIterator(Items.end()); }
 };
@@ -122,8 +122,8 @@ enum class ESpatialEventType : uint8
 	ItemRemoved
 };
 
-using FSpatialEntryChangedNative = TMulticastDelegate<void(const FInventoryKey&, ESpatialEventType)>;
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FSpatialEntryChanged, FInventoryKey, EntryKey, ESpatialEventType, EventType);
+using FSpatialStackChangedNative = TMulticastDelegate<void(const FInventoryKey&, ESpatialEventType)>;
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FSpatialStackChanged, FInventoryKey, Key, ESpatialEventType, EventType);
 
 using FGridSizeChangedNative = TMulticastDelegate<void(FIntPoint)>;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FGridSizeChanged, FIntPoint, newGridSize);
@@ -152,9 +152,9 @@ protected:
 	virtual void PostEntryChanged(const UFaerieItemContainerBase* Container, FEntryKey Key) override;
 	//~ UItemContainerExtensionBase
 
-	void PreEntryReplicatedRemove(const FSpatialKeyedEntry& Entry);
-	void PostEntryReplicatedAdd(const FSpatialKeyedEntry& Entry);
-	void PostEntryReplicatedChange(const FSpatialKeyedEntry& Entry);
+	void PreStackRemove(const FSpatialKeyedStack& Stack);
+	void PostStackAdd(const FSpatialKeyedStack& Stack);
+	void PostStackChange(const FSpatialKeyedStack& Stack);
 
 	UFUNCTION(/* Replication */)
 	virtual void OnRep_GridSize();
@@ -162,7 +162,7 @@ protected:
 private:
 	bool AddItemToGrid(const FInventoryKey& Key, const UFaerieItem* Item);
 	void RemoveItem(const FInventoryKey& Key, const UFaerieItem* Item);
-	void RemoveItemBatch(const TArray<FInventoryKey>& AffectedKeys, const UFaerieItem* Item);
+	void RemoveItemBatch(const TConstArrayView<FInventoryKey>& Keys, const UFaerieItem* Item);
 
 	// Gets a shape from a shape token on the item, or returns a single cell at 0,0 for items with no token.
 	FFaerieGridShape GetItemShape_Impl(const UFaerieItem* Item) const;
@@ -182,17 +182,16 @@ public:
 	FFaerieGridShape GetItemShape(FEntryKey Key) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Faerie|Grid")
-	FSpatialItemPlacement GetEntryPlacementData(const FInventoryKey& Key) const;
+	FSpatialItemPlacement GetStackPlacementData(const FInventoryKey& Key) const;
 
-	// @todo rename GetEntrySize (bounds is something else)
 	UFUNCTION(BlueprintCallable, Category = "Faerie|Grid")
-	FIntPoint GetEntryBounds(const FInventoryKey& Entry) const;
+	FIntPoint GetStackBounds(const FInventoryKey& Key) const;
 
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Faerie|Grid")
 	void SetGridSize(FIntPoint NewGridSize);
 
-	FSpatialEntryChangedNative::RegistrationType& GetOnSpatialEntryChanged() { return SpatialEntryChangedDelegateNative; }
-	FGridSizeChangedNative::RegistrationType& GetOnGridSizeChanged() { return GridSizeChangedDelegateNative; }
+	FSpatialStackChangedNative::RegistrationType& GetOnSpatialStackChanged() { return SpatialStackChangedNative; }
+	FGridSizeChangedNative::RegistrationType& GetOnGridSizeChanged() { return GridSizeChangedNative; }
 
 protected:
 	// Convert a point into a grid index
@@ -204,7 +203,7 @@ protected:
 	static FFaerieGridShape ApplyPlacement(const FFaerieGridShapeConstView& Shape, const FSpatialItemPlacement& Placement);
 
 	// @todo Drakyn: look at these
-	FSpatialKeyedEntry* FindOverlappingItem(const FFaerieGridShape& TranslatedShape, const FInventoryKey& ExcludeKey);
+	FSpatialKeyedStack* FindOverlappingItem(const FFaerieGridShape& TranslatedShape, const FInventoryKey& ExcludeKey);
 
 	bool TrySwapItems(FInventoryKey KeyA, FSpatialItemPlacement& PlacementA, FInventoryKey KeyB, FSpatialItemPlacement& PlacementB);
 
@@ -213,7 +212,7 @@ protected:
 	void UpdateItemPosition(const FInventoryKey Key, FSpatialItemPlacement& Placement, const FIntPoint& NewPosition);
 
 	UPROPERTY(BlueprintAssignable, Category = "Events")
-	FSpatialEntryChanged SpatialEntryChangedDelegate;
+	FSpatialStackChanged SpatialStackChangedDelegate;
 
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FGridSizeChanged GridSizeChangedDelegate;
@@ -227,8 +226,8 @@ protected:
 private:
 	TBitArray<> OccupiedCells;
 
-	FSpatialEntryChangedNative SpatialEntryChangedDelegateNative;
-	FGridSizeChangedNative GridSizeChangedDelegateNative;
+	FSpatialStackChangedNative SpatialStackChangedNative;
+	FGridSizeChangedNative GridSizeChangedNative;
 
 	/*
 	 * @todo we do not support multiple containers. FSpatialContent would need to be refactored to allow that.
