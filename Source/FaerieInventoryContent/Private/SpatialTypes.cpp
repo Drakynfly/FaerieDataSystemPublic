@@ -676,7 +676,7 @@ bool FFaerieGridShapeConstView::IsSymmetrical() const
 	return FFaerieGridShapeConstView(Shape) == *this;
 }
 
-bool FFaerieGridShapeConstView::Contains(const FFaerieGridShapeView& Other) const
+bool FFaerieGridShapeConstView::Contains(const FFaerieGridShapeConstView& Other) const
 {
 	TSet<FIntPoint> SeenPoints;
 	SeenPoints.Append(Points);

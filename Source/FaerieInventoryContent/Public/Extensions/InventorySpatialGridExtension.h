@@ -203,7 +203,7 @@ protected:
 	static FFaerieGridShape ApplyPlacement(const FFaerieGridShapeConstView& Shape, const FSpatialItemPlacement& Placement);
 
 	// @todo Drakyn: look at these
-	FSpatialKeyedStack* FindOverlappingItem(const FFaerieGridShape& TranslatedShape, const FInventoryKey& ExcludeKey);
+	FSpatialKeyedStack* FindOverlappingItem(const FFaerieGridShapeConstView& TranslatedShape, const FInventoryKey& ExcludeKey);
 
 	bool TrySwapItems(FInventoryKey KeyA, FSpatialItemPlacement& PlacementA, FInventoryKey KeyB, FSpatialItemPlacement& PlacementB);
 

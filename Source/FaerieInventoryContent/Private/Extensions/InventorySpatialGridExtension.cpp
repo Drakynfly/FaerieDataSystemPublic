@@ -568,7 +568,7 @@ FFaerieGridShape UInventorySpatialGridExtension::ApplyPlacement(const FFaerieGri
 	return Shape.Copy().Rotate(Placement.Rotation).Translate(Placement.Origin);
 }
 
-FSpatialKeyedStack* UInventorySpatialGridExtension::FindOverlappingItem(const FFaerieGridShape& TranslatedShape,
+FSpatialKeyedStack* UInventorySpatialGridExtension::FindOverlappingItem(const FFaerieGridShapeConstView& TranslatedShape,
 																		const FInventoryKey& ExcludeKey)
 {
 	return SpatialEntries.Items.FindByPredicate(

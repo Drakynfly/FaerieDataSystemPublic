@@ -156,7 +156,7 @@ struct FAERIEINVENTORYCONTENT_API FFaerieGridShapeConstView
 	FIntPoint GetShapeCenter() const;
 	FIntPoint GetShapeAverageCenter() const;
 	bool IsSymmetrical() const;
-	bool Contains(const FFaerieGridShapeView& Other) const;
+	bool Contains(const FFaerieGridShapeConstView& Other) const;
 
 	FFaerieGridShape Copy() const;
 

@@ -255,7 +255,7 @@ bool FFaerieClientAction_RequestMoveEquipmentSlotToSpatialInventory::Server_Exec
 	// Validate Slot and Storage access
 	if (!IsValid(Slot) ||
 		!Slot->IsFilled() ||
-		TargetPoint != FIntPoint::NoneValue ||
+		TargetPoint == FIntPoint::NoneValue ||
 		!Client->CanAccessSlot(Slot) ||
 		!IsValid(ToStorage) ||
 		!Client->CanAccessStorage(ToStorage))
