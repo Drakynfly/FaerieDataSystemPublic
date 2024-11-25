@@ -1,6 +1,7 @@
 ﻿// Copyright Guy (Drakynfly) Lundvall. All Rights Reserved.
 
 #include "Extensions/InventoryGridExtensionBase.h"
+#include "FaerieItemContainerBase.h"
 #include "Net/UnrealNetwork.h"
 
 void UInventoryGridExtensionBase::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
@@ -19,6 +20,22 @@ void UInventoryGridExtensionBase::PostInitProperties()
 {
 	Super::PostInitProperties();
 	GridContent.ChangeListener = this;
+}
+
+void UInventoryGridExtensionBase::InitializeExtension(const UFaerieItemContainerBase* Container)
+{
+	Super::InitializeExtension(Container);
+
+	checkf(!IsValid(InitializedContainer), TEXT("UInventoryGridExtensionBase doesn't support multi-initialization!"))
+	InitializedContainer = const_cast<UFaerieItemContainerBase*>(Container);
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, InitializedContainer, this);
+
+	// Add all existing items to the grid on startup.
+	// This is dumb, and just adds them in order, it doesn't space pack them. To do that, we would want to sort items by size, and add largest first.
+	// This is also skipping possible serialization of grid data.
+	// @todo handle serialization loading
+	// @todo handle items that are too large to fit / too many items (log error?)
+	OccupiedCells.SetNum(GridSize.X * GridSize.Y, false);
 }
 
 void UInventoryGridExtensionBase::DeinitializeExtension(const UFaerieItemContainerBase* Container)
@@ -43,6 +60,27 @@ FIntPoint UInventoryGridExtensionBase::Unravel(const int32 Index) const
 	const int32 X = Index % GridSize.X;
 	const int32 Y = Index / GridSize.X;
 	return FIntPoint{ X, Y };
+}
+
+bool UInventoryGridExtensionBase::IsCellOccupied(const FIntPoint& Point) const
+{
+	return OccupiedCells[Ravel(Point)];
+}
+
+void UInventoryGridExtensionBase::MarkCell(const FIntPoint& Point)
+{
+	OccupiedCells[Ravel(Point)] = true;
+}
+
+void UInventoryGridExtensionBase::UnmarkCell(const FIntPoint& Point)
+{
+	OccupiedCells[Ravel(Point)] = false;
+}
+
+void UInventoryGridExtensionBase::BroadcastEvent(const FInventoryKey& Key, const EFaerieGridEventType EventType)
+{
+	SpatialStackChangedNative.Broadcast(Key, EventType);
+	SpatialStackChangedDelegate.Broadcast(Key, EventType);
 }
 
 void UInventoryGridExtensionBase::OnRep_GridSize()

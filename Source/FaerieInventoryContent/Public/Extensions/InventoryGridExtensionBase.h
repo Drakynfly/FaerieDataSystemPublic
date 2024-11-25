@@ -31,6 +31,7 @@ public:
 
 protected:
 	//~ UItemContainerExtensionBase
+	virtual void InitializeExtension(const UFaerieItemContainerBase* Container) override;
 	virtual void DeinitializeExtension(const UFaerieItemContainerBase* Container) override;
 	//~ UItemContainerExtensionBase
 
@@ -43,6 +44,12 @@ protected:
 
 	// Convert a grid index to a point
 	FIntPoint Unravel(int32 Index) const;
+
+	bool IsCellOccupied(const FIntPoint& Point) const;
+	void MarkCell(const FIntPoint& Point);
+	void UnmarkCell(const FIntPoint& Point);
+
+	void BroadcastEvent(const FInventoryKey& Key, EFaerieGridEventType EventType);
 
 	UFUNCTION(/* Replication */)
 	virtual void OnRep_GridSize();
@@ -58,22 +65,11 @@ public:
 	FFaerieGridSizeChangedNative::RegistrationType& GetOnGridSizeChanged() { return GridSizeChangedNative; }
 
 protected:
-	UPROPERTY(EditAnywhere, Replicated, Category = "Data")
-	FFaerieGridContent GridContent;
-
-	UPROPERTY(BlueprintAssignable, Category = "Events")
-	FSpatialStackChanged SpatialStackChangedDelegate;
-
-	UPROPERTY(BlueprintAssignable, Category = "Events")
-	FFaerieGridSizeChanged GridSizeChangedDelegate;
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, ReplicatedUsing = "OnRep_GridSize", Category = "Config")
 	FIntPoint GridSize = FIntPoint(10, 10);
 
-	TBitArray<> OccupiedCells;
-
-	FFaerieGridStackChangedNative SpatialStackChangedNative;
-	FFaerieGridSizeChangedNative GridSizeChangedNative;
+	UPROPERTY(EditAnywhere, Replicated, Category = "Data")
+	FFaerieGridContent GridContent;
 
 	/*
 	 * @todo we do not support multiple containers. FFaerieGridContent would need to be refactored to allow that.
@@ -82,4 +78,16 @@ protected:
 	 */
 	UPROPERTY(Replicated)
 	TObjectPtr<UFaerieItemContainerBase> InitializedContainer;
+
+private:
+	UPROPERTY(BlueprintAssignable, Category = "Events", meta = (AllowPrivateAccess = "true"))
+	FSpatialStackChanged SpatialStackChangedDelegate;
+
+	UPROPERTY(BlueprintAssignable, Category = "Events", meta = (AllowPrivateAccess = "true"))
+	FFaerieGridSizeChanged GridSizeChangedDelegate;
+
+	FFaerieGridStackChangedNative SpatialStackChangedNative;
+	FFaerieGridSizeChangedNative GridSizeChangedNative;
+
+	TBitArray<> OccupiedCells;
 };

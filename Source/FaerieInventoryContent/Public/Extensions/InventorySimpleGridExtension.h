@@ -47,5 +47,4 @@ protected:
 
 	void SwapItems(FFaerieGridPlacement& PlacementA, FFaerieGridPlacement& PlacementB);
 	void MoveSingleItem(FFaerieGridPlacement& Placement, const FIntPoint& NewPosition);
-	void UpdateItemPosition(FFaerieGridPlacement& Placement, const FIntPoint& NewPosition);
 };

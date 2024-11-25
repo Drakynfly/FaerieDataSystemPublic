@@ -10,16 +10,8 @@
 
 void UInventorySimpleGridExtension::InitializeExtension(const UFaerieItemContainerBase* Container)
 {
-	checkf(!IsValid(InitializedContainer), TEXT("InventorySimpleGridExtension doesn't support multi-initialization!"))
-	InitializedContainer = const_cast<UFaerieItemContainerBase*>(Container);
-	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, InitializedContainer, this);
+	Super::InitializeExtension(InitializedContainer);
 
-	// Add all existing items to the grid on startup.
-	// This is dumb, and just adds them in order, it doesn't space pack them. To do that, we would want to sort items by size, and add largest first.
-	// This is also skipping possible serialization of grid data.
-	// @todo handle serialization loading
-	// @todo handle items that are too large to fit / too many items (log error?)
-	OccupiedCells.SetNum(GridSize.X * GridSize.Y, false);
 	if (const UFaerieItemStorage* ItemStorage = Cast<UFaerieItemStorage>(Container))
 	{
 		bool Failed = false;
@@ -103,8 +95,7 @@ void UInventorySimpleGridExtension::PostEntryChanged(const UFaerieItemContainerB
 		}
 		else
 		{
-			SpatialStackChangedNative.Broadcast(SpatialEntry.Key, EFaerieGridEventType::ItemChanged);
-			SpatialStackChangedDelegate.Broadcast(SpatialEntry.Key, EFaerieGridEventType::ItemChanged);
+			BroadcastEvent(SpatialEntry.Key, EFaerieGridEventType::ItemChanged);
 		}
 	}
 
@@ -112,8 +103,7 @@ void UInventorySimpleGridExtension::PostEntryChanged(const UFaerieItemContainerB
 	for (const FInventoryKey& KeyToRemove : KeysToRemove)
 	{
 		GridContent.Remove(KeyToRemove);
-		SpatialStackChangedNative.Broadcast(KeyToRemove, EFaerieGridEventType::ItemRemoved);
-		SpatialStackChangedDelegate.Broadcast(KeyToRemove, EFaerieGridEventType::ItemRemoved);
+		BroadcastEvent(KeyToRemove, EFaerieGridEventType::ItemRemoved);
 	}
 	GridContent.MarkArrayDirty();
 }
@@ -122,24 +112,20 @@ void UInventorySimpleGridExtension::PostEntryChanged(const UFaerieItemContainerB
 void UInventorySimpleGridExtension::PreStackRemove(const FFaerieGridKeyedStack& Stack)
 {
 	// This is to account for removals through proxies that don't directly interface with the grid
-	OccupiedCells[Ravel(Stack.Value.Origin)] = false;
-
-	SpatialStackChangedNative.Broadcast(Stack.Key, EFaerieGridEventType::ItemRemoved);
-	SpatialStackChangedDelegate.Broadcast(Stack.Key, EFaerieGridEventType::ItemRemoved);
+	UnmarkCell(Stack.Value.Origin);
+	BroadcastEvent(Stack.Key, EFaerieGridEventType::ItemRemoved);
 }
 
 void UInventorySimpleGridExtension::PostStackAdd(const FFaerieGridKeyedStack& Stack)
 {
-	SpatialStackChangedNative.Broadcast(Stack.Key, EFaerieGridEventType::ItemAdded);
-	SpatialStackChangedDelegate.Broadcast(Stack.Key, EFaerieGridEventType::ItemAdded);
+	BroadcastEvent(Stack.Key, EFaerieGridEventType::ItemAdded);
 }
 
 void UInventorySimpleGridExtension::PostStackChange(const FFaerieGridKeyedStack& Stack)
 {
 	if (const UFaerieItemStorage* Storage = Cast<UFaerieItemStorage>(InitializedContainer); Storage->IsValidKey(Stack.Key))
 	{
-		SpatialStackChangedNative.Broadcast(Stack.Key, EFaerieGridEventType::ItemChanged);
-		SpatialStackChangedDelegate.Broadcast(Stack.Key, EFaerieGridEventType::ItemChanged);
+		BroadcastEvent(Stack.Key, EFaerieGridEventType::ItemChanged);
 	}
 }
 
@@ -169,7 +155,7 @@ bool UInventorySimpleGridExtension::AddItemToGrid(const FInventoryKey& Key, cons
 	}
 
 	GridContent.Insert(Key, DesiredItemPlacement);
-	OccupiedCells[Ravel(DesiredItemPlacement.Origin)] = true;
+	MarkCell(DesiredItemPlacement.Origin);
 	return true;
 }
 
@@ -201,7 +187,7 @@ FFaerieGridPlacement UInventorySimpleGridExtension::FindFirstEmptyLocation() con
 		for (TestPoint.X = 0; TestPoint.X < GridSize.X; TestPoint.X++)
 		{
 			// Skip if current cell is occupied
-			if (OccupiedCells[Ravel(TestPoint)])
+			if (IsCellOccupied(TestPoint))
 			{
 				continue;
 			}
@@ -269,20 +255,16 @@ FInventoryKey UInventorySimpleGridExtension::FindOverlappingItem(const FInventor
 void UInventorySimpleGridExtension::SwapItems(FFaerieGridPlacement& PlacementA, FFaerieGridPlacement& PlacementB)
 {
 	Swap(PlacementA.Origin, PlacementB.Origin);
+	// No need to change cell marking, because swaps don't change any.
 }
 
 void UInventorySimpleGridExtension::MoveSingleItem(FFaerieGridPlacement& Placement, const FIntPoint& NewPosition)
 {
-	UpdateItemPosition(Placement, NewPosition);
-}
-
-void UInventorySimpleGridExtension::UpdateItemPosition(FFaerieGridPlacement& Placement, const FIntPoint& NewPosition)
-{
 	// Clear old position first
-	OccupiedCells[Ravel(Placement.Origin)] = false;
+	UnmarkCell(Placement.Origin);
 
 	// Then set new positions
-	OccupiedCells[Ravel(NewPosition)] = true;
+	MarkCell(NewPosition);
 
 	Placement.Origin = NewPosition;
 }

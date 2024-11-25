@@ -11,16 +11,8 @@
 
 void UInventorySpatialGridExtension::InitializeExtension(const UFaerieItemContainerBase* Container)
 {
-	checkf(!IsValid(InitializedContainer), TEXT("InventorySpatialGridExtension doesn't support multi-initialization!"))
-	InitializedContainer = const_cast<UFaerieItemContainerBase*>(Container);
-	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, InitializedContainer, this);
+	Super::InitializeExtension(Container);
 
-	// Add all existing items to the grid on startup.
-	// This is dumb, and just adds them in order, it doesn't space pack them. To do that, we would want to sort items by size, and add largest first.
-	// This is also skipping possible serialization of grid data.
-	// @todo handle serialization loading
-	// @todo handle items that are too large to fit / too many items (log error?)
-	OccupiedCells.SetNum(GridSize.X * GridSize.Y, false);
 	if (const UFaerieItemStorage* ItemStorage = Cast<UFaerieItemStorage>(Container))
 	{
 		bool Failed = false;
@@ -104,8 +96,7 @@ void UInventorySpatialGridExtension::PostEntryChanged(const UFaerieItemContainer
 		}
 		else
 		{
-			SpatialStackChangedNative.Broadcast(SpatialEntry.Key, EFaerieGridEventType::ItemChanged);
-			SpatialStackChangedDelegate.Broadcast(SpatialEntry.Key, EFaerieGridEventType::ItemChanged);
+			BroadcastEvent(SpatialEntry.Key, EFaerieGridEventType::ItemChanged);
 		}
 	}
 
@@ -113,8 +104,7 @@ void UInventorySpatialGridExtension::PostEntryChanged(const UFaerieItemContainer
 	for (const FInventoryKey& KeyToRemove : KeysToRemove)
 	{
 		GridContent.Remove(KeyToRemove);
-		SpatialStackChangedNative.Broadcast(KeyToRemove, EFaerieGridEventType::ItemRemoved);
-		SpatialStackChangedDelegate.Broadcast(KeyToRemove, EFaerieGridEventType::ItemRemoved);
+		BroadcastEvent(KeyToRemove, EFaerieGridEventType::ItemRemoved);
 	}
 	GridContent.MarkArrayDirty();
 }
@@ -126,17 +116,15 @@ void UInventorySpatialGridExtension::PreStackRemove(const FFaerieGridKeyedStack&
 	for (const FFaerieGridShape Translated = ApplyPlacement(GetItemShape(Stack.Key.EntryKey), Stack.Value);
 		 const FIntPoint& Point : Translated.Points)
 	{
-		OccupiedCells[Ravel(Point)] = false;
+		UnmarkCell(Point);
 	}
 
-	SpatialStackChangedNative.Broadcast(Stack.Key, EFaerieGridEventType::ItemRemoved);
-	SpatialStackChangedDelegate.Broadcast(Stack.Key, EFaerieGridEventType::ItemRemoved);
+	BroadcastEvent(Stack.Key, EFaerieGridEventType::ItemRemoved);
 }
 
 void UInventorySpatialGridExtension::PostStackAdd(const FFaerieGridKeyedStack& Stack)
 {
-	SpatialStackChangedNative.Broadcast(Stack.Key, EFaerieGridEventType::ItemAdded);
-	SpatialStackChangedDelegate.Broadcast(Stack.Key, EFaerieGridEventType::ItemAdded);
+	BroadcastEvent(Stack.Key, EFaerieGridEventType::ItemAdded);
 }
 
 void UInventorySpatialGridExtension::PostStackChange(const FFaerieGridKeyedStack& Stack)
@@ -144,8 +132,7 @@ void UInventorySpatialGridExtension::PostStackChange(const FFaerieGridKeyedStack
 	if (const UFaerieItemStorage* Storage = Cast<UFaerieItemStorage>(InitializedContainer);
 		Storage->IsValidKey(Stack.Key))
 	{
-		SpatialStackChangedNative.Broadcast(Stack.Key, EFaerieGridEventType::ItemChanged);
-		SpatialStackChangedDelegate.Broadcast(Stack.Key, EFaerieGridEventType::ItemChanged);
+		BroadcastEvent(Stack.Key, EFaerieGridEventType::ItemChanged);
 	}
 }
 
@@ -181,7 +168,7 @@ bool UInventorySpatialGridExtension::AddItemToGrid(const FInventoryKey& Key, con
 	for (const FFaerieGridShape Translated = ApplyPlacement(Shape, DesiredItemPlacement);
 		 const FIntPoint& Point : Translated.Points)
 	{
-		OccupiedCells[Ravel(Point)] = true;
+		MarkCell(Point);
 	}
 	return true;
 }
@@ -220,8 +207,8 @@ FIntPoint UInventorySpatialGridExtension::GetStackBounds(const FInventoryKey& Ke
 bool UInventorySpatialGridExtension::FitsInGrid(const FFaerieGridShapeConstView& Shape, const FFaerieGridPlacement& PlacementData, const TConstArrayView<FInventoryKey> ExcludedKeys, FIntPoint* OutCandidate) const
 {
 	// Build list of excluded indices
-	TArray<int32> ExcludedIndices;
-	ExcludedIndices.Reserve(ExcludedKeys.Num() * Shape.Points.Num());
+	TArray<FIntPoint> ExcludedPositions;
+	ExcludedPositions.Reserve(ExcludedKeys.Num() * Shape.Points.Num());
 	for (const FInventoryKey& Key : ExcludedKeys)
 	{
 		const FFaerieGridShapeConstView OtherShape = GetItemShape(Key.EntryKey);
@@ -229,7 +216,7 @@ bool UInventorySpatialGridExtension::FitsInGrid(const FFaerieGridShapeConstView&
 		for (const FFaerieGridShape Translated = ApplyPlacement(OtherShape, Placement);
 			 const auto& Point : Translated.Points)
 		{
-			ExcludedIndices.Add(Ravel(Point));
+			ExcludedPositions.Add(Point);
 		}
 	}
 
@@ -245,8 +232,7 @@ bool UInventorySpatialGridExtension::FitsInGrid(const FFaerieGridShapeConstView&
 		}
 
 		// If this index is not in the excluded list, check if it's occupied
-		if (const int32 BitGridIndex = Ravel(Point);
-			!ExcludedIndices.Contains(BitGridIndex) && OccupiedCells[BitGridIndex])
+		if (!ExcludedPositions.Contains(Point) && IsCellOccupied(Point))
 		{
 			if (OutCandidate)
 			{
@@ -315,10 +301,11 @@ FFaerieGridPlacement UInventorySpatialGridExtension::FindFirstEmptyLocation(cons
 		for (TestPoint.X = 0; TestPoint.X < GridSize.X; TestPoint.X++)
 		{
 			// Skip if current cell is occupied
-			if (OccupiedCells[Ravel(TestPoint)])
+			if (IsCellOccupied(TestPoint))
 			{
 				continue;
 			}
+
 			// Try each rotation at this potential origin point
 			TestPlacement.Origin = TestPoint;
 			for (const ESpatialItemRotation Rotation : RotationRange)
@@ -505,14 +492,14 @@ void UInventorySpatialGridExtension::UpdateItemPosition(const FInventoryKey Key,
 	for (auto& Point : Rotated.Points)
 	{
 		const FIntPoint OldPoint = Placement.Origin + Point;
-		OccupiedCells[Ravel(OldPoint)] = false;
+		UnmarkCell(OldPoint);
 	}
 
 	// Then set new positions
 	for (auto& Point : Rotated.Points)
 	{
 		const FIntPoint Translated = NewPosition + Point;
-		OccupiedCells[Ravel(Translated)] = true;
+		MarkCell(Translated);
 	}
 
 	Placement.Origin = NewPosition;
@@ -544,14 +531,14 @@ bool UInventorySpatialGridExtension::RotateItem(const FInventoryKey& Key)
 			// Clear old occupied cells
 			for (const auto& OldPoint : OldShape.Points)
 			{
-				OccupiedCells[Ravel(OldPoint)] = false;
+				UnmarkCell(OldPoint);
 			}
 
 			// Set new occupied cells taking into account rotation
 			const FFaerieGridShape NewShape = ApplyPlacement(ItemShape, Placement);
 			for (const auto& Point : NewShape.Points)
 			{
-				OccupiedCells[Ravel(Point)] = true;
+				MarkCell(Point);
 			}
 
 			return true;
