@@ -277,7 +277,7 @@ bool FFaerieClientAction_RequestMoveEquipmentSlotToSpatialInventory::Server_Exec
 		return false;
 	}
 
-	if (FSpatialItemPlacement Placement{ TargetPoint };
+	if (FFaerieGridPlacement Placement{ TargetPoint };
 		!SpatialExtension->FitsInGridAnyRotation(Shape->GetShape(), Placement))
 	{
 		return false;
