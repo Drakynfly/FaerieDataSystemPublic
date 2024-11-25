@@ -297,7 +297,8 @@ FFaerieGridPlacement UInventorySpatialGridExtension::FindFirstEmptyLocation(cons
 		}
 	}
 
-	FIntPoint FirstPoint = FIntPoint(TNumericLimits<int32>::Max(), TNumericLimits<int32>::Max());
+	//Find top left most point
+	FIntPoint FirstPoint = FIntPoint(TNumericLimits<int32>::Max());
 	for (const FIntPoint& Point : Shape.Points)
 	{
 		if (Point.Y < FirstPoint.Y || (Point.Y == FirstPoint.Y && Point.X < FirstPoint.X))
