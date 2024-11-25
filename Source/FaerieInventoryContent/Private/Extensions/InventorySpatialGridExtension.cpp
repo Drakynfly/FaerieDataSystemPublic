@@ -211,7 +211,7 @@ bool UInventorySpatialGridExtension::FitsInGrid(const FFaerieGridShapeConstView&
 	ExcludedPositions.Reserve(ExcludedKeys.Num() * Shape.Points.Num());
 	for (const FInventoryKey& Key : ExcludedKeys)
 	{
-		const FFaerieGridShapeConstView OtherShape = GetItemShape(Key.EntryKey);
+		const FFaerieGridShape OtherShape = GetItemShape(Key.EntryKey);
 		const FFaerieGridPlacement Placement = GetStackPlacementData(Key);
 		for (const FFaerieGridShape Translated = ApplyPlacement(OtherShape, Placement);
 			 const auto& Point : Translated.Points)
@@ -219,11 +219,15 @@ bool UInventorySpatialGridExtension::FitsInGrid(const FFaerieGridShapeConstView&
 			ExcludedPositions.Add(Point);
 		}
 	}
-
+	FIntPoint MinPoint(TNumericLimits<int32>::Max());
+	FIntPoint MaxPoint(TNumericLimits<int32>::Min());
+	
 	// Check if all points in the shape fit within the grid and don't overlap with occupied cells
 	for (const FFaerieGridShape Translated = ApplyPlacement(Shape, PlacementData);
 		 const FIntPoint& Point : Translated.Points)
 	{
+		MinPoint = MinPoint.ComponentMin(Point);
+		MaxPoint = MaxPoint.ComponentMax(Point);
 		// Check if point is within grid bounds
 		if (Point.X < 0 || Point.X >= GridSize.X ||
 			Point.Y < 0 || Point.Y >= GridSize.Y)
@@ -236,9 +240,18 @@ bool UInventorySpatialGridExtension::FitsInGrid(const FFaerieGridShapeConstView&
 		{
 			if (OutCandidate)
 			{
-				// Skip past this occupied cell
-				OutCandidate->X = Point.X;
-				OutCandidate->Y = PlacementData.Origin.Y;
+				// Skip to next row if we're near the right edge
+				if (Point.X >= GridSize.X - MaxPoint.X + MinPoint.X)
+				{
+					OutCandidate->X = 0;
+					OutCandidate->Y = Point.Y + 1;
+				}
+				else
+				{
+					// Skip past the current shape's width
+					OutCandidate->X = Point.X + 1;
+					OutCandidate->Y = Point.Y;
+				}
 			}
 			return false;
 		}
@@ -284,12 +297,14 @@ FFaerieGridPlacement UInventorySpatialGridExtension::FindFirstEmptyLocation(cons
 		}
 	}
 
-	int32 Min = TNumericLimits<int32>::Max();
-	int32 Max = TNumericLimits<int32>::Min();
+	//Find top left most point
+	FIntPoint FirstPoint = FIntPoint(TNumericLimits<int32>::Max());
 	for (const FIntPoint& Point : Shape.Points)
 	{
-		Min = FMath::Min(Min, Point.X);
-		Max = FMath::Max(Max, Point.X);
+		if (Point.Y < FirstPoint.Y || (Point.Y == FirstPoint.Y && Point.X < FirstPoint.X))
+		{
+			FirstPoint = Point;
+		}
 	}
 
 	FFaerieGridPlacement TestPlacement;
@@ -305,9 +320,10 @@ FFaerieGridPlacement UInventorySpatialGridExtension::FindFirstEmptyLocation(cons
 			{
 				continue;
 			}
-
-			// Try each rotation at this potential origin point
-			TestPlacement.Origin = TestPoint;
+			
+			// Calculate the origin offset by the first point
+			TestPlacement.Origin = TestPoint - FirstPoint;
+			
 			for (const ESpatialItemRotation Rotation : RotationRange)
 			{
 				TestPlacement.Rotation = Rotation;
@@ -338,7 +354,7 @@ bool UInventorySpatialGridExtension::MoveItem(const FInventoryKey& Key, const FI
 	return GridContent.EditItem(Key,
 		[&](FFaerieGridPlacement& Placement)
 		{
-			const FFaerieGridShapeConstView ItemShape = GetItemShape(Key.EntryKey);
+			const FFaerieGridShape ItemShape = GetItemShape(Key.EntryKey);
 
 			// Create placement at target point
 			FFaerieGridPlacement TargetPlacement = Placement;
@@ -398,7 +414,7 @@ FInventoryKey UInventorySpatialGridExtension::FindOverlappingItem(const FFaerieG
 		{
 			if (ExcludeKey == Other.Key) { return false; }
 
-			const FFaerieGridShapeConstView OtherItemShape = GetItemShape(Other.Key.EntryKey);
+			const FFaerieGridShape OtherItemShape = GetItemShape(Other.Key.EntryKey);
 
 			// Create a rotated and translated version of the other item's shape
 			const FFaerieGridShape OtherTranslatedShape = ApplyPlacement(OtherItemShape, Other.Value);
@@ -413,6 +429,8 @@ FInventoryKey UInventorySpatialGridExtension::FindOverlappingItem(const FFaerieG
 
 bool UInventorySpatialGridExtension::TrySwapItems(const FInventoryKey KeyA, FFaerieGridPlacement& PlacementA, const FInventoryKey KeyB, FFaerieGridPlacement& PlacementB)
 {
+	const FFaerieGridShape ItemShapeA = GetItemShape(KeyA.EntryKey);
+	const FFaerieGridShape ItemShapeB = GetItemShape(KeyB.EntryKey);
 	// Store original positions
 	const FIntPoint OriginA = PlacementA.Origin;
 	const FIntPoint OriginB = PlacementB.Origin;
@@ -421,16 +439,13 @@ bool UInventorySpatialGridExtension::TrySwapItems(const FInventoryKey KeyA, FFae
 	FFaerieGridPlacement PlacementCopyA = PlacementA;
 	FFaerieGridPlacement PlacementCopyB = PlacementB;
 
-	const FFaerieGridShapeConstView ShapeA = GetItemShape(KeyA.EntryKey);
-	const FFaerieGridShapeConstView ShapeB = GetItemShape(KeyB.EntryKey);
-
 	// Check if both items would fit in their new positions
 	PlacementCopyA.Origin = OriginB;
 	PlacementCopyB.Origin = OriginA;
 
 	// This is a first check mainly to see if the item would fit inside the grids bounds
-	if (!FitsInGrid(ShapeA, PlacementCopyA, MakeArrayView(&KeyB, 1)) ||
-		!FitsInGrid(ShapeB, PlacementCopyB, MakeArrayView(&KeyA, 1)))
+	if (!FitsInGrid(ItemShapeA, PlacementCopyA, MakeArrayView(&KeyB, 1)) ||
+		!FitsInGrid(ItemShapeB, PlacementCopyB, MakeArrayView(&KeyA, 1)))
 	{
 		return false;
 	}
@@ -440,9 +455,9 @@ bool UInventorySpatialGridExtension::TrySwapItems(const FInventoryKey KeyA, FFae
 
 	// Check if both items can exist in their new positions without overlapping
 	bool bValidSwap = true;
-	for (const FIntPoint& Point : ShapeA.Points)
+	for (const FIntPoint& Point : ItemShapeA.Points)
 	{
-		for (const FIntPoint& OtherPoint : ShapeB.Points)
+		for (const FIntPoint& OtherPoint : ItemShapeB.Points)
 		{
 			if (Point + PlacementA.Origin == OtherPoint + PlacementB.Origin)
 			{
@@ -469,7 +484,7 @@ bool UInventorySpatialGridExtension::TrySwapItems(const FInventoryKey KeyA, FFae
 
 bool UInventorySpatialGridExtension::MoveSingleItem(const FInventoryKey Key, FFaerieGridPlacement& Placement, const FIntPoint& NewPosition)
 {
-	const FFaerieGridShapeConstView ItemShape = GetItemShape(Key.EntryKey);
+	const FFaerieGridShape ItemShape = GetItemShape(Key.EntryKey);
 	FFaerieGridPlacement PlacementCopy = Placement;
 	PlacementCopy.Origin = NewPosition;
 	if (!FitsInGrid(ItemShape, PlacementCopy, MakeArrayView(&Key, 1)))
@@ -483,10 +498,10 @@ bool UInventorySpatialGridExtension::MoveSingleItem(const FInventoryKey Key, FFa
 
 void UInventorySpatialGridExtension::UpdateItemPosition(const FInventoryKey Key, FFaerieGridPlacement& Placement, const FIntPoint& NewPosition)
 {
-	const FFaerieGridShapeConstView ItemShape = GetItemShape(Key.EntryKey);
+	const FFaerieGridShape ItemShape = GetItemShape(Key.EntryKey);
 
 	// We could have the same index in both the add and removal so we need to clear first
-	const FFaerieGridShape Rotated = ItemShape.Copy().Rotate(Placement.Rotation);
+	const FFaerieGridShape Rotated = ItemShape.Rotate(Placement.Rotation);
 
 	// Clear old positions first
 	for (auto& Point : Rotated.Points)
@@ -510,8 +525,8 @@ bool UInventorySpatialGridExtension::RotateItem(const FInventoryKey& Key)
 	return GridContent.EditItem(Key,
 		[this, Key](FFaerieGridPlacement& Placement)
 		{
-			const FFaerieGridShapeConstView ItemShape = GetItemShape(Key.EntryKey);
-
+			const FFaerieGridShape ItemShape = GetItemShape(Key.EntryKey);
+			
 			// No Point in Trying to Rotate
 			if (ItemShape.IsSymmetrical()) return false;
 
