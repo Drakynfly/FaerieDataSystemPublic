@@ -211,7 +211,7 @@ bool UInventorySpatialGridExtension::FitsInGrid(const FFaerieGridShapeConstView&
 	ExcludedPositions.Reserve(ExcludedKeys.Num() * Shape.Points.Num());
 	for (const FInventoryKey& Key : ExcludedKeys)
 	{
-		const FFaerieGridShapeConstView OtherShape = GetItemShape(Key.EntryKey);
+		const FFaerieGridShape OtherShape = GetItemShape(Key.EntryKey);
 		const FFaerieGridPlacement Placement = GetStackPlacementData(Key);
 		for (const FFaerieGridShape Translated = ApplyPlacement(OtherShape, Placement);
 			 const auto& Point : Translated.Points)
@@ -355,13 +355,12 @@ bool UInventorySpatialGridExtension::MoveItem(const FInventoryKey& Key, const FI
 		[&](FFaerieGridPlacement& Placement)
 		{
 			const FFaerieGridShape ItemShape = GetItemShape(Key.EntryKey);
-			const FFaerieGridShapeConstView ItemShapeView(ItemShape);
 
 			// Create placement at target point
 			FFaerieGridPlacement TargetPlacement = Placement;
 			TargetPlacement.Origin = TargetPoint;
 			// Get the rotated shape based on current stack rotation so we can correctly get items that would overlap
-			const FFaerieGridShape Translated = ApplyPlacement(ItemShapeView, TargetPlacement);
+			const FFaerieGridShape Translated = ApplyPlacement(ItemShape, TargetPlacement);
 
 			if (const FInventoryKey OverlappingKey = FindOverlappingItem(Translated, Key);
 				OverlappingKey.IsValid())
@@ -416,10 +415,9 @@ FInventoryKey UInventorySpatialGridExtension::FindOverlappingItem(const FFaerieG
 			if (ExcludeKey == Other.Key) { return false; }
 
 			const FFaerieGridShape OtherItemShape = GetItemShape(Other.Key.EntryKey);
-			const FFaerieGridShapeConstView OtherItemShapeView(OtherItemShape);
 
 			// Create a rotated and translated version of the other item's shape
-			const FFaerieGridShape OtherTranslatedShape = ApplyPlacement(OtherItemShapeView, Other.Value);
+			const FFaerieGridShape OtherTranslatedShape = ApplyPlacement(OtherItemShape, Other.Value);
 
 			return TranslatedShape.Contains(OtherTranslatedShape);
 		}))
@@ -441,16 +439,13 @@ bool UInventorySpatialGridExtension::TrySwapItems(const FInventoryKey KeyA, FFae
 	FFaerieGridPlacement PlacementCopyA = PlacementA;
 	FFaerieGridPlacement PlacementCopyB = PlacementB;
 
-	const FFaerieGridShapeConstView ShapeA(ItemShapeA);
-	const FFaerieGridShapeConstView ShapeB(ItemShapeB);
-
 	// Check if both items would fit in their new positions
 	PlacementCopyA.Origin = OriginB;
 	PlacementCopyB.Origin = OriginA;
 
 	// This is a first check mainly to see if the item would fit inside the grids bounds
-	if (!FitsInGrid(ShapeA, PlacementCopyA, MakeArrayView(&KeyB, 1)) ||
-		!FitsInGrid(ShapeB, PlacementCopyB, MakeArrayView(&KeyA, 1)))
+	if (!FitsInGrid(ItemShapeA, PlacementCopyA, MakeArrayView(&KeyB, 1)) ||
+		!FitsInGrid(ItemShapeB, PlacementCopyB, MakeArrayView(&KeyA, 1)))
 	{
 		return false;
 	}
@@ -460,9 +455,9 @@ bool UInventorySpatialGridExtension::TrySwapItems(const FInventoryKey KeyA, FFae
 
 	// Check if both items can exist in their new positions without overlapping
 	bool bValidSwap = true;
-	for (const FIntPoint& Point : ShapeA.Points)
+	for (const FIntPoint& Point : ItemShapeA.Points)
 	{
-		for (const FIntPoint& OtherPoint : ShapeB.Points)
+		for (const FIntPoint& OtherPoint : ItemShapeB.Points)
 		{
 			if (Point + PlacementA.Origin == OtherPoint + PlacementB.Origin)
 			{
@@ -490,10 +485,9 @@ bool UInventorySpatialGridExtension::TrySwapItems(const FInventoryKey KeyA, FFae
 bool UInventorySpatialGridExtension::MoveSingleItem(const FInventoryKey Key, FFaerieGridPlacement& Placement, const FIntPoint& NewPosition)
 {
 	const FFaerieGridShape ItemShape = GetItemShape(Key.EntryKey);
-	const FFaerieGridShapeConstView ItemShapeView(ItemShape);
 	FFaerieGridPlacement PlacementCopy = Placement;
 	PlacementCopy.Origin = NewPosition;
-	if (!FitsInGrid(ItemShapeView, PlacementCopy, MakeArrayView(&Key, 1)))
+	if (!FitsInGrid(ItemShape, PlacementCopy, MakeArrayView(&Key, 1)))
 	{
 		return false;
 	}
@@ -505,10 +499,9 @@ bool UInventorySpatialGridExtension::MoveSingleItem(const FInventoryKey Key, FFa
 void UInventorySpatialGridExtension::UpdateItemPosition(const FInventoryKey Key, FFaerieGridPlacement& Placement, const FIntPoint& NewPosition)
 {
 	const FFaerieGridShape ItemShape = GetItemShape(Key.EntryKey);
-	const FFaerieGridShapeConstView ItemShapeView(ItemShape);
 
 	// We could have the same index in both the add and removal so we need to clear first
-	const FFaerieGridShape Rotated = ItemShapeView.Copy().Rotate(Placement.Rotation);
+	const FFaerieGridShape Rotated = ItemShape.Rotate(Placement.Rotation);
 
 	// Clear old positions first
 	for (auto& Point : Rotated.Points)
@@ -533,22 +526,21 @@ bool UInventorySpatialGridExtension::RotateItem(const FInventoryKey& Key)
 		[this, Key](FFaerieGridPlacement& Placement)
 		{
 			const FFaerieGridShape ItemShape = GetItemShape(Key.EntryKey);
-			const FFaerieGridShapeConstView ItemShapeView(ItemShape);
 			
 			// No Point in Trying to Rotate
-			if (ItemShapeView.IsSymmetrical()) return false;
+			if (ItemShape.IsSymmetrical()) return false;
 
 			const ESpatialItemRotation NextRotation = GetNextRotation(Placement.Rotation);
 
 			FFaerieGridPlacement TempPlacementData = Placement;
 			TempPlacementData.Rotation = NextRotation;
-			if (!FitsInGrid(ItemShapeView, TempPlacementData, MakeArrayView(&Key, 1)))
+			if (!FitsInGrid(ItemShape, TempPlacementData, MakeArrayView(&Key, 1)))
 			{
 				return false;
 			}
 
 			// Store old points before transformations so we can clear them from the bit grid
-			const FFaerieGridShape OldShape = ApplyPlacement(ItemShapeView, Placement);
+			const FFaerieGridShape OldShape = ApplyPlacement(ItemShape, Placement);
 			Placement.Rotation = NextRotation;
 
 			// Clear old occupied cells
@@ -558,7 +550,7 @@ bool UInventorySpatialGridExtension::RotateItem(const FInventoryKey& Key)
 			}
 
 			// Set new occupied cells taking into account rotation
-			const FFaerieGridShape NewShape = ApplyPlacement(ItemShapeView, Placement);
+			const FFaerieGridShape NewShape = ApplyPlacement(ItemShape, Placement);
 			for (const auto& Point : NewShape.Points)
 			{
 				MarkCell(Point);
