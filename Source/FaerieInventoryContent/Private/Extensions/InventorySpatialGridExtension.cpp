@@ -429,10 +429,9 @@ bool UInventorySpatialGridExtension::MoveItem(const FInventoryKey& Key, const FI
 					}
 
 					// Try merging them. This is known to be safe, since all stacks with the same key share immutability.
-					if (UFaerieItemStorage* Storage = Cast<UFaerieItemStorage>(InitializedContainer);
-						Storage->MergeStacks(Key.EntryKey, Key.StackKey, OverlappingKey.StackKey))
+					if (UFaerieItemStorage* Storage = Cast<UFaerieItemStorage>(InitializedContainer))
 					{
-						return true;
+						return Storage->MergeStacks(Key.EntryKey, Key.StackKey, OverlappingKey.StackKey);
 					}
 				}
 
