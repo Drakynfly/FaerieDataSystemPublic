@@ -36,6 +36,15 @@ bool FFaerieGridContent::EditItem(const FInventoryKey Key, const TFunctionRef<bo
 	return false;
 }
 
+FFaerieGridContent::FScopedStackHandle::~FScopedStackHandle()
+{
+	// Propagate change to client
+	Source.MarkItemDirty(Handle);
+
+	// Broadcast change on server
+	Source.PostStackReplicatedChange(Handle);
+}
+
 void FFaerieGridContent::PreStackReplicatedRemove(const FFaerieGridKeyedStack& Stack) const
 {
 	if (ChangeListener.IsValid())

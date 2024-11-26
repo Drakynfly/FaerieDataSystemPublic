@@ -409,16 +409,6 @@ bool UInventorySpatialGridExtension::MoveItem(const FInventoryKey& Key, const FI
 			if (const FInventoryKey OverlappingKey = FindOverlappingItem(Translated, Key);
 				OverlappingKey.IsValid())
 			{
-				// Gross method of getting mutable access to the other point... considering implementing handles like FInventoryContent does.
-				FFaerieGridPlacement* OverlappingPlacement = nullptr;
-				GridContent.EditItem(OverlappingKey,
-					[&OverlappingPlacement](FFaerieGridPlacement& OtherPlacement)
-					{
-						OverlappingPlacement = &OtherPlacement;
-						return true;
-					});
-				check(OverlappingPlacement);
-
 				// If the Entry keys are identical, it gives us some other things to test before Swapping.
 				if (Key.EntryKey == OverlappingKey.EntryKey)
 				{
@@ -429,15 +419,18 @@ bool UInventorySpatialGridExtension::MoveItem(const FInventoryKey& Key, const FI
 					}
 
 					// Try merging them. This is known to be safe, since all stacks with the same key share immutability.
-					if (UFaerieItemStorage* Storage = Cast<UFaerieItemStorage>(InitializedContainer))
+					if (UFaerieItemStorage* Storage = Cast<UFaerieItemStorage>(InitializedContainer);
+						Storage->MergeStacks(Key.EntryKey, Key.StackKey, OverlappingKey.StackKey))
 					{
-						return Storage->MergeStacks(Key.EntryKey, Key.StackKey, OverlappingKey.StackKey);
+						return true;
 					}
 				}
+				
+				const FFaerieGridContent::FScopedStackHandle StackHandle = GridContent.GetHandle(OverlappingKey);
 
 				return TrySwapItems(
 					Key, Placement,
-					OverlappingKey, *OverlappingPlacement);
+					OverlappingKey, StackHandle.Get());
 			}
 
 			return MoveSingleItem(Key, Placement, TargetPoint);
