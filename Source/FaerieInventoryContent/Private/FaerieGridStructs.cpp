@@ -20,22 +20,6 @@ void FFaerieGridKeyedStack::PostReplicatedChange(const FFaerieGridContent& InArr
 	InArraySerializer.PostStackReplicatedChange(*this);
 }
 
-bool FFaerieGridContent::EditItem(const FInventoryKey Key, const TFunctionRef<bool(FFaerieGridPlacement&)>& Func)
-{
-	if (const int32 Index = IndexOf(Key);
-		Index != INDEX_NONE)
-	{
-		if (FFaerieGridKeyedStack& Stack = Items[Index];
-			Func(Stack.Value))
-		{
-			MarkItemDirty(Stack);
-			PostStackReplicatedChange(Stack);
-			return true;
-		}
-	}
-	return false;
-}
-
 FFaerieGridContent::FScopedStackHandle::~FScopedStackHandle()
 {
 	// Propagate change to client

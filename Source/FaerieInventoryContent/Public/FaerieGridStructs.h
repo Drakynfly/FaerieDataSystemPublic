@@ -85,8 +85,6 @@ private:
 	TWeakObjectPtr<UInventoryGridExtensionBase> ChangeListener;
 
 public:
-	bool EditItem(FInventoryKey Key, const TFunctionRef<bool(FFaerieGridPlacement&)>& Func);
-
 	template <typename Predicate>
 	const FFaerieGridKeyedStack* FindByPredicate(Predicate Pred) const
 	{
