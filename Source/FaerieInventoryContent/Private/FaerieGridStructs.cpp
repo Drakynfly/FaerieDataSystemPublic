@@ -38,7 +38,7 @@ void FFaerieGridContent::PreStackReplicatedRemove(const FFaerieGridKeyedStack& S
 {
 	if (ChangeListener.IsValid())
 	{
-		ChangeListener->PreStackRemove(Stack);
+		ChangeListener->PreStackRemove_Client(Stack);
 	}
 }
 
@@ -70,12 +70,7 @@ void FFaerieGridContent::Insert(FInventoryKey Key, const FFaerieGridPlacement& V
 
 void FFaerieGridContent::Remove(const FInventoryKey Key)
 {
-	if (BSOA::Remove(Key,
-			[this](const FFaerieGridKeyedStack& Stack)
-			{
-				// Notify owning server of this removal.
-				PreStackReplicatedRemove(Stack);
-			}))
+	if (BSOA::Remove(Key))
 	{
 		// Notify clients of this removal.
 		MarkArrayDirty();

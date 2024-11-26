@@ -70,6 +70,9 @@ void UInventorySpatialGridExtension::PostRemoval(const UFaerieItemContainerBase*
 {
 	if (const UFaerieItemStorage* ItemStorage = Cast<UFaerieItemStorage>(Container))
 	{
+		// Create a temporary array to store keys that need to be removed
+		TArray<FInventoryKey> KeysToRemove;
+
 		for (auto&& StackKey : Event.StackKeys)
 		{
 			if (FInventoryKey CurrentKey{Event.EntryTouched, StackKey};
@@ -77,7 +80,12 @@ void UInventorySpatialGridExtension::PostRemoval(const UFaerieItemContainerBase*
 			{
 				PostStackChange({ CurrentKey, GetStackPlacementData(CurrentKey) });
 			}
+			else
+			{
+				KeysToRemove.Add(CurrentKey);
+			}
 		}
+		RemoveItemBatch(KeysToRemove, Event.Item.Get());
 	}
 }
 
@@ -103,17 +111,24 @@ void UInventorySpatialGridExtension::PostEntryChanged(const UFaerieItemContainer
 	// remove the stored keys
 	for (const FInventoryKey& KeyToRemove : KeysToRemove)
 	{
-		GridContent.Remove(KeyToRemove);
+		RemoveItem(KeyToRemove, Container->View(KeyToRemove.EntryKey).Item.Get());
 		BroadcastEvent(KeyToRemove, EFaerieGridEventType::ItemRemoved);
 	}
 	GridContent.MarkArrayDirty();
 }
 
 
-void UInventorySpatialGridExtension::PreStackRemove(const FFaerieGridKeyedStack& Stack)
+void UInventorySpatialGridExtension::PreStackRemove_Client(const FFaerieGridKeyedStack& Stack)
+{
+	RebuildOccupiedCells();
+
+	BroadcastEvent(Stack.Key, EFaerieGridEventType::ItemRemoved);
+}
+
+void UInventorySpatialGridExtension::PreStackRemove_Server(const FFaerieGridKeyedStack& Stack, const UFaerieItem* Item)
 {
 	// This is to account for removals through proxies that don't directly interface with the grid
-	for (const FFaerieGridShape Translated = ApplyPlacement(GetItemShape(Stack.Key.EntryKey), Stack.Value);
+	for (const FFaerieGridShape Translated = ApplyPlacement(GetItemShape_Impl(Item), Stack.Value);
 		 const FIntPoint& Point : Translated.Points)
 	{
 		UnmarkCell(Point);
@@ -175,14 +190,39 @@ bool UInventorySpatialGridExtension::AddItemToGrid(const FInventoryKey& Key, con
 
 void UInventorySpatialGridExtension::RemoveItem(const FInventoryKey& Key, const UFaerieItem* Item)
 {
-	GridContent.Remove(Key);
+	GridContent.BSOA::Remove(Key,
+		[Item, this](const FFaerieGridKeyedStack& Stack)
+		{
+			PreStackRemove_Server(Stack, Item);
+			GridContent.MarkArrayDirty();
+		});
 }
 
 void UInventorySpatialGridExtension::RemoveItemBatch(const TConstArrayView<FInventoryKey>& Keys, const UFaerieItem* Item)
 {
 	for (auto&& InvKey : Keys)
 	{
-		GridContent.Remove(InvKey);
+		RemoveItem(InvKey, Item);
+	}
+}
+
+void UInventorySpatialGridExtension::RebuildOccupiedCells()
+{
+	UnmarkAllCells();
+
+	for (const auto& SpatialEntry : GridContent)
+	{
+		if (InitializedContainer->IsValidKey(SpatialEntry.Key.EntryKey))
+		{
+			if (auto&& Item = InitializedContainer->View(SpatialEntry.Key.EntryKey).Item.Get())
+			{
+				for (const FFaerieGridShape Translated = ApplyPlacement(GetItemShape_Impl(Item), SpatialEntry.Value);
+					 const FIntPoint& Point : Translated.Points)
+				{
+					MarkCell(Point);
+				}
+			}
+		}
 	}
 }
 
@@ -221,7 +261,7 @@ bool UInventorySpatialGridExtension::FitsInGrid(const FFaerieGridShapeConstView&
 	}
 	FIntPoint MinPoint(TNumericLimits<int32>::Max());
 	FIntPoint MaxPoint(TNumericLimits<int32>::Min());
-	
+
 	// Check if all points in the shape fit within the grid and don't overlap with occupied cells
 	for (const FFaerieGridShape Translated = ApplyPlacement(Shape, PlacementData);
 		 const FIntPoint& Point : Translated.Points)
@@ -320,10 +360,10 @@ FFaerieGridPlacement UInventorySpatialGridExtension::FindFirstEmptyLocation(cons
 			{
 				continue;
 			}
-			
+
 			// Calculate the origin offset by the first point
 			TestPlacement.Origin = TestPoint - FirstPoint;
-			
+
 			for (const ESpatialItemRotation Rotation : RotationRange)
 			{
 				TestPlacement.Rotation = Rotation;
@@ -526,7 +566,7 @@ bool UInventorySpatialGridExtension::RotateItem(const FInventoryKey& Key)
 		[this, Key](FFaerieGridPlacement& Placement)
 		{
 			const FFaerieGridShape ItemShape = GetItemShape(Key.EntryKey);
-			
+
 			// No Point in Trying to Rotate
 			if (ItemShape.IsSymmetrical()) return false;
 

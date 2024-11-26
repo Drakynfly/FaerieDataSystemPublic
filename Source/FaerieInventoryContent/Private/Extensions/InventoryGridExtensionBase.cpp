@@ -77,6 +77,11 @@ void UInventoryGridExtensionBase::UnmarkCell(const FIntPoint& Point)
 	OccupiedCells[Ravel(Point)] = false;
 }
 
+void UInventoryGridExtensionBase::UnmarkAllCells()
+{
+	OccupiedCells.Reset();
+}
+
 void UInventoryGridExtensionBase::BroadcastEvent(const FInventoryKey& Key, const EFaerieGridEventType EventType)
 {
 	SpatialStackChangedNative.Broadcast(Key, EventType);

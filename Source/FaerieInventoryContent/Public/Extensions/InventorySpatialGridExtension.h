@@ -25,7 +25,9 @@ protected:
 	//~ UItemContainerExtensionBase
 
 	//~ UInventoryGridExtensionBase
-	virtual void PreStackRemove(const FFaerieGridKeyedStack& Stack) override;
+	virtual void PreStackRemove_Client(const FFaerieGridKeyedStack& Stack) override;
+	virtual void PreStackRemove_Server(const FFaerieGridKeyedStack& Stack, const UFaerieItem* Item) override;
+
 	virtual void PostStackAdd(const FFaerieGridKeyedStack& Stack) override;
 	virtual void PostStackChange(const FFaerieGridKeyedStack& Stack) override;
 	//~ UInventoryGridExtensionBase
@@ -34,6 +36,9 @@ private:
 	bool AddItemToGrid(const FInventoryKey& Key, const UFaerieItem* Item);
 	void RemoveItem(const FInventoryKey& Key, const UFaerieItem* Item);
 	void RemoveItemBatch(const TConstArrayView<FInventoryKey>& Keys, const UFaerieItem* Item);
+
+	// The client has to manually rebuild its cell after a removal, as the item's shape is likely lost.
+	void RebuildOccupiedCells();
 
 	// Gets a shape from a shape token on the item, or returns a single cell at 0,0 for items with no token.
 	FFaerieGridShape GetItemShape_Impl(const UFaerieItem* Item) const;

@@ -35,7 +35,9 @@ protected:
 	virtual void DeinitializeExtension(const UFaerieItemContainerBase* Container) override;
 	//~ UItemContainerExtensionBase
 
-	virtual void PreStackRemove(const FFaerieGridKeyedStack& Stack) {}
+	virtual void PreStackRemove_Client(const FFaerieGridKeyedStack& Stack) {}
+	virtual void PreStackRemove_Server(const FFaerieGridKeyedStack& Stack, const UFaerieItem* Item) {}
+
 	virtual void PostStackAdd(const FFaerieGridKeyedStack& Stack) {}
 	virtual void PostStackChange(const FFaerieGridKeyedStack& Stack) {}
 
@@ -48,6 +50,7 @@ protected:
 	bool IsCellOccupied(const FIntPoint& Point) const;
 	void MarkCell(const FIntPoint& Point);
 	void UnmarkCell(const FIntPoint& Point);
+	void UnmarkAllCells();
 
 	void BroadcastEvent(const FInventoryKey& Key, EFaerieGridEventType EventType);
 

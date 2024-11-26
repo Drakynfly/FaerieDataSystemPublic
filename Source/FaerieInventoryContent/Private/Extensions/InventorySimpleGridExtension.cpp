@@ -69,6 +69,9 @@ void UInventorySimpleGridExtension::PostRemoval(const UFaerieItemContainerBase* 
 {
 	if (const UFaerieItemStorage* ItemStorage = Cast<UFaerieItemStorage>(Container))
 	{
+		// Create a temporary array to store keys that need to be removed
+		TArray<FInventoryKey> KeysToRemove;
+
 		for (auto&& StackKey : Event.StackKeys)
 		{
 			if (FInventoryKey CurrentKey{Event.EntryTouched, StackKey};
@@ -76,7 +79,12 @@ void UInventorySimpleGridExtension::PostRemoval(const UFaerieItemContainerBase* 
 			{
 				PostStackChange({ CurrentKey, GetStackPlacementData(CurrentKey) });
 			}
+			else
+			{
+				KeysToRemove.Add(CurrentKey);
+			}
 		}
+		RemoveItemBatch(KeysToRemove, Event.Item.Get());
 	}
 }
 
@@ -102,14 +110,21 @@ void UInventorySimpleGridExtension::PostEntryChanged(const UFaerieItemContainerB
 	// remove the stored keys
 	for (const FInventoryKey& KeyToRemove : KeysToRemove)
 	{
-		GridContent.Remove(KeyToRemove);
+		RemoveItem(KeyToRemove, Container->View(KeyToRemove.EntryKey).Item.Get());
 		BroadcastEvent(KeyToRemove, EFaerieGridEventType::ItemRemoved);
 	}
 	GridContent.MarkArrayDirty();
 }
 
 
-void UInventorySimpleGridExtension::PreStackRemove(const FFaerieGridKeyedStack& Stack)
+void UInventorySimpleGridExtension::PreStackRemove_Client(const FFaerieGridKeyedStack& Stack)
+{
+	// This is to account for removals through proxies that don't directly interface with the grid
+	UnmarkCell(Stack.Value.Origin);
+	BroadcastEvent(Stack.Key, EFaerieGridEventType::ItemRemoved);
+}
+
+void UInventorySimpleGridExtension::PreStackRemove_Server(const FFaerieGridKeyedStack& Stack, const UFaerieItem* Item)
 {
 	// This is to account for removals through proxies that don't directly interface with the grid
 	UnmarkCell(Stack.Value.Origin);
@@ -161,14 +176,19 @@ bool UInventorySimpleGridExtension::AddItemToGrid(const FInventoryKey& Key, cons
 
 void UInventorySimpleGridExtension::RemoveItem(const FInventoryKey& Key, const UFaerieItem* Item)
 {
-	GridContent.Remove(Key);
+	GridContent.BSOA::Remove(Key,
+		[Item, this](const FFaerieGridKeyedStack& Stack)
+		{
+			PreStackRemove_Server(Stack, Item);
+			GridContent.MarkArrayDirty();
+		});
 }
 
 void UInventorySimpleGridExtension::RemoveItemBatch(const TConstArrayView<FInventoryKey>& Keys, const UFaerieItem* Item)
 {
 	for (auto&& InvKey : Keys)
 	{
-		GridContent.Remove(InvKey);
+		RemoveItem(InvKey, Item);
 	}
 }
 
