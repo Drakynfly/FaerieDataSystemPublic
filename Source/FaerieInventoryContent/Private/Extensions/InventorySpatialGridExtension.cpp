@@ -9,6 +9,9 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(InventorySpatialGridExtension)
 
+DECLARE_STATS_GROUP(TEXT("InventorySpatialGridExtension"), STATGROUP_FaerieSpatialGrid, STATCAT_Advanced);
+DECLARE_CYCLE_STAT(TEXT("Client OccupiedCells rebuild"), STAT_Client_CellRebuild, STATGROUP_FaerieSpatialGrid);
+
 void UInventorySpatialGridExtension::InitializeExtension(const UFaerieItemContainerBase* Container)
 {
 	Super::InitializeExtension(Container);
@@ -117,7 +120,6 @@ void UInventorySpatialGridExtension::PostEntryChanged(const UFaerieItemContainer
 	GridContent.MarkArrayDirty();
 }
 
-
 void UInventorySpatialGridExtension::PreStackRemove_Client(const FFaerieGridKeyedStack& Stack)
 {
 	RebuildOccupiedCells();
@@ -208,6 +210,8 @@ void UInventorySpatialGridExtension::RemoveItemBatch(const TConstArrayView<FInve
 
 void UInventorySpatialGridExtension::RebuildOccupiedCells()
 {
+	SCOPE_CYCLE_COUNTER(STAT_Client_CellRebuild);
+
 	UnmarkAllCells();
 
 	for (const auto& SpatialEntry : GridContent)
