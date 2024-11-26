@@ -6,7 +6,7 @@
 #include "FaerieItemContainerBase.h"
 #include "FaerieItemDataProxy.h"
 #include "FaerieSlotTag.h"
-#include "FlakesStructs.h"
+#include "FlakesData.h"
 #include "FaerieEquipmentSlot.generated.h"
 
 struct FFaerieAssetInfo;

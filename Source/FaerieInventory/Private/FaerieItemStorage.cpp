@@ -6,11 +6,11 @@
 #include "FaerieItem.h"
 #include "InventoryStorageProxy.h"
 #include "ItemContainerExtensionBase.h"
-#include "Net/UnrealNetwork.h"
 #include "Tokens/FaerieItemStorageToken.h"
 #include "Tokens/FaerieStackLimiterToken.h"
 
-#include "FlakesStructs.h"
+#include "Net/UnrealNetwork.h"
+#include "Providers/FlakesBinarySerializer.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FaerieItemStorage)
 

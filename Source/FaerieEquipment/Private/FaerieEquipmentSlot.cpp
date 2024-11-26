@@ -6,13 +6,14 @@
 #include "FaerieAssetInfo.h"
 #include "FaerieItem.h"
 #include "FaerieItemTemplate.h"
-#include "FlakesStructs.h"
 #include "InventoryDataEnums.h"
 #include "ItemContainerEvent.h"
 #include "ItemContainerExtensionBase.h"
+#include "Tokens/FaerieChildSlotToken.h"
+
 #include "Net/UnrealNetwork.h"
 #include "Net/Core/PushModel/PushModel.h"
-#include "Tokens/FaerieChildSlotToken.h"
+#include "Providers/FlakesBinarySerializer.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FaerieEquipmentSlot)
 
