@@ -3,6 +3,8 @@
 #include "FaerieContainerExtensionInterface.h"
 #include "ItemContainerExtensionBase.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(FaerieContainerExtensionInterface)
+
 bool IFaerieContainerExtensionInterface::RemoveExtensionByClass(const TSubclassOf<UItemContainerExtensionBase> ExtensionClass)
 {
 	if (!ensure(

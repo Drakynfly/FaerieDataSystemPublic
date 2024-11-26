@@ -3,6 +3,8 @@
 #include "FaerieGridStructs.h"
 #include "Extensions/InventoryGridExtensionBase.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(FaerieGridStructs)
+
 void FFaerieGridKeyedStack::PreReplicatedRemove(const FFaerieGridContent& InArraySerializer)
 {
 	InArraySerializer.PreStackReplicatedRemove(*this);

@@ -2,6 +2,8 @@
 
 #include "ItemContainerEvent.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(ItemContainerEvent)
+
 namespace Faerie::Inventory::Tags
 {
 	UE_DEFINE_GAMEPLAY_TAG_TYPED_COMMENT(FFaerieInventoryTag, Addition,
