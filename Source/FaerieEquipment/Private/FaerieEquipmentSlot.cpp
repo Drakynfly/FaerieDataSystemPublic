@@ -322,6 +322,7 @@ FFaerieItemStack UFaerieEquipmentSlot::TakeItemFromSlot(int32 Copies)
 
 	Extensions->PreRemoval(this, StoredKey, Copies);
 
+	const FEntryKey CurrentKey = StoredKey;
 	const FFaerieItemStack OutStack{ItemStack.Item, Copies};
 
 	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, ItemStack, this);
@@ -339,7 +340,7 @@ FFaerieItemStack UFaerieEquipmentSlot::TakeItemFromSlot(int32 Copies)
 	else
 	{
 		ItemStack.Copies -= Copies;
-		Extensions->PostEntryChanged(this, StoredKey);
+		Extensions->PostEntryChanged(this, CurrentKey);
 	}
 
 	Faerie::Inventory::FEventLog Event;
@@ -347,7 +348,7 @@ FFaerieItemStack UFaerieEquipmentSlot::TakeItemFromSlot(int32 Copies)
 	Event.Amount = OutStack.Copies;
 	Event.Success = true;
 	Event.Type = Faerie::Equipment::Tags::SlotTake;
-	Event.EntryTouched = StoredKey;
+	Event.EntryTouched = CurrentKey;
 
 	Extensions->PostRemoval(this, Event);
 
