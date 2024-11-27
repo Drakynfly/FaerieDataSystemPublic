@@ -45,6 +45,8 @@ void UFaerieInventoryComponent::ReadyForReplication()
 	const AActor* Owner = GetOwner();
 	check(Owner);
 
+	if (!Owner->HasAuthority()) return;
+
 	if (!Owner->IsUsingRegisteredSubObjectList())
 	{
 		UE_LOG(LogFaerieInventoryComponent, Warning,
@@ -54,6 +56,11 @@ void UFaerieInventoryComponent::ReadyForReplication()
 	{
 		AddReplicatedSubObject(ItemStorage);
 		AddReplicatedSubObject(Extensions);
+		Extensions->ForEachExtension(
+			[this](UItemContainerExtensionBase* Extension)
+			{
+				AddReplicatedSubObject(Extension);
+			});
 
 		if (IsValid(Extensions))
 		{
