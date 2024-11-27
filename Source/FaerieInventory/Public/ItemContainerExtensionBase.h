@@ -89,8 +89,6 @@ class FAERIEINVENTORY_API UItemContainerExtensionGroup final : public UItemConta
 {
 	GENERATED_BODY()
 
-	friend class UFaerieItemContainerBase;
-
 public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
@@ -120,7 +118,7 @@ public:
 	virtual UItemContainerExtensionBase* GetExtension(TSubclassOf<UItemContainerExtensionBase> ExtensionClass) const override;
 	//~ IFaerieContainerExtensionInterface
 
-private:
+
 	void ForEachExtension(const TFunctionRef<void(UItemContainerExtensionBase*)>& Func);
 
 private:

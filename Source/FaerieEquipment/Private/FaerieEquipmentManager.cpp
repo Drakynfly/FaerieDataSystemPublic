@@ -91,6 +91,8 @@ void UFaerieEquipmentManager::AddSubobjectsForReplication()
 	const AActor* Owner = GetOwner();
 	check(Owner);
 
+	if (!Owner->HasAuthority()) return;
+
 	if (!Owner->IsUsingRegisteredSubObjectList())
 	{
 		UE_LOG(LogTemp, Warning,
@@ -99,6 +101,11 @@ void UFaerieEquipmentManager::AddSubobjectsForReplication()
 	else
 	{
 		AddReplicatedSubObject(ExtensionGroup);
+		ExtensionGroup->ForEachExtension(
+			[this](UItemContainerExtensionBase* Extension)
+			{
+				AddReplicatedSubObject(Extension);
+			});
 
 		for (auto&& Slot : Slots)
 		{
