@@ -52,7 +52,7 @@ FDS is primarily designed for:
 - Common shared editor utils. Nothing super important.
 
 ## General Notes
-- Main compiles against UE 5.4. I will update to future versions as they release. I don't typically support older versions, but previous commits will work on 5.3 through 5.1 with minimal effort.
+- Main compiles against UE 5.5. I will update to future versions as they release. I don't typically support older versions, but previous commits will work on 5.4 through 5.1 with minimal effort.
 - This is essentially just the inventory system used by my game, Project Faerie, so there might be *some* lingering inexplicable quirks and oddities in some files. I try to remove these and make this plugin as generic and multi-purpose as a I can, but bare with me as I continue to develop the plugin :/
 - FDS is still extremely WIP. Use at your own risk. Nothing is guaranteed to function. Everything is subject to change. This plugin is essentially in Alpha, as it is still in active development.
   - This means two things:
@@ -71,9 +71,6 @@ FDS is primarily designed for:
 
 ## Engine Plugin Dependencies
 These default plugins are forcibly enabled by FDS:
-
-### StructUtils
-  - Immensely useful utility plugin. There is no reason people should be mad for me requiring this.
 
 ### GameplayTagsEditor
   - Prerequisite for making children of FGameplayTag.
