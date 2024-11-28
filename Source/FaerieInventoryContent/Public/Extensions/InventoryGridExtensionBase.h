@@ -47,7 +47,6 @@ protected:
 	// Convert a grid index to a point
 	FIntPoint Unravel(int32 Index) const;
 
-	bool IsCellOccupied(const FIntPoint& Point) const;
 	void MarkCell(const FIntPoint& Point);
 	void UnmarkCell(const FIntPoint& Point);
 	void UnmarkAllCells();
@@ -58,6 +57,9 @@ protected:
 	virtual void OnRep_GridSize();
 
 public:
+	UFUNCTION(BlueprintCallable, Category = "Faerie|Grid")
+	bool IsCellOccupied(const FIntPoint& Point) const;
+
 	UFUNCTION(BlueprintCallable, Category = "Faerie|Grid")
 	FFaerieGridPlacement GetStackPlacementData(const FInventoryKey& Key) const;
 

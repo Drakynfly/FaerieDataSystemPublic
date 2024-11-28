@@ -55,6 +55,7 @@ public:
 
 	FFaerieGridPlacement FindFirstEmptyLocation(const FFaerieGridShapeConstView& Shape) const;
 
+	UFUNCTION(BlueprintCallable, Category = "Faerie|Grid")
 	FFaerieGridShape GetItemShape(FEntryKey Key) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Faerie|Grid")

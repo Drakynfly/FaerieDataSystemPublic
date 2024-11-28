@@ -51,10 +51,10 @@ public:
 
 	// Add a new extension of the given class, and return the result. If an extension of this class already exists, it
 	// will be returned instead.
-	UFUNCTION(BlueprintCallable, Category = "Faerie|Extensions", BlueprintAuthorityOnly, meta = (DeterminesOutputType = "ExtensionClass"))
+	UFUNCTION(BlueprintCallable, Category = "Faerie|Extensions", BlueprintAuthorityOnly, meta = (DeterminesOutputType = "ExtensionClass"), DisplayName = "Add Extension (by class)")
 	virtual UItemContainerExtensionBase* AddExtensionByClass(TSubclassOf<UItemContainerExtensionBase> ExtensionClass);
 
-	UFUNCTION(BlueprintCallable, Category = "Faerie|Extensions", BlueprintAuthorityOnly, DisplayName = "Add Extension (by class)")
+	UFUNCTION(BlueprintCallable, Category = "Faerie|Extensions", BlueprintAuthorityOnly)
 	virtual bool RemoveExtension(UItemContainerExtensionBase* Extension);
 
 	UFUNCTION(BlueprintCallable, Category = "Faerie|Extensions", BlueprintAuthorityOnly, DisplayName = "Remove Extension (by class)")
