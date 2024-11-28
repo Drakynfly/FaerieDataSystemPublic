@@ -225,9 +225,6 @@ bool UInventorySimpleGridExtension::MoveItem(const FInventoryKey& Key, const FIn
 	if (const FInventoryKey OverlappingKey = FindOverlappingItem(Key);
 		OverlappingKey.IsValid())
 	{
-		// Gross method of getting mutable access to the other point... considering implementing handles like FInventoryContent does.
-		const FFaerieGridContent::FScopedStackHandle OverlappingHandle = GridContent.GetHandle(OverlappingKey);
-
 		// If the Entry keys are identical, it gives us some other things to test before Swapping.
 		if (Key.EntryKey == OverlappingKey.EntryKey)
 		{
@@ -245,6 +242,7 @@ bool UInventorySimpleGridExtension::MoveItem(const FInventoryKey& Key, const FIn
 			}
 		}
 
+		const FFaerieGridContent::FScopedStackHandle OverlappingHandle = GridContent.GetHandle(OverlappingKey);
 		SwapItems(Handle.Get(), OverlappingHandle.Get());
 		return true;
 	}

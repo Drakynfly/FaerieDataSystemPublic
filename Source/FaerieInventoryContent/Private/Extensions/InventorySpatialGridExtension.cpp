@@ -423,7 +423,7 @@ bool UInventorySpatialGridExtension::MoveItem(const FInventoryKey& Key, const FI
 				return true;
 			}
 		}
-		
+
 		const FFaerieGridContent::FScopedStackHandle StackHandle = GridContent.GetHandle(OverlappingKey);
 
 		return TrySwapItems(
@@ -555,30 +555,33 @@ void UInventorySpatialGridExtension::UpdateItemPosition(const FInventoryKey Key,
 
 bool UInventorySpatialGridExtension::RotateItem(const FInventoryKey& Key)
 {
-	FFaerieGridContent::FScopedStackHandle Handle = GridContent.GetHandle(Key);
 	const FFaerieGridShape ItemShape = GetItemShape(Key.EntryKey);
 
 	// No Point in Trying to Rotate
 	if (ItemShape.IsSymmetrical()) return false;
 
-	const ESpatialItemRotation NextRotation = GetNextRotation(Handle.Get().Rotation);
+	FFaerieGridPlacement TempPlacementData = GetStackPlacementData(Key);
 
-	FFaerieGridPlacement TempPlacementData = Handle.Get();
+	const ESpatialItemRotation NextRotation = GetNextRotation(TempPlacementData.Rotation);
+
 	TempPlacementData.Rotation = NextRotation;
 	if (!FitsInGrid(ItemShape, TempPlacementData, MakeArrayView(&Key, 1)))
 	{
 		return false;
 	}
 
+	const FFaerieGridContent::FScopedStackHandle Handle = GridContent.GetHandle(Key);
+
 	// Store old points before transformations so we can clear them from the bit grid
 	const FFaerieGridShape OldShape = ApplyPlacement(ItemShape, Handle.Get());
-	Handle.Get().Rotation = NextRotation;
 
 	// Clear old occupied cells
 	for (const auto& OldPoint : OldShape.Points)
 	{
 		UnmarkCell(OldPoint);
 	}
+
+	Handle->Rotation = NextRotation;
 
 	// Set new occupied cells taking into account rotation
 	const FFaerieGridShape NewShape = ApplyPlacement(ItemShape, Handle.Get());
