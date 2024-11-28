@@ -1072,10 +1072,25 @@ bool UFaerieItemStorage::MergeStacks(const FEntryKey Entry, const FStackKey Stac
 		return false;
 	}
 
-	// @todo should this make a EventLog? a new type tag would be needed. only reason is to give the logging extension more data to track
+	Faerie::Inventory::FEventLog Event;
+	Event.Amount = KeyedStackB->Stack; // Initially store the amount in stack B here.
+	Event.Item = EntryView.Get().ItemObject;
+	Event.EntryTouched = Entry;
+	Event.StackKeys.Add(StackA);
+	Event.StackKeys.Add(StackB);
+	Event.Type = Faerie::Inventory::Tags::Merge;
+	Event.Success = true;
 
-	const FInventoryContent::FScopedItemHandle Handle = EntryMap.GetHandle(Entry);
-	Handle->MergeStacks(StackA, StackB);
+	// Open Mutable Scope
+	{
+		const FInventoryContent::FScopedItemHandle Handle = EntryMap.GetHandle(Entry);
+		Handle->MergeStacks(StackA, StackB);
+	}
+	// Close Mutable scope
+
+	Event.Amount = KeyedStackB->Stack - Event.Amount; // This creates a diff to let us know how many were moved.
+
+	Extensions->PostEntryChanged(this, Event);
 
 	return true;
 }

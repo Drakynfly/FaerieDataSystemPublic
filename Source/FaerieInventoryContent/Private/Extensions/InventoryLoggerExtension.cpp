@@ -27,6 +27,11 @@ void UInventoryLoggerExtension::PostRemoval(const UFaerieItemContainerBase* Cont
 	HandleNewEvent({Container, Event});
 }
 
+void UInventoryLoggerExtension::PostEntryChanged(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event)
+{
+	HandleNewEvent({Container, Event});
+}
+
 void UInventoryLoggerExtension::HandleNewEvent(const FLoggedInventoryEvent& Event)
 {
 	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, EventLog, this);
