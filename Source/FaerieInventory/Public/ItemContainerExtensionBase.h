@@ -69,7 +69,9 @@ protected:
 	/* Allows us to use the key from the last removal */
 	virtual void PostRemoval(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) {}
 
-	virtual void PostEntryChanged(const UFaerieItemContainerBase* Container, FEntryKey Key) {}
+	virtual void PostEntryChanged(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) {}
+
+	virtual void PostEntryChanged_DEPRECATED(const UFaerieItemContainerBase* Container, FEntryKey Key) {}
 
 public:
 	void SetIdentifier(const FGuid* GuidToUse = nullptr);
@@ -111,7 +113,9 @@ public:
 	virtual EEventExtensionResponse AllowsRemoval(const UFaerieItemContainerBase* Container, FEntryKey Key, FFaerieInventoryTag Reason) const override;
 	virtual void PreRemoval(const UFaerieItemContainerBase* Container, FEntryKey Key, int32 Removal) override;
 	virtual void PostRemoval(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) override;
-	virtual void PostEntryChanged(const UFaerieItemContainerBase* Container, FEntryKey Key) override;
+
+	virtual void PostEntryChanged(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) override;
+	virtual void PostEntryChanged_DEPRECATED(const UFaerieItemContainerBase* Container, FEntryKey Key) override;
 	//~ UItemContainerExtensionBase
 
 	//~ IFaerieContainerExtensionInterface

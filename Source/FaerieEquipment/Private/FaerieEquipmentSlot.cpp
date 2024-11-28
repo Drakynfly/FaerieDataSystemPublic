@@ -270,6 +270,12 @@ void UFaerieEquipmentSlot::SetItemInSlot(const FFaerieItemStack Stack)
 
 	Extensions->PreAddition(this, Stack);
 
+	Faerie::Inventory::FEventLog Event;
+	Event.Item = Stack.Item;
+	Event.Amount = Stack.Copies;
+	Event.Success = true;
+	Event.Type = Faerie::Equipment::Tags::SlotSet;
+
 	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, ItemStack, this);
 	// Increment key when stored item changes. This is only going to happen if ItemStack.Item is currently nullptr.
 	if (Stack.Item != ItemStack.Item)
@@ -278,22 +284,18 @@ void UFaerieEquipmentSlot::SetItemInSlot(const FFaerieItemStack Stack)
 		StoredKey = KeyGen.NextKey();
 
 		ItemStack = Stack;
-
 		TakeOwnership(ItemStack.Item);
+
+		Event.EntryTouched = StoredKey;
+		Extensions->PostAddition(this, Event);
 	}
 	else
 	{
 		ItemStack.Copies += Stack.Copies;
-		Extensions->PostEntryChanged(this, StoredKey);
-	}
 
-	Faerie::Inventory::FEventLog Event;
-	Event.Item = ItemStack.Item;
-	Event.Amount = 1;
-	Event.Success = true;
-	Event.Type = Faerie::Equipment::Tags::SlotSet;
-	Event.EntryTouched = StoredKey;
-	Extensions->PostAddition(this, Event);
+		Event.EntryTouched = StoredKey;
+		Extensions->PostEntryChanged(this, Event);
+	}
 
 	BroadcastChange();
 }
@@ -322,7 +324,13 @@ FFaerieItemStack UFaerieEquipmentSlot::TakeItemFromSlot(int32 Copies)
 
 	Extensions->PreRemoval(this, StoredKey, Copies);
 
-	const FEntryKey CurrentKey = StoredKey;
+	Faerie::Inventory::FEventLog Event;
+	Event.Item = ItemStack.Item;
+	Event.Amount = Copies;
+	Event.Success = true;
+	Event.Type = Faerie::Equipment::Tags::SlotTake;
+	Event.EntryTouched = StoredKey;
+
 	const FFaerieItemStack OutStack{ItemStack.Item, Copies};
 
 	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, ItemStack, this);
@@ -336,21 +344,15 @@ FFaerieItemStack UFaerieEquipmentSlot::TakeItemFromSlot(int32 Copies)
 
 		// Take ownership of new items.
 		ReleaseOwnership(OutStack.Item);
+
+		Extensions->PostRemoval(this, Event);
 	}
 	else
 	{
 		ItemStack.Copies -= Copies;
-		Extensions->PostEntryChanged(this, CurrentKey);
+		Extensions->PostEntryChanged(this, Event);
 	}
 
-	Faerie::Inventory::FEventLog Event;
-	Event.Item = OutStack.Item;
-	Event.Amount = OutStack.Copies;
-	Event.Success = true;
-	Event.Type = Faerie::Equipment::Tags::SlotTake;
-	Event.EntryTouched = CurrentKey;
-
-	Extensions->PostRemoval(this, Event);
 
 	BroadcastChange();
 

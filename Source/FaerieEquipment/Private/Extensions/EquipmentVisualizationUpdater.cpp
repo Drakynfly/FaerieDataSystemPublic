@@ -67,7 +67,7 @@ void UEquipmentVisualizationUpdater::PreRemoval(const UFaerieItemContainerBase* 
 	}
 }
 
-void UEquipmentVisualizationUpdater::PostEntryChanged(const UFaerieItemContainerBase* Container, const FEntryKey Key)
+void UEquipmentVisualizationUpdater::PostEntryChanged_DEPRECATED(const UFaerieItemContainerBase* Container, const FEntryKey Key)
 {
 	// The item in a slot has changed. Recreate the visual.
 	// @todo maybe don't always do this?!?! determine if we need to. but how?

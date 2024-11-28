@@ -158,7 +158,7 @@ void UItemContainerExtensionGroup::PostAddition(const UFaerieItemContainerBase* 
 												const Faerie::Inventory::FEventLog& Event)
 {
 	ForEachExtension(
-		[Container, Event](UItemContainerExtensionBase* Extension)
+		[Container, &Event](UItemContainerExtensionBase* Extension)
 		{
 			Extension->PostAddition(Container, Event);
 		});
@@ -205,18 +205,28 @@ void UItemContainerExtensionGroup::PostRemoval(const UFaerieItemContainerBase* C
                                            const Faerie::Inventory::FEventLog& Event)
 {
 	ForEachExtension(
-		[Container, Event](UItemContainerExtensionBase* Extension)
+		[Container, &Event](UItemContainerExtensionBase* Extension)
 		{
 			Extension->PostRemoval(Container, Event);
 		});
 }
 
-void UItemContainerExtensionGroup::PostEntryChanged(const UFaerieItemContainerBase* Container, const FEntryKey Key)
+void UItemContainerExtensionGroup::PostEntryChanged(const UFaerieItemContainerBase* Container,
+	const Faerie::Inventory::FEventLog& Event)
+{
+	ForEachExtension(
+		[Container, &Event](UItemContainerExtensionBase* Extension)
+		{
+			Extension->PostEntryChanged(Container, Event);
+		});
+}
+
+void UItemContainerExtensionGroup::PostEntryChanged_DEPRECATED(const UFaerieItemContainerBase* Container, const FEntryKey Key)
 {
 	ForEachExtension(
 		[Container, Key](UItemContainerExtensionBase* Extension)
 		{
-			Extension->PostEntryChanged(Container, Key);
+			Extension->PostEntryChanged_DEPRECATED(Container, Key);
 		});
 }
 

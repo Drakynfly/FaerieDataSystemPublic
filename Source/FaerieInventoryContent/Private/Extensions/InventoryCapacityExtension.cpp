@@ -103,9 +103,9 @@ void UInventoryCapacityExtension::PostRemoval(const UFaerieItemContainerBase* Co
 	HandleStateChanged();
 }
 
-void UInventoryCapacityExtension::PostEntryChanged(const UFaerieItemContainerBase* Container, const FEntryKey Key)
+void UInventoryCapacityExtension::PostEntryChanged(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event)
 {
-	UpdateCacheForEntry(Container, Key);
+	UpdateCacheForEntry(Container, Event.EntryTouched);
 	HandleStateChanged();
 }
 

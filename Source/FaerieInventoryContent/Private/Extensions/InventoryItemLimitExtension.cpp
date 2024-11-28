@@ -57,9 +57,9 @@ void UInventoryItemLimitExtension::PostRemoval(const UFaerieItemContainerBase* C
 	UpdateCacheForEntry(Container, Event.EntryTouched);
 }
 
-void UInventoryItemLimitExtension::PostEntryChanged(const UFaerieItemContainerBase* Container, const FEntryKey Key)
+void UInventoryItemLimitExtension::PostEntryChanged(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event)
 {
-	UpdateCacheForEntry(Container, Key);
+	UpdateCacheForEntry(Container, Event.EntryTouched);
 }
 
 int32 UInventoryItemLimitExtension::GetTotalItemCount() const

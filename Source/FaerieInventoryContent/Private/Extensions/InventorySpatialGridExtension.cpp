@@ -92,11 +92,12 @@ void UInventorySpatialGridExtension::PostRemoval(const UFaerieItemContainerBase*
 	}
 }
 
-void UInventorySpatialGridExtension::PostEntryChanged(const UFaerieItemContainerBase* Container, FEntryKey Key)
+void UInventorySpatialGridExtension::PostEntryChanged(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event)
 {
 	// Create a temporary array to store keys that need to be removed
 	TArray<FInventoryKey> KeysToRemove;
 
+	// @todo update logic to use Event
 	// get keys to remove
 	for (const auto& SpatialEntry : GridContent)
 	{

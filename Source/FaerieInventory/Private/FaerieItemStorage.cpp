@@ -219,7 +219,9 @@ void UFaerieItemStorage::PostContentChanged(const FKeyedInventoryEntry& Entry)
 	// Call updates on any entry and stack proxies
 	if (IsValidKey(Entry.Key))
 	{
-		Extensions->PostEntryChanged(this, Entry.Key);
+		// @todo this is the usage of the Deprecated API that needs to be replaced, before we can remove it.
+		// It's the only time this API is called on the client (where we don't have event logs). Needs another solution!
+		Extensions->PostEntryChanged_DEPRECATED(this, Entry.Key);
 
 		OnKeyUpdatedCallback.Broadcast(this, Entry.Key);
 		OnKeyUpdated.Broadcast(this, Entry.Key);

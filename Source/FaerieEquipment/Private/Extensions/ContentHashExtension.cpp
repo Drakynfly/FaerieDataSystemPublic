@@ -39,7 +39,7 @@ void UContentHashExtension::PostRemoval(const UFaerieItemContainerBase* Containe
 	RecalcContainerHash(Container);
 }
 
-void UContentHashExtension::PostEntryChanged(const UFaerieItemContainerBase* Container, FEntryKey)
+void UContentHashExtension::PostEntryChanged(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog&)
 {
 	RecalcContainerHash(Container);
 }
