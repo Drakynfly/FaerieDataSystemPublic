@@ -76,7 +76,7 @@ void FTableDropCustomization::CustomizeChildren(TSharedRef<IPropertyHandle> Prop
     if (auto&& SlotInterface = Cast<IFaerieItemSlotInterface>(ObjectValue))
     {
     	const FFaerieCraftingSlotsView SlotsView = Faerie::Crafting::GetCraftingSlots(SlotInterface);
-    	const FFaerieItemCraftingSlots& SlotsPtr = SlotsView.Get<const FFaerieItemCraftingSlots>();
+    	const FFaerieItemCraftingSlots& SlotsPtr = SlotsView.Get();
 
     	if (SlotsPtr.RequiredSlots.IsEmpty() &&
     		SlotsPtr.OptionalSlots.IsEmpty())

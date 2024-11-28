@@ -205,7 +205,7 @@ FConstStructView UInventoryReplicatedDataExtensionBase::GetDataForEntry(const UF
 	if (const TConstStructView<FRepDataFastArray> ContainerData = FindFastArrayForContainer(Container);
 		ContainerData.IsValid())
 	{
-		const FRepDataFastArray& Ref = ContainerData.Get<const FRepDataFastArray>();
+		const FRepDataFastArray& Ref = ContainerData.Get();
 
 		if (Ref.Contains(Key))
 		{

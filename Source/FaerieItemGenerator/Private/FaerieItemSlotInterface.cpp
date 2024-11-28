@@ -19,7 +19,7 @@ namespace Faerie::Crafting
 	{
 		if (Interface == nullptr) return false;
 		const FFaerieCraftingSlotsView SlotsView = GetCraftingSlots(Interface);
-		return SlotsView.Get<const FFaerieItemCraftingSlots>().OptionalSlots.Contains(Name);
+		return SlotsView.Get().OptionalSlots.Contains(Name);
 	}
 
 	bool FindSlot(const IFaerieItemSlotInterface* Interface, const FFaerieItemSlotHandle& Name, UFaerieItemTemplate*& OutSlot)
@@ -27,7 +27,7 @@ namespace Faerie::Crafting
 		if (Interface == nullptr) return false;
 
 		const FFaerieCraftingSlotsView SlotsView = GetCraftingSlots(Interface);
-		const FFaerieItemCraftingSlots& SlotsPtr = SlotsView.Get<const FFaerieItemCraftingSlots>();
+		const FFaerieItemCraftingSlots& SlotsPtr = SlotsView.Get();
 
 		if (SlotsPtr.RequiredSlots.Contains(Name))
 		{

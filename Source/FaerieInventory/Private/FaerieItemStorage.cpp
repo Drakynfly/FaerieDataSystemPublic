@@ -131,7 +131,7 @@ int32 UFaerieItemStorage::GetStack(const FEntryKey Key) const
 	if (!IsValidKey(Key)) return 0;
 
 	// Return the total items stored by this key, across all stacks, since this API doesn't know about stacks.
-	return GetEntryViewImpl(Key).Get<const FInventoryEntry>().StackSum();
+	return GetEntryViewImpl(Key).Get().StackSum();
 }
 
 void UFaerieItemStorage::OnItemMutated(const UFaerieItem* Item, const UFaerieItemToken* Token)
@@ -565,8 +565,8 @@ TArray<FInventoryKey> UFaerieItemStorage::GetInvKeysForEntry(const FEntryKey Key
 	if (!IsValidKey(Key)) return Out;
 
 	const FInventoryEntryView Entry = GetEntryViewImpl(Key);
-	Out.Reserve(Entry.Get<const FInventoryEntry>().Stacks.Num());
-	for (const FKeyedStack& Stack : Entry.Get<const FInventoryEntry>().Stacks)
+	Out.Reserve(Entry.Get().Stacks.Num());
+	for (const FKeyedStack& Stack : Entry.Get().Stacks)
 	{
 		Out.Add({Key, Stack.Key});
 	}
@@ -595,7 +595,7 @@ bool UFaerieItemStorage::ContainsKey(const FEntryKey Key) const
 bool UFaerieItemStorage::IsValidKey(const FInventoryKey Key) const
 {
 	if (!IsValidKey(Key.EntryKey)) return false;
-	return GetEntryViewImpl(Key.EntryKey).Get<const FInventoryEntry>().Stacks.FindByKey(Key.StackKey) != nullptr;
+	return GetEntryViewImpl(Key.EntryKey).Get().Stacks.FindByKey(Key.StackKey) != nullptr;
 }
 
 bool UFaerieItemStorage::ContainsItem(const UFaerieItem* Item, const EFaerieItemEqualsCheck Method) const
@@ -997,7 +997,7 @@ FEntryKey UFaerieItemStorage::MoveStack(UFaerieItemStorage* ToStorage, const FIn
 		return FEntryKey::InvalidKey;
 	}
 
-	const FInventoryEntry& Entry = EntryView.Get<const FInventoryEntry>();
+	const FInventoryEntry& Entry = EntryView.Get();
 
 	FFaerieItemStack ItemStack;
 	ItemStack.Item = Entry.ItemObject;
@@ -1035,7 +1035,7 @@ FEntryKey UFaerieItemStorage::MoveEntry(UFaerieItemStorage* ToStorage, const FEn
 		return FEntryKey::InvalidKey;
 	}
 
-	if (!ToStorage->CanAddStack(EntryView.Get<const FInventoryEntry>().ToItemStackView(), AddStackBehavior))
+	if (!ToStorage->CanAddStack(EntryView.Get().ToItemStackView(), AddStackBehavior))
 	{
 		return FEntryKey::InvalidKey;
 	}
@@ -1062,12 +1062,12 @@ bool UFaerieItemStorage::MergeStacks(const FEntryKey Entry, const FStackKey Stac
 	}
 
 	auto&& EntryView = GetEntryViewImpl(Entry);
-	const FKeyedStack* KeyedStackB = EntryView.Get<const FInventoryEntry>().Stacks.FindByKey(StackB);
+	const FKeyedStack* KeyedStackB = EntryView.Get().Stacks.FindByKey(StackB);
 
 	// Ensure both stacks exist and B isn't already full
-	if (!EntryView.Get<const FInventoryEntry>().Stacks.FindByKey(StackA) ||
+	if (!EntryView.Get().Stacks.FindByKey(StackA) ||
 		!KeyedStackB ||
-		KeyedStackB->Stack == EntryView.Get<const FInventoryEntry>().Limit)
+		KeyedStackB->Stack == EntryView.Get().Limit)
 	{
 		return false;
 	}

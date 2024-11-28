@@ -12,7 +12,7 @@ TArray<FKeyedStack> UInventoryEntryProxyBase::GetAllStacks() const
 	if (const FInventoryEntryView& Entry = GetInventoryEntry();
 		ensure(Entry.IsValid()))
 	{
-		return Entry.Get<const FInventoryEntry>().Stacks;
+		return Entry.Get().Stacks;
 	}
 	return {};
 }
@@ -22,7 +22,7 @@ int32 UInventoryEntryProxyBase::GetStackLimit() const
 	if (const FInventoryEntryView& Entry = GetInventoryEntry();
 		ensure(Entry.IsValid()))
 	{
-		return Entry.Get<const FInventoryEntry>().Limit;
+		return Entry.Get().Limit;
 	}
 	return 0;
 }
@@ -40,7 +40,7 @@ const UFaerieItem* UInventoryEntryStorageProxy::GetItemObject() const
 		return nullptr;
 	}
 
-	return EntryView.Get<const FInventoryEntry>().ItemObject;
+	return EntryView.Get().ItemObject;
 }
 
 int32 UInventoryEntryStorageProxy::GetCopies() const
@@ -56,7 +56,7 @@ int32 UInventoryEntryStorageProxy::GetCopies() const
 		return 0;
 	}
 
-	return EntryView.Get<const FInventoryEntry>().StackSum();
+	return EntryView.Get().StackSum();
 }
 
 bool UInventoryEntryStorageProxy::CanMutate() const
@@ -141,7 +141,7 @@ int32 UInventoryStackProxy::GetCopies() const
 		return 0;
 	}
 
-	return EntryView.Get<const FInventoryEntry>().GetStack(Key.StackKey);
+	return EntryView.Get().GetStack(Key.StackKey);
 }
 
 FEntryKey UInventoryStackProxy::GetKey() const

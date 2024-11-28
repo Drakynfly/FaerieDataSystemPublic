@@ -213,7 +213,7 @@ void UCraftingActionWithSlots::ConsumeSlotCosts(const IFaerieItemSlotInterface* 
 		};
 
 	const FFaerieCraftingSlotsView SlotsView = Faerie::Crafting::GetCraftingSlots(Interface);
-	const FFaerieItemCraftingSlots& SlotsPtr = SlotsView.Get<const FFaerieItemCraftingSlots>();
+	const FFaerieItemCraftingSlots& SlotsPtr = SlotsView.Get();
 
 	Algo::ForEachIf(SlotsPtr.RequiredSlots, CanEat, EatUse);
 	Algo::ForEachIf(SlotsPtr.OptionalSlots, CanEat, EatUse);

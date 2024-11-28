@@ -137,7 +137,7 @@ FWeightAndVolume UInventoryCapacityExtension::GetEntryWeightAndVolume(const UFae
 			return Out;
 		}
 
-		for (const FInventoryEntry& Entry = EntryView.Get<const FInventoryEntry>();
+		for (const FInventoryEntry& Entry = EntryView.Get();
 			auto&& KeyedStack : Entry.Stacks)
 		{
 			Out.Volume += Token->GetVolumeOfStack(KeyedStack.Stack);
