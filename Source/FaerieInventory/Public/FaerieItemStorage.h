@@ -72,6 +72,10 @@ public:
 	virtual void PostLoad() override;
 	//~ UObject
 
+	//~ UNetSupportedObject
+	virtual void AddSubobjectsForReplication(AActor* Actor) override;
+	//~ UNetSupportedObject
+
 	//~ UFaerieItemContainerBase
 	virtual FFaerieContainerSaveData MakeSaveData() const override;
 	virtual void LoadSaveData(const FFaerieContainerSaveData& SaveData) override;

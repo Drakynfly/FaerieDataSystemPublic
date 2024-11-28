@@ -79,6 +79,15 @@ EDataValidationResult UItemContainerExtensionGroup::IsDataValid(FDataValidationC
 }
 #endif
 
+void UItemContainerExtensionGroup::AddSubobjectsForReplication(AActor* Actor)
+{
+	ForEachExtension(
+		[Actor](UItemContainerExtensionBase* Extension)
+		{
+			Actor->AddReplicatedSubObject(Extension);
+		});
+}
+
 void UItemContainerExtensionGroup::InitializeExtension(const UFaerieItemContainerBase* Container)
 {
 	if (!ensure(IsValid(Container))) return;

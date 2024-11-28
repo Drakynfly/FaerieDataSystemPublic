@@ -29,6 +29,7 @@ void ABenchVisualBase::BeginPlay()
 	if (IsValid(Behavior))
 	{
 		AddReplicatedSubObject(Behavior);
+		Behavior->AddSubobjectsForReplication(this);
 		Behavior->BeginPlay();
 	}
 }

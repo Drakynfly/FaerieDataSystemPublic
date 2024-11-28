@@ -42,7 +42,7 @@ void UFaerieInventoryComponent::ReadyForReplication()
 {
 	Super::ReadyForReplication();
 
-	const AActor* Owner = GetOwner();
+	AActor* Owner = GetOwner();
 	check(Owner);
 
 	if (!Owner->HasAuthority()) return;
@@ -55,12 +55,9 @@ void UFaerieInventoryComponent::ReadyForReplication()
 	else
 	{
 		AddReplicatedSubObject(ItemStorage);
+		ItemStorage->AddSubobjectsForReplication(Owner);
 		AddReplicatedSubObject(Extensions);
-		Extensions->ForEachExtension(
-			[this](UItemContainerExtensionBase* Extension)
-			{
-				AddReplicatedSubObject(Extension);
-			});
+		Extensions->AddSubobjectsForReplication(Owner);
 
 		if (IsValid(Extensions))
 		{
@@ -79,6 +76,7 @@ bool UFaerieInventoryComponent::AddExtension(UItemContainerExtensionBase* Extens
 	if (ItemStorage->AddExtension(Extension))
 	{
 		AddReplicatedSubObject(Extension);
+		Extension->AddSubobjectsForReplication(GetOwner());
 		return true;
 	}
 	return false;

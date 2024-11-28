@@ -55,6 +55,12 @@ void UFaerieItemStorage::PostLoad()
 	// See Footnote1
 }
 
+void UFaerieItemStorage::AddSubobjectsForReplication(AActor* Actor)
+{
+	Actor->AddReplicatedSubObject(Extensions);
+	Extensions->AddSubobjectsForReplication(Actor);
+}
+
 FFaerieContainerSaveData UFaerieItemStorage::MakeSaveData() const
 {
 	ensureMsgf(GetDefault<UFaerieInventorySettings>()->ContainerMutableBehavior == EFaerieContainerOwnershipBehavior::Rename,

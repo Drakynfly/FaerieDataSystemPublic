@@ -18,6 +18,9 @@ public:
 	// Enable full networking
 	virtual bool IsSupportedForNetworking() const override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	// Implement this to add internal subobjects for replication
+	virtual void AddSubobjectsForReplication(AActor* Actor) {}
 };
 
 /**

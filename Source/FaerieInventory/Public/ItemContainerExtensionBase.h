@@ -98,6 +98,10 @@ public:
 	virtual EDataValidationResult IsDataValid(FDataValidationContext& Context) const override;
 #endif
 
+	//~ UNetSupportedObject
+	virtual void AddSubobjectsForReplication(AActor* Actor) override;
+	//~ UNetSupportedObject
+
 	//~ UItemContainerExtensionBase
 	virtual void InitializeExtension(const UFaerieItemContainerBase* Container) override;
 	virtual void DeinitializeExtension(const UFaerieItemContainerBase* Container) override;
