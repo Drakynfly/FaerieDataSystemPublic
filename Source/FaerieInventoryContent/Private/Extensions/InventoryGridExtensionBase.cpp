@@ -81,7 +81,7 @@ void UInventoryGridExtensionBase::UnmarkCell(const FIntPoint& Point)
 
 void UInventoryGridExtensionBase::UnmarkAllCells()
 {
-	OccupiedCells.Reset();
+	OccupiedCells.Init(false, OccupiedCells.Num());
 }
 
 void UInventoryGridExtensionBase::BroadcastEvent(const FInventoryKey& Key, const EFaerieGridEventType EventType)

@@ -85,12 +85,34 @@ private:
 	TWeakObjectPtr<UInventoryGridExtensionBase> ChangeListener;
 
 public:
-	bool EditItem(FInventoryKey Key, const TFunctionRef<bool(FFaerieGridPlacement&)>& Func);
-
 	template <typename Predicate>
 	const FFaerieGridKeyedStack* FindByPredicate(Predicate Pred) const
 	{
 		return Items.FindByPredicate(Pred);
+	}
+
+	struct FScopedStackHandle
+	{
+		FScopedStackHandle(const FInventoryKey Key, FFaerieGridContent& Source)
+		  : Handle(Source.Items[Source.IndexOf(Key)]),
+			Source(Source) {}
+
+		~FScopedStackHandle();
+
+	protected:
+		FFaerieGridKeyedStack& Handle;
+
+	private:
+		FFaerieGridContent& Source;
+
+	public:
+		FFaerieGridPlacement* operator->() const { return &Handle.Value; }
+		FFaerieGridPlacement& Get() const { return Handle.Value; }
+	};
+
+	FScopedStackHandle GetHandle(const FInventoryKey Key)
+	{
+		return FScopedStackHandle(Key, *this);
 	}
 
 	void PreStackReplicatedRemove(const FFaerieGridKeyedStack& Stack) const;

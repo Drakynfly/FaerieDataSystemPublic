@@ -138,6 +138,44 @@ namespace Faerie::Hacks
 			TArray<int32, TInlineAllocator<8>>& AddedIndices,
 			GuidMapType& GuidMap)
 		{
+			if (Items.Num() > 0)
+			{
+				TMap<int32, int32> ReplicationIDToOldIndexMap;
+				ReplicationIDToOldIndexMap.Reserve(Items.Num());
+    
+				for (int32 i = 0; i < Items.Num(); ++i)
+				{
+					ReplicationIDToOldIndexMap.Add(Items[i].ReplicationID, i);
+				}
+				
+				Algo::SortBy(Items, &Type::Key);
+				
+				auto UpdateIndices = [&](TArray<int32, TInlineAllocator<8>>& Indices)
+				{
+					for (int32& Idx : Indices)
+					{
+						const int32 ReplicationID = Items[Idx].ReplicationID;
+						Idx = ReplicationIDToOldIndexMap[ReplicationID];
+					}
+				};
+				
+				UpdateIndices(ChangedIndices);
+				UpdateIndices(AddedIndices);
+				UpdateIndices(Header.DeletedIndices);
+				
+				ArraySerializer.ItemMap.Reset();
+				ArraySerializer.ItemMap.Reserve(Items.Num());
+
+				for (int32 i = 0; i < Items.Num(); ++i)
+				{
+					const Type& Item = Items[i];
+					if (Item.ReplicationID != INDEX_NONE)
+					{
+						ArraySerializer.ItemMap.Add(Item.ReplicationID, i);
+					}
+				}
+			}
+			
 			//CSV_SCOPED_TIMING_STAT(Networking, FastArray_Apply);
 
 			// ---------------------------------------------------------
@@ -235,28 +273,6 @@ namespace Faerie::Hacks
 				// Clear the map now that the indices are all shifted around. This kind of sucks, we could use slightly better data structures here I think.
 				// This will force the ItemMap to be rebuilt for the current Items array
 				ArraySerializer.ItemMap.Empty();
-			}
-			if (Items.Num() > 0)
-			{
-				// Sort using the key
-				Algo::SortBy(Items, &Type::Key);
-				UE_LOG(LogNetFastTArray, Verbose, TEXT("FastArrayDeltaSerialize: Recreating Items map. Items.Num: %d Map.Num: %d"), Items.Num(), ArraySerializer.ItemMap.Num());
-
-				// Reserve space in the map based on the number of items
-				ArraySerializer.ItemMap.Reset();
-				ArraySerializer.ItemMap.Reserve(Items.Num());
-
-				//copied logic from FFastArrayReplicationFragmentHelper
-				const Type* SrcItems = Items.GetData();
-				for (int32 It = 0, EndIt = Items.Num(); It != EndIt; ++It)
-				{
-					const Type& Item = SrcItems[It];
-					if (Item.ReplicationID == INDEX_NONE)
-					{
-						continue;
-					}
-					ArraySerializer.ItemMap.Add(Item.ReplicationID, It);
-				}
 			}
 		}
 

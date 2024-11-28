@@ -395,54 +395,43 @@ FFaerieGridShape UInventorySpatialGridExtension::GetItemShape(const FEntryKey Ke
 
 bool UInventorySpatialGridExtension::MoveItem(const FInventoryKey& Key, const FIntPoint& TargetPoint)
 {
-	return GridContent.EditItem(Key,
-		[&](FFaerieGridPlacement& Placement)
+	const FFaerieGridContent::FScopedStackHandle TargetStackHandle = GridContent.GetHandle(Key);
+	const FFaerieGridShape ItemShape = GetItemShape(Key.EntryKey);
+
+	// Create placement at target point
+	FFaerieGridPlacement TargetPlacement = GetStackPlacementData(Key);
+	TargetPlacement.Origin = TargetPoint;
+	// Get the rotated shape based on current stack rotation so we can correctly get items that would overlap
+	const FFaerieGridShape Translated = ApplyPlacement(ItemShape, TargetPlacement);
+
+	if (const FInventoryKey OverlappingKey = FindOverlappingItem(Translated, Key);
+		OverlappingKey.IsValid())
+	{
+		// If the Entry keys are identical, it gives us some other things to test before Swapping.
+		if (Key.EntryKey == OverlappingKey.EntryKey)
 		{
-			const FFaerieGridShape ItemShape = GetItemShape(Key.EntryKey);
-
-			// Create placement at target point
-			FFaerieGridPlacement TargetPlacement = Placement;
-			TargetPlacement.Origin = TargetPoint;
-			// Get the rotated shape based on current stack rotation so we can correctly get items that would overlap
-			const FFaerieGridShape Translated = ApplyPlacement(ItemShape, TargetPlacement);
-
-			if (const FInventoryKey OverlappingKey = FindOverlappingItem(Translated, Key);
-				OverlappingKey.IsValid())
+			if (Key.StackKey == OverlappingKey.StackKey)
 			{
-				// Gross method of getting mutable access to the other point... considering implementing handles like FInventoryContent does.
-				FFaerieGridPlacement* OverlappingPlacement = nullptr;
-				GridContent.EditItem(OverlappingKey,
-					[&OverlappingPlacement](FFaerieGridPlacement& OtherPlacement)
-					{
-						OverlappingPlacement = &OtherPlacement;
-						return true;
-					});
-				check(OverlappingPlacement);
-
-				// If the Entry keys are identical, it gives us some other things to test before Swapping.
-				if (Key.EntryKey == OverlappingKey.EntryKey)
-				{
-					if (Key.StackKey == OverlappingKey.StackKey)
-					{
-						// It's the same stack? No point in this!
-						return false;
-					}
-
-					// Try merging them. This is known to be safe, since all stacks with the same key share immutability.
-					if (UFaerieItemStorage* Storage = Cast<UFaerieItemStorage>(InitializedContainer);
-						Storage->MergeStacks(Key.EntryKey, Key.StackKey, OverlappingKey.StackKey))
-					{
-						return true;
-					}
-				}
-
-				return TrySwapItems(
-					Key, Placement,
-					OverlappingKey, *OverlappingPlacement);
+				// It's the same stack? No point in this!
+				return false;
 			}
 
-			return MoveSingleItem(Key, Placement, TargetPoint);
-		});
+			// Try merging them. This is known to be safe, since all stacks with the same key share immutability.
+			if (UFaerieItemStorage* Storage = Cast<UFaerieItemStorage>(InitializedContainer);
+				Storage->MergeStacks(Key.EntryKey, Key.StackKey, OverlappingKey.StackKey))
+			{
+				return true;
+			}
+		}
+		
+		const FFaerieGridContent::FScopedStackHandle StackHandle = GridContent.GetHandle(OverlappingKey);
+
+		return TrySwapItems(
+			Key, TargetStackHandle.Get(),
+			OverlappingKey, StackHandle.Get());
+	}
+
+	return MoveSingleItem(Key, TargetStackHandle.Get(), TargetPoint);
 }
 
 FFaerieGridShape UInventorySpatialGridExtension::ApplyPlacement(const FFaerieGridShapeConstView& Shape, const FFaerieGridPlacement& Placement)
@@ -566,40 +555,37 @@ void UInventorySpatialGridExtension::UpdateItemPosition(const FInventoryKey Key,
 
 bool UInventorySpatialGridExtension::RotateItem(const FInventoryKey& Key)
 {
-	return GridContent.EditItem(Key,
-		[this, Key](FFaerieGridPlacement& Placement)
-		{
-			const FFaerieGridShape ItemShape = GetItemShape(Key.EntryKey);
+	FFaerieGridContent::FScopedStackHandle Handle = GridContent.GetHandle(Key);
+	const FFaerieGridShape ItemShape = GetItemShape(Key.EntryKey);
 
-			// No Point in Trying to Rotate
-			if (ItemShape.IsSymmetrical()) return false;
+	// No Point in Trying to Rotate
+	if (ItemShape.IsSymmetrical()) return false;
 
-			const ESpatialItemRotation NextRotation = GetNextRotation(Placement.Rotation);
+	const ESpatialItemRotation NextRotation = GetNextRotation(Handle.Get().Rotation);
 
-			FFaerieGridPlacement TempPlacementData = Placement;
-			TempPlacementData.Rotation = NextRotation;
-			if (!FitsInGrid(ItemShape, TempPlacementData, MakeArrayView(&Key, 1)))
-			{
-				return false;
-			}
+	FFaerieGridPlacement TempPlacementData = Handle.Get();
+	TempPlacementData.Rotation = NextRotation;
+	if (!FitsInGrid(ItemShape, TempPlacementData, MakeArrayView(&Key, 1)))
+	{
+		return false;
+	}
 
-			// Store old points before transformations so we can clear them from the bit grid
-			const FFaerieGridShape OldShape = ApplyPlacement(ItemShape, Placement);
-			Placement.Rotation = NextRotation;
+	// Store old points before transformations so we can clear them from the bit grid
+	const FFaerieGridShape OldShape = ApplyPlacement(ItemShape, Handle.Get());
+	Handle.Get().Rotation = NextRotation;
 
-			// Clear old occupied cells
-			for (const auto& OldPoint : OldShape.Points)
-			{
-				UnmarkCell(OldPoint);
-			}
+	// Clear old occupied cells
+	for (const auto& OldPoint : OldShape.Points)
+	{
+		UnmarkCell(OldPoint);
+	}
 
-			// Set new occupied cells taking into account rotation
-			const FFaerieGridShape NewShape = ApplyPlacement(ItemShape, Placement);
-			for (const auto& Point : NewShape.Points)
-			{
-				MarkCell(Point);
-			}
+	// Set new occupied cells taking into account rotation
+	const FFaerieGridShape NewShape = ApplyPlacement(ItemShape, Handle.Get());
+	for (const auto& Point : NewShape.Points)
+	{
+		MarkCell(Point);
+	}
 
-			return true;
-		});
+	return true;
 }
