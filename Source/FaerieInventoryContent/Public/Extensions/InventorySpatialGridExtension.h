@@ -70,5 +70,6 @@ protected:
 
 	bool MoveSingleItem(const FInventoryKey Key, FFaerieGridPlacement& Placement, const FIntPoint& NewPosition);
 
-	void UpdateItemPosition(const FInventoryKey Key, FFaerieGridPlacement& Placement, const FIntPoint& NewPosition);
+	void UpdateItemPosition(const FInventoryKey Key, FFaerieGridPlacement& Placement, const FIntPoint& NewPosition, const bool bRemoveOldPoints = true);
+	void ClearCellsForEntry(FInventoryKey Key, const FFaerieGridPlacement& Placement, const FIntPoint& NewPosition);
 };

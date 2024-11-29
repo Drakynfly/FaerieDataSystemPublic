@@ -492,8 +492,11 @@ bool UInventorySpatialGridExtension::TrySwapItems(const FInventoryKey KeyA, FFae
 		return false;
 	}
 
-	UpdateItemPosition(KeyA, PlacementA, OriginB);
-	UpdateItemPosition(KeyB, PlacementB, OriginA);
+	//Maybe a better way for this? calling update item cell was clearing KeyAs keys since it clears its old position
+	ClearCellsForEntry(KeyA, PlacementA, OriginB);
+	ClearCellsForEntry(KeyB, PlacementB, OriginA);
+	UpdateItemPosition(KeyA, PlacementA, OriginB, false);
+	UpdateItemPosition(KeyB, PlacementB, OriginA, false);
 
 	// Check if both items can exist in their new positions without overlapping
 	bool bValidSwap = true;
@@ -516,6 +519,9 @@ bool UInventorySpatialGridExtension::TrySwapItems(const FInventoryKey KeyA, FFae
 	// Revert to original positions if validation fails
 	if (!bValidSwap)
 	{
+		//Same Issue mentioned above
+		ClearCellsForEntry(KeyA, PlacementA, OriginB);
+		ClearCellsForEntry(KeyB, PlacementB, OriginA);
 		UpdateItemPosition(KeyA, PlacementA, OriginA);
 		UpdateItemPosition(KeyB, PlacementB, OriginB);
 		return false;
@@ -538,18 +544,21 @@ bool UInventorySpatialGridExtension::MoveSingleItem(const FInventoryKey Key, FFa
 	return true;
 }
 
-void UInventorySpatialGridExtension::UpdateItemPosition(const FInventoryKey Key, FFaerieGridPlacement& Placement, const FIntPoint& NewPosition)
+void UInventorySpatialGridExtension::UpdateItemPosition(const FInventoryKey Key, FFaerieGridPlacement& Placement, const FIntPoint& NewPosition, const bool bRemoveOldPoints)
 {
 	const FFaerieGridShape ItemShape = GetItemShape(Key.EntryKey);
 
 	// We could have the same index in both the add and removal so we need to clear first
 	const FFaerieGridShape Rotated = ItemShape.Rotate(Placement.Rotation);
 
-	// Clear old positions first
-	for (auto& Point : Rotated.Points)
+	if(bRemoveOldPoints)
 	{
-		const FIntPoint OldPoint = Placement.Origin + Point;
-		UnmarkCell(OldPoint);
+		// Clear old positions first
+		for (auto& Point : Rotated.Points)
+		{
+			const FIntPoint OldPoint = Placement.Origin + Point;
+			UnmarkCell(OldPoint);
+		}
 	}
 
 	// Then set new positions
@@ -560,6 +569,18 @@ void UInventorySpatialGridExtension::UpdateItemPosition(const FInventoryKey Key,
 	}
 
 	Placement.Origin = NewPosition;
+}
+
+void UInventorySpatialGridExtension::ClearCellsForEntry(const FInventoryKey Key, const FFaerieGridPlacement& Placement, const FIntPoint& NewPosition)
+{
+	const FFaerieGridShape ItemShape = GetItemShape(Key.EntryKey);
+	const FFaerieGridShape Rotated = ItemShape.Rotate(Placement.Rotation);
+	
+	for (auto& Point : Rotated.Points)
+	{
+		const FIntPoint OldPoint = Placement.Origin + Point;
+		UnmarkCell(OldPoint);
+	}
 }
 
 bool UInventorySpatialGridExtension::RotateItem(const FInventoryKey& Key)
