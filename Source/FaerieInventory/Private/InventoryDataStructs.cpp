@@ -94,30 +94,27 @@ void FInventoryEntry::SetStack(const FStackKey& Key, const int32 Stack)
 
 void FInventoryEntry::AddToAnyStack(int32 Amount, TArray<FStackKey>* OutAddedKeys)
 {
-	// Fill existing stacks first
-	int32 RemainingAmount = Amount;
-
 	for (auto& KeyedStack : Stacks)
 	{
 		if (Limit == Faerie::ItemData::UnlimitedStack)
 		{
 			// This stack can contain the rest, add and return
-			KeyedStack.Stack += RemainingAmount;
+			KeyedStack.Stack += Amount;
 			return;
 		}
 
 		if (KeyedStack.Stack < Limit)
 		{
 			// Calculate how much we can add to this stack
-			int32 SpaceInStack = Limit - KeyedStack.Stack;
+			const int32 SpaceInStack = Limit - KeyedStack.Stack;
 			// Add either the remaining amount or the available space, whichever is smaller
-			int32 AmountToAdd = FMath::Min(RemainingAmount, SpaceInStack);
+			const int32 AmountToAdd = FMath::Min(Amount, SpaceInStack);
 
 			KeyedStack.Stack += AmountToAdd;
-			RemainingAmount -= AmountToAdd;
+			Amount -= AmountToAdd;
 
 			// If we've used up all the amount, we can return
-			if (RemainingAmount <= 0)
+			if (Amount <= 0)
 			{
 				return;
 			}
@@ -125,9 +122,9 @@ void FInventoryEntry::AddToAnyStack(int32 Amount, TArray<FStackKey>* OutAddedKey
 	}
 
 	// We have dispersed the incoming stack among existing ones. If there is stack remaining, create new stacks.
-	if (RemainingAmount > 0)
+	if (Amount > 0)
 	{
-		return AddToNewStacks(RemainingAmount, OutAddedKeys);
+		return AddToNewStacks(Amount, OutAddedKeys);
 	}
 }
 
