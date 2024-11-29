@@ -1128,7 +1128,6 @@ bool UFaerieItemStorage::SplitStack(FEntryKey Entry, FStackKey StackA, const int
 
 		// Update event with final stack information
 		Event.Amount = AffectedStacks.Key.Stack;
-		Event.StackKeys.Add(StackA);
 		Event.StackKeys.Add(AffectedStacks.Value.Key);
 	}
 	
