@@ -3,7 +3,6 @@
 // ReSharper disable CppMemberFunctionMayBeConst
 #include "InventoryDataStructs.h"
 
-#include "AudioMixerBlueprintLibrary.h"
 #include "FaerieItemStorage.h"
 #include "InventoryDataEnums.h"
 #include "HAL/LowLevelMemStats.h"
