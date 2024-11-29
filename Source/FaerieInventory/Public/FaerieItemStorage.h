@@ -287,6 +287,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Storage", BlueprintAuthorityOnly)
 	bool MergeStacks(FEntryKey Entry, FStackKey StackA, FStackKey StackB);
 
+	UFUNCTION(BlueprintCallable, Category = "Storage", BlueprintAuthorityOnly)
+	bool SplitStack(FEntryKey Entry, FStackKey StackA, const int32 Amount);
+	
 	/** Call MoveEntry on all entries in this storage. */
 	UFUNCTION(BlueprintCallable, Category = "Storage", BlueprintAuthorityOnly)
 	void Dump(UFaerieItemStorage* ToStorage);

@@ -99,19 +99,27 @@ void UInventorySpatialGridExtension::PostEntryChanged(const UFaerieItemContainer
 
 	// @todo update logic to use Event
 	// get keys to remove
-	for (const auto& SpatialEntry : GridContent)
+
+	for(auto&& AffectedKey : Event.StackKeys)
 	{
+		FInventoryKey CurrentKey{Event.EntryTouched, AffectedKey};
 		if (const UFaerieItemStorage* Storage = Cast<UFaerieItemStorage>(InitializedContainer);
-			!Storage->IsValidKey(SpatialEntry.Key))
+		!Storage->IsValidKey(CurrentKey))
 		{
-			KeysToRemove.Add(SpatialEntry.Key);
+			KeysToRemove.Add(CurrentKey);
 		}
 		else
 		{
-			BroadcastEvent(SpatialEntry.Key, EFaerieGridEventType::ItemChanged);
+			if(GridContent.Find(CurrentKey) != nullptr)
+			{
+				BroadcastEvent(CurrentKey, EFaerieGridEventType::ItemChanged);
+			}
+			else
+			{
+				AddItemToGrid(CurrentKey, Event.Item.Get());
+			}
 		}
 	}
-
 	// remove the stored keys
 	for (const FInventoryKey& KeyToRemove : KeysToRemove)
 	{

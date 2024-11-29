@@ -2,6 +2,8 @@
 
 // ReSharper disable CppMemberFunctionMayBeConst
 #include "InventoryDataStructs.h"
+
+#include "AudioMixerBlueprintLibrary.h"
 #include "FaerieItemStorage.h"
 #include "InventoryDataEnums.h"
 #include "HAL/LowLevelMemStats.h"
@@ -95,27 +97,39 @@ void FInventoryEntry::SetStack(const FStackKey& Key, const int32 Stack)
 void FInventoryEntry::AddToAnyStack(int32 Amount, TArray<FStackKey>* OutAddedKeys)
 {
 	// Fill existing stacks first
+	int32 RemainingAmount = Amount;
+
 	for (auto& KeyedStack : Stacks)
 	{
 		if (Limit == Faerie::ItemData::UnlimitedStack)
 		{
 			// This stack can contain the rest, add and return
-			KeyedStack.Stack += Amount;
+			KeyedStack.Stack += RemainingAmount;
 			return;
 		}
 
 		if (KeyedStack.Stack < Limit)
 		{
-			auto&& AddToStack = Limit - KeyedStack.Stack;
-			Amount -= AddToStack;
-			KeyedStack.Stack += AddToStack;
+			// Calculate how much we can add to this stack
+			int32 SpaceInStack = Limit - KeyedStack.Stack;
+			// Add either the remaining amount or the available space, whichever is smaller
+			int32 AmountToAdd = FMath::Min(RemainingAmount, SpaceInStack);
+
+			KeyedStack.Stack += AmountToAdd;
+			RemainingAmount -= AmountToAdd;
+
+			// If we've used up all the amount, we can return
+			if (RemainingAmount <= 0)
+			{
+				return;
+			}
 		}
 	}
 
 	// We have dispersed the incoming stack among existing ones. If there is stack remaining, create new stacks.
-	if (Amount > 0)
+	if (RemainingAmount > 0)
 	{
-		return AddToNewStacks(Amount, OutAddedKeys);
+		return AddToNewStacks(RemainingAmount, OutAddedKeys);
 	}
 }
 
@@ -199,6 +213,24 @@ int32 FInventoryEntry::MergeStacks(const FStackKey A, const FStackKey B)
 		return 0;
 	}
 	return StackA.Stack;
+}
+
+TTuple<FKeyedStack, FKeyedStack> FInventoryEntry::SplitStack(const FStackKey A, const int32 Amount)
+{
+	const int32 StackIndexA = GetStackIndex(A);
+	FKeyedStack& StackA = Stacks[StackIndexA];
+	TArray<FStackKey> AddedStacks;
+	AddedStacks.Reserve(1);
+	//Added Stacks should never return more than 1 element, since amount must be less than the current stack
+	//and how would that stack have exceeded its limit in the first place?
+	if(StackA.Stack > Amount)
+	{
+		StackA.Stack -= Amount;
+		AddToNewStacks(Amount, &AddedStacks);
+	}
+	const int32 StackIndexB = GetStackIndex(AddedStacks.Last());
+	const FKeyedStack& StackB = Stacks[StackIndexB];
+	return TTuple<FKeyedStack, FKeyedStack>(StackA, StackB);
 }
 
 bool FInventoryEntry::IsValid() const

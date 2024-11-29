@@ -270,6 +270,7 @@ public:
 	// Merge the amounts in two stacks, moving as much as possible from stack A to stack B.
 	// The remainder in stack A will be returned, if some remains.
 	int32 MergeStacks(FStackKey A, FStackKey B);
+	TTuple<FKeyedStack, FKeyedStack> SplitStack(FStackKey A, int32 Amount);
 
 	bool IsValid() const;
 
