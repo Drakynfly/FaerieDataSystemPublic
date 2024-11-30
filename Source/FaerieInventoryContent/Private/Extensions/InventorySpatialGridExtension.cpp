@@ -492,8 +492,8 @@ bool UInventorySpatialGridExtension::TrySwapItems(const FInventoryKey KeyA, FFae
 	}
 
 	//Maybe a better way for this? calling update item cell was clearing KeyAs keys since it clears its old position
-	ClearCellsForEntry(KeyA, PlacementA, OriginB);
-	ClearCellsForEntry(KeyB, PlacementB, OriginA);
+	ClearCellsForEntry(KeyA, PlacementA);
+	ClearCellsForEntry(KeyB, PlacementB);
 	UpdateItemPosition(KeyA, PlacementA, OriginB, false);
 	UpdateItemPosition(KeyB, PlacementB, OriginA, false);
 
@@ -519,8 +519,8 @@ bool UInventorySpatialGridExtension::TrySwapItems(const FInventoryKey KeyA, FFae
 	if (!bValidSwap)
 	{
 		//Same Issue mentioned above
-		ClearCellsForEntry(KeyA, PlacementA, OriginB);
-		ClearCellsForEntry(KeyB, PlacementB, OriginA);
+		ClearCellsForEntry(KeyA, PlacementA);
+		ClearCellsForEntry(KeyB, PlacementB);
 		UpdateItemPosition(KeyA, PlacementA, OriginA);
 		UpdateItemPosition(KeyB, PlacementB, OriginB);
 		return false;
@@ -552,12 +552,7 @@ void UInventorySpatialGridExtension::UpdateItemPosition(const FInventoryKey Key,
 
 	if(bRemoveOldPoints)
 	{
-		// Clear old positions first
-		for (auto& Point : Rotated.Points)
-		{
-			const FIntPoint OldPoint = Placement.Origin + Point;
-			UnmarkCell(OldPoint);
-		}
+		ClearCellsForEntry(Key, Placement);
 	}
 
 	// Then set new positions
@@ -570,7 +565,7 @@ void UInventorySpatialGridExtension::UpdateItemPosition(const FInventoryKey Key,
 	Placement.Origin = NewPosition;
 }
 
-void UInventorySpatialGridExtension::ClearCellsForEntry(const FInventoryKey Key, const FFaerieGridPlacement& Placement, const FIntPoint& NewPosition)
+void UInventorySpatialGridExtension::ClearCellsForEntry(const FInventoryKey Key, const FFaerieGridPlacement& Placement)
 {
 	const FFaerieGridShape ItemShape = GetItemShape(Key.EntryKey);
 	const FFaerieGridShape Rotated = ItemShape.Rotate(Placement.Rotation);
