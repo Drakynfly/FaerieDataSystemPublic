@@ -257,70 +257,69 @@ FIntPoint UInventorySpatialGridExtension::GetStackBounds(const FInventoryKey& Ke
 	return GetItemShape(Key.EntryKey).GetSize();
 }
 
-bool UInventorySpatialGridExtension::FitsInGrid(const FFaerieGridShapeConstView& Shape, const FFaerieGridPlacement& PlacementData, const TConstArrayView<FInventoryKey> ExcludedKeys, FIntPoint* OutCandidate) const
+bool UInventorySpatialGridExtension::FitsInGrid(const FFaerieGridShapeConstView& Shape, const FFaerieGridPlacement& PlacementData, const TConstArrayView<FInventoryKey> ExcludedKeys) const
 {
-	// Build list of excluded indices
-	TArray<FIntPoint> ExcludedPositions;
-	ExcludedPositions.Reserve(ExcludedKeys.Num() * Shape.Points.Num());
-	for (const FInventoryKey& Key : ExcludedKeys)
-	{
-		const FFaerieGridShape OtherShape = GetItemShape(Key.EntryKey);
-		const FFaerieGridPlacement Placement = GetStackPlacementData(Key);
-		for (const FFaerieGridShape Translated = ApplyPlacement(OtherShape, Placement);
-			 const auto& Point : Translated.Points)
-		{
-			ExcludedPositions.Add(Point);
-		}
-	}
-	FIntPoint MinPoint(TNumericLimits<int32>::Max());
-	FIntPoint MaxPoint(TNumericLimits<int32>::Min());
+    // Build list of excluded indices
+    TArray<FIntPoint> ExcludedPositions;
+    ExcludedPositions.Reserve(ExcludedKeys.Num() * Shape.Points.Num());
+    for (const FInventoryKey& Key : ExcludedKeys)
+    {
+        const FFaerieGridShape OtherShape = GetItemShape(Key.EntryKey);
+        const FFaerieGridPlacement Placement = GetStackPlacementData(Key);
+        for (const FFaerieGridShape Translated = ApplyPlacement(OtherShape, Placement);
+            const auto& Point : Translated.Points)
+        {
+            ExcludedPositions.Add(Point);
+        }
+    }
 
-	// Check if all points in the shape fit within the grid and don't overlap with occupied cells
-	for (const FFaerieGridShape Translated = ApplyPlacement(Shape, PlacementData);
-		 const FIntPoint& Point : Translated.Points)
-	{
-		MinPoint = MinPoint.ComponentMin(Point);
-		MaxPoint = MaxPoint.ComponentMax(Point);
-		// Check if point is within grid bounds
-		if (Point.X < 0 || Point.X >= GridSize.X ||
+    // Calculate shape bounds
+    FIntPoint MinPoint(TNumericLimits<int32>::Max());
+    FIntPoint MaxPoint(TNumericLimits<int32>::Min());
+    const FFaerieGridShape Translated = ApplyPlacement(Shape, PlacementData);
+    
+    for (const FIntPoint& Point : Translated.Points)
+    {
+        MinPoint = MinPoint.ComponentMin(Point);
+        MaxPoint = MaxPoint.ComponentMax(Point);
+    }
+
+    // Calculate shape dimensions
+    const FIntPoint ShapeDimensions = MaxPoint - MinPoint;
+
+    // Early exit if shape is obviously too large
+    if (ShapeDimensions.X > GridSize.X || ShapeDimensions.Y > GridSize.Y)
+    {
+        return false;
+    }
+
+    // Check if all points in the shape fit within the grid and don't overlap with occupied cells
+    for (const FIntPoint& Point : Translated.Points)
+    {
+	    // Check if point is within grid bounds
+    	if (Point.X < 0 || Point.X >= GridSize.X ||
 			Point.Y < 0 || Point.Y >= GridSize.Y)
-		{
-			return false;
-		}
+    	{
+    		return false;
+    	}
 
-		// If this index is not in the excluded list, check if it's occupied
-		if (!ExcludedPositions.Contains(Point) && IsCellOccupied(Point))
-		{
-			if (OutCandidate)
-			{
-				// Skip to next row if we're near the right edge
-				if (Point.X >= GridSize.X - MaxPoint.X + MinPoint.X)
-				{
-					OutCandidate->X = 0;
-					OutCandidate->Y = Point.Y + 1;
-				}
-				else
-				{
-					// Skip past the current shape's width
-					OutCandidate->X = Point.X + 1;
-					OutCandidate->Y = Point.Y;
-				}
-			}
-			return false;
-		}
-	}
+    	// If this index is not in the excluded list, check if it's occupied
+    	if (!ExcludedPositions.Contains(Point) && IsCellOccupied(Point))
+    	{
+    		return false;
+    	}
+    }
 
-	return true;
+    return true;
 }
 
 bool UInventorySpatialGridExtension::FitsInGridAnyRotation(const FFaerieGridShapeConstView& Shape,
-	FFaerieGridPlacement& PlacementData, const TConstArrayView<FInventoryKey> ExcludedKeys,
-	FIntPoint* OutCandidate) const
+	FFaerieGridPlacement& PlacementData, const TConstArrayView<FInventoryKey> ExcludedKeys) const
 {
 	for (const auto Rotation : TEnumRange<ESpatialItemRotation>())
 	{
 		PlacementData.Rotation = Rotation;
-		if (FitsInGrid(Shape, PlacementData, ExcludedKeys, OutCandidate))
+		if (FitsInGrid(Shape, PlacementData, ExcludedKeys))
 		{
 			return true;
 		}
@@ -380,7 +379,7 @@ FFaerieGridPlacement UInventorySpatialGridExtension::FindFirstEmptyLocation(cons
 			for (const ESpatialItemRotation Rotation : RotationRange)
 			{
 				TestPlacement.Rotation = Rotation;
-				if (FitsInGrid(Shape, TestPlacement, {}, &TestPoint))
+				if (FitsInGrid(Shape, TestPlacement, {}))
 				{
 					return TestPlacement;
 				}

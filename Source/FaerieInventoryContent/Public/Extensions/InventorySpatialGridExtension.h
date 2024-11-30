@@ -49,9 +49,9 @@ public:
 	bool MoveItem(const FInventoryKey& Key, const FIntPoint& TargetPoint);
 	bool RotateItem(const FInventoryKey& Key);
 
-	bool FitsInGrid(const FFaerieGridShapeConstView& Shape, const FFaerieGridPlacement& PlacementData, TConstArrayView<FInventoryKey> ExcludedKeys = {}, FIntPoint* OutCandidate = nullptr) const;
+	bool FitsInGrid(const FFaerieGridShapeConstView& Shape, const FFaerieGridPlacement& PlacementData, TConstArrayView<FInventoryKey> ExcludedKeys = {}) const;
 
-	bool FitsInGridAnyRotation(const FFaerieGridShapeConstView& Shape, FFaerieGridPlacement& PlacementData, TConstArrayView<FInventoryKey> ExcludedKeys = {}, FIntPoint* OutCandidate = nullptr) const;
+	bool FitsInGridAnyRotation(const FFaerieGridShapeConstView& Shape, FFaerieGridPlacement& PlacementData, TConstArrayView<FInventoryKey> ExcludedKeys = {}) const;
 
 	FFaerieGridPlacement FindFirstEmptyLocation(const FFaerieGridShapeConstView& Shape) const;
 
