@@ -140,41 +140,49 @@ namespace Faerie::Hacks
 		{
 			if (Items.Num() > 0)
 			{
-				TMap<int32, int32> ReplicationIDToOldIndexMap;
-				ReplicationIDToOldIndexMap.Reserve(Items.Num());
-    
+				// Cache Old Position Data
+				TMap<int32, int32> OldIndexToReplicationIDMap;
+				OldIndexToReplicationIDMap.Reserve(Items.Num());
 				for (int32 i = 0; i < Items.Num(); ++i)
 				{
-					ReplicationIDToOldIndexMap.Add(Items[i].ReplicationID, i);
+					OldIndexToReplicationIDMap.Add(i, Items[i].ReplicationID);
 				}
 				
 				Algo::SortBy(Items, &Type::Key);
+
+				// Build a Map For Replication id to new index
+				TMap<int32, int32> NewIndexMap;
+				NewIndexMap.Reserve(Items.Num());
+				for (int32 i = 0; i < Items.Num(); ++i)
+				{
+					if (Items[i].ReplicationID != INDEX_NONE)
+					{
+						NewIndexMap.Add(Items[i].ReplicationID, i);
+					}
+				}
 				
 				auto UpdateIndices = [&](TArray<int32, TInlineAllocator<8>>& Indices)
 				{
 					for (int32& Idx : Indices)
 					{
-						const int32 ReplicationID = Items[Idx].ReplicationID;
-						Idx = ReplicationIDToOldIndexMap[ReplicationID];
+						if (OldIndexToReplicationIDMap.Contains(Idx)) // Ensure the old index is valid
+						{
+							const int32 ReplicationID = OldIndexToReplicationIDMap[Idx];
+							if (NewIndexMap.Contains(ReplicationID))
+							{
+								Idx = NewIndexMap[ReplicationID];
+							}
+						}
 					}
 				};
-				
+
 				UpdateIndices(ChangedIndices);
 				UpdateIndices(AddedIndices);
 				UpdateIndices(Header.DeletedIndices);
 				
-				ArraySerializer.ItemMap.Reset();
-				ArraySerializer.ItemMap.Reserve(Items.Num());
-
-				for (int32 i = 0; i < Items.Num(); ++i)
-				{
-					const Type& Item = Items[i];
-					if (Item.ReplicationID != INDEX_NONE)
-					{
-						ArraySerializer.ItemMap.Add(Item.ReplicationID, i);
-					}
-				}
+				ArraySerializer.ItemMap = MoveTemp(NewIndexMap);
 			}
+
 			
 			//CSV_SCOPED_TIMING_STAT(Networking, FastArray_Apply);
 
