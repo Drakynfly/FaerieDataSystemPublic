@@ -210,22 +210,22 @@ int32 FInventoryEntry::MergeStacks(const FStackKey A, const FStackKey B)
 	return StackA.Stack;
 }
 
-TTuple<FKeyedStack, FKeyedStack> FInventoryEntry::SplitStack(const FStackKey A, const int32 Amount)
+TTuple<FKeyedStack, FKeyedStack> FInventoryEntry::SplitStack(const FStackKey Key, const int32 Amount)
 {
-	const int32 StackIndexA = GetStackIndex(A);
-	FKeyedStack& StackA = Stacks[StackIndexA];
+	const int32 StackIndex = GetStackIndex(Key);
+	FKeyedStack& Stack = Stacks[StackIndex];
 	TArray<FStackKey> AddedStacks;
 	AddedStacks.Reserve(1);
 	//Added Stacks should never return more than 1 element, since amount must be less than the current stack
 	//and how would that stack have exceeded its limit in the first place?
-	if(StackA.Stack > Amount)
+	if(Stack.Stack > Amount)
 	{
-		StackA.Stack -= Amount;
+		Stack.Stack -= Amount;
 		AddToNewStacks(Amount, &AddedStacks);
 	}
-	const int32 StackIndexB = GetStackIndex(AddedStacks.Last());
-	const FKeyedStack& StackB = Stacks[StackIndexB];
-	return TTuple<FKeyedStack, FKeyedStack>(StackA, StackB);
+	const int32 NewStackIndex = GetStackIndex(AddedStacks.Last());
+	const FKeyedStack& NewStack = Stacks[NewStackIndex];
+	return TTuple<FKeyedStack, FKeyedStack>(Stack, NewStack);
 }
 
 bool FInventoryEntry::IsValid() const
