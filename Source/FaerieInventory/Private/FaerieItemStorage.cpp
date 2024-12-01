@@ -1109,7 +1109,7 @@ bool UFaerieItemStorage::MergeStacks(const FEntryKey Entry, const FStackKey Stac
 	return true;
 }
 
-bool UFaerieItemStorage::SplitStack(FEntryKey Entry, FStackKey StackA, const int32 Amount)
+bool UFaerieItemStorage::SplitStack(FEntryKey Entry, FStackKey Stack, const int32 Amount)
 {
 	if (!IsValidKey(Entry) || !CanEditEntry(Entry))
 	{
@@ -1117,13 +1117,13 @@ bool UFaerieItemStorage::SplitStack(FEntryKey Entry, FStackKey StackA, const int
 	}
 	
 	auto&& EntryView = GetEntryViewImpl(Entry);
-	const FKeyedStack* KeyedStackA = EntryView.Get<const FInventoryEntry>().Stacks.FindByKey(StackA);
+	const FKeyedStack* KeyedStack = EntryView.Get<const FInventoryEntry>().Stacks.FindByKey(Stack);
     
 	// Validate requested amount is less than whats in stack, and that a new stack of the target size can be added
 	auto&& StackView = View(Entry);
 	StackView.Copies = Amount;
-	if (!CanEditStack({Entry, StackA}, Faerie::Inventory::Tags::Split) || 
-		Amount >= KeyedStackA->Stack)
+	if (!CanEditStack({Entry, Stack}, Faerie::Inventory::Tags::Split) || 
+		Amount >= KeyedStack->Stack)
 	{
 		return false;
 	}
@@ -1131,14 +1131,14 @@ bool UFaerieItemStorage::SplitStack(FEntryKey Entry, FStackKey StackA, const int
 	Faerie::Inventory::FEventLog Event;
 	Event.Item = EntryView.Get().ItemObject;
 	Event.EntryTouched = Entry;
-	Event.StackKeys.Add(StackA);
+	Event.StackKeys.Add(Stack);
 	Event.Type = Faerie::Inventory::Tags::Split;
 	Event.Success = true;
 
 	// Split the stack
 	{
 		const FInventoryContent::FScopedItemHandle Handle = EntryMap.GetHandle(Entry);
-		const TTuple<FKeyedStack, FKeyedStack> AffectedStacks = Handle->SplitStack(StackA, Amount);
+		const TTuple<FKeyedStack, FKeyedStack> AffectedStacks = Handle->SplitStack(Stack, Amount);
 
 		// Update event with final stack information
 		Event.Amount = AffectedStacks.Key.Stack;
