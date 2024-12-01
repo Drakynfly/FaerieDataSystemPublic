@@ -68,7 +68,7 @@ EEventExtensionResponse UInventorySpatialGridExtension::AllowsEdit(const UFaerie
 		}
 		return EEventExtensionResponse::Allowed;
 	}
-	return EEventExtensionResponse::Disallowed;
+	return EEventExtensionResponse::NoExplicitResponse;
 }
 
 void UInventorySpatialGridExtension::PostAddition(const UFaerieItemContainerBase* Container,
