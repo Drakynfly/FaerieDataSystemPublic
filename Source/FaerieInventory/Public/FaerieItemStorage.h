@@ -208,6 +208,9 @@ public:
 	bool CanAddStack(FFaerieItemStackView Stack, EFaerieStorageAddStackBehavior AddStackBehavior) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Storage")
+	bool CanEditStack(FInventoryKey StackKey, FFaerieInventoryTag EditType) const;
+
+	UFUNCTION(BlueprintCallable, Category = "Storage")
 	bool CanEditEntry(FEntryKey EntryKey) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Storage")

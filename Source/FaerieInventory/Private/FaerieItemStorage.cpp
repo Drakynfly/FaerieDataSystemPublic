@@ -817,6 +817,38 @@ bool UFaerieItemStorage::CanAddStack(const FFaerieItemStackView Stack, const EFa
 	}
 }
 
+bool UFaerieItemStorage::CanEditStack(const FInventoryKey StackKey, const FFaerieInventoryTag EditType) const
+{
+	// @todo: the same checks that apply to add apply here too, a way to deduplicate?
+	UInventoryStackProxy* StackProxy = GetStackProxyImpl(StackKey);
+	if (!IsValid(StackProxy->GetItemObject()) ||
+	StackProxy->GetCopies() < 1)
+	{
+		return false;
+	}
+
+	if (StackProxy->GetItemObject()->IsDataMutable())
+	{
+		// See CanAddStackFor Context
+		const TSet<UFaerieItemContainerBase*> ContainerSet = UFaerieItemContainerToken::GetAllContainersInItem(StackProxy->GetItemObject());
+		for (auto&& Container : ContainerSet)
+		{
+			if (Container == this)
+			{
+				return false;
+			}
+		}
+	}
+
+	switch (Extensions->AllowsEdit(this, StackKey.EntryKey, EditType))
+	{
+	case EEventExtensionResponse::NoExplicitResponse:
+	case EEventExtensionResponse::Allowed:				return true;
+	case EEventExtensionResponse::Disallowed:			return false;
+	default: return false;
+	}
+}
+
 bool UFaerieItemStorage::CanEditEntry(FEntryKey EntryKey) const
 {
 	// @todo Expose this to extensions
@@ -1061,13 +1093,16 @@ bool UFaerieItemStorage::MergeStacks(const FEntryKey Entry, const FStackKey Stac
 		return false;
 	}
 
+
 	auto&& EntryView = GetEntryViewImpl(Entry);
 	const FKeyedStack* KeyedStackB = EntryView.Get().Stacks.FindByKey(StackB);
 
 	// Ensure both stacks exist and B isn't already full
 	if (!EntryView.Get().Stacks.FindByKey(StackA) ||
 		!KeyedStackB ||
-		KeyedStackB->Stack == EntryView.Get().Limit)
+		KeyedStackB->Stack == EntryView.Get().Limit ||
+		!CanEditStack({Entry, StackA}, Faerie::Inventory::Tags::Merge) ||
+		!CanEditStack({Entry, StackB}, Faerie::Inventory::Tags::Merge))
 	{
 		return false;
 	}
@@ -1108,7 +1143,7 @@ bool UFaerieItemStorage::SplitStack(FEntryKey Entry, FStackKey StackA, const int
 	// Validate requested amount is less than whats in stack, and that a new stack of the target size can be added
 	auto&& StackView = View(Entry);
 	StackView.Copies = Amount;
-	if (!CanAddStack(StackView, EFaerieStorageAddStackBehavior::OnlyNewStacks) || 
+	if (!CanEditStack({Entry, StackA}, Faerie::Inventory::Tags::Split) || 
 		Amount >= KeyedStackA->Stack)
 	{
 		return false;
