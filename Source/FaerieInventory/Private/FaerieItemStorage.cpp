@@ -819,27 +819,6 @@ bool UFaerieItemStorage::CanAddStack(const FFaerieItemStackView Stack, const EFa
 
 bool UFaerieItemStorage::CanEditStack(const FInventoryKey StackKey, const FFaerieInventoryTag EditType) const
 {
-	// @todo: the same checks that apply to add apply here too, a way to deduplicate?
-	UInventoryStackProxy* StackProxy = GetStackProxyImpl(StackKey);
-	if (!IsValid(StackProxy->GetItemObject()) ||
-	StackProxy->GetCopies() < 1)
-	{
-		return false;
-	}
-
-	if (StackProxy->GetItemObject()->IsDataMutable())
-	{
-		// See CanAddStackFor Context
-		const TSet<UFaerieItemContainerBase*> ContainerSet = UFaerieItemContainerToken::GetAllContainersInItem(StackProxy->GetItemObject());
-		for (auto&& Container : ContainerSet)
-		{
-			if (Container == this)
-			{
-				return false;
-			}
-		}
-	}
-
 	switch (Extensions->AllowsEdit(this, StackKey.EntryKey, EditType))
 	{
 	case EEventExtensionResponse::NoExplicitResponse:
