@@ -281,8 +281,7 @@ bool FFaerieClientAction_RequestMoveEquipmentSlotToSpatialInventory::Server_Exec
 		return false;
 	}
 
-	if (FFaerieGridPlacement Placement{ TargetPoint };
-		!SpatialExtension->FitsInGridAnyRotation(Shape->GetShape(), Placement))
+	if (!SpatialExtension->FitsInGridAnyRotation(Shape->GetShape(), TargetPoint))
 	{
 		return false;
 	}
@@ -290,22 +289,14 @@ bool FFaerieClientAction_RequestMoveEquipmentSlotToSpatialInventory::Server_Exec
 	// Determine the stack amount to transfer
 	const int32 StackAmount = Amount == Faerie::ItemData::UnlimitedStack ? Slot->GetCopies() : Amount;
 
-	static constexpr EFaerieStorageAddStackBehavior SpatialInventoryMoveBehavior = EFaerieStorageAddStackBehavior::OnlyNewStacks;
-
-	// Verify if the storage can accommodate the stack
-	if (!ToStorage->CanAddStack({ Slot->GetItemObject(), StackAmount }, SpatialInventoryMoveBehavior))
-	{
-		return false;
-	}
-
 	// Attempt to transfer the item stack
 	if (const FFaerieItemStack Stack = Slot->TakeItemFromSlot(StackAmount);
 		IsValid(Stack.Item))
 	{
-		const FLoggedInventoryEvent Event = ToStorage->AddItemStackWithLog(Stack, SpatialInventoryMoveBehavior);
+		// Must be a new stack, since we intend to manually place it in the grid.
+		const FLoggedInventoryEvent Event = ToStorage->AddItemStackWithLog(Stack, EFaerieStorageAddStackBehavior::OnlyNewStacks);
 		if (!Event.Event.Success)
 		{
-			UE_LOG(LogTemp, Error, TEXT("RequestMoveEquipmentSlotToSpatialInventory: wat happened!"));
 			return false;
 		}
 

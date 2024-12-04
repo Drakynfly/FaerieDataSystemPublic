@@ -50,9 +50,9 @@ public:
 	bool MoveItem(const FInventoryKey& Key, const FIntPoint& TargetPoint);
 	bool RotateItem(const FInventoryKey& Key);
 
-	bool FitsInGrid(const FFaerieGridShapeConstView& Shape, const FFaerieGridPlacement& PlacementData, TConstArrayView<FInventoryKey> ExcludedKeys = {}) const;
+	bool FitsInGrid(const FFaerieGridShapeConstView& TranslatedShape, TConstArrayView<FInventoryKey> ExcludedKeys = {}) const;
 
-	bool FitsInGridAnyRotation(const FFaerieGridShapeConstView& Shape, FFaerieGridPlacement& PlacementData, TConstArrayView<FInventoryKey> ExcludedKeys = {}) const;
+	bool FitsInGridAnyRotation(const FFaerieGridShapeConstView& Shape, FIntPoint Origin, TConstArrayView<FInventoryKey> ExcludedKeys = {}) const;
 
 	FFaerieGridPlacement FindFirstEmptyLocation(const FFaerieGridShapeConstView& Shape) const;
 
@@ -71,6 +71,6 @@ protected:
 
 	bool MoveSingleItem(const FInventoryKey Key, FFaerieGridPlacement& Placement, const FIntPoint& NewPosition);
 
-	void AddItemPosition(const FFaerieGridShapeConstView ItemShape, const FFaerieGridPlacement& Placement);
-	void RemoveItemPosition(const FFaerieGridShapeConstView& ItemShape, const FFaerieGridPlacement& Placement);
+	void AddItemPosition(const FFaerieGridShapeConstView TranslatedShape);
+	void RemoveItemPosition(const FFaerieGridShapeConstView& TranslatedShape);
 };

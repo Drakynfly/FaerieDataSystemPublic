@@ -402,7 +402,7 @@ bool FFaerieGridShapeView::IsSymmetrical() const
 	return ShapeCopy == *this;
 }
 
-bool FFaerieGridShapeView::Contains(const FFaerieGridShapeView& Other) const
+bool FFaerieGridShapeView::Overlaps(const FFaerieGridShapeView& Other) const
 {
 	TSet<FIntPoint> SeenPoints;
 	SeenPoints.Append(Points);
@@ -676,7 +676,7 @@ bool FFaerieGridShapeConstView::IsSymmetrical() const
 	return FFaerieGridShapeConstView(Shape) == *this;
 }
 
-bool FFaerieGridShapeConstView::Contains(const FFaerieGridShapeConstView& Other) const
+bool FFaerieGridShapeConstView::Overlaps(const FFaerieGridShapeConstView& Other) const
 {
 	TSet<FIntPoint> SeenPoints;
 	SeenPoints.Append(Points);
