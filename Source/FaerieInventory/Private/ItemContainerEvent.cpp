@@ -19,6 +19,17 @@ namespace Faerie::Inventory::Tags
 	UE_DEFINE_GAMEPLAY_TAG_TYPED_COMMENT(FFaerieInventoryTag, Split,
 		"Fae.Inventory.Edit.Split", "An entry was edited to split an amount off onto a new stack")
 
+	const TSet<FFaerieInventoryTag>& EditTagsAllowedByDefault()
+	{
+		static const TSet<FFaerieInventoryTag> StaticTags
+		{
+			Merge,
+			Split
+		};
+
+		return StaticTags;
+	}
+
 	const TSet<FFaerieInventoryTag>& RemovalTagsAllowedByDefault()
 	{
 		static const TSet<FFaerieInventoryTag> StaticTags

@@ -141,7 +141,7 @@ struct FAERIEINVENTORY_API FKeyedStack
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "KeyedStack")
 	int32 Stack = 0;
 
-	friend bool operator==(const FKeyedStack& Lhs, const FStackKey& Rhs)
+	friend bool operator==(const FKeyedStack& Lhs, const FStackKey Rhs)
 	{
 		return Lhs.Key == Rhs;
 	}
@@ -242,18 +242,20 @@ private:
 	// Internal count of how many stacks we've made. Used to track key creation. Only valid on the server.
 	Faerie::TKeyGen<FStackKey> KeyGen;
 
-	int32 GetStackIndex(const FStackKey& Key) const;
-	FKeyedStack* GetStackPtr(const FStackKey& Key);
-	const FKeyedStack* GetStackPtr(const FStackKey& Key) const;
+	int32 GetStackIndex(FStackKey Key) const;
+	FKeyedStack* GetStackPtr(FStackKey Key);
+	const FKeyedStack* GetStackPtr(FStackKey Key) const;
 
 public:
-	int32 GetStack(const FStackKey& Key) const;
+	bool Contains(FStackKey Key) const;
+
+	int32 GetStack(FStackKey Key) const;
 
 	TArray<FStackKey> CopyKeys() const;
 
 	int32 StackSum() const;
 
-	void SetStack(const FStackKey& Key, const int32 Stack);
+	void SetStack(FStackKey, const int32 Stack);
 
 	// Add the Amount to the stacks, adding new stacks as needed. Can optionally return the list of added stacks.
 	// ReturnValue is 0 if Stack was successfully added, or the remainder, otherwise.
@@ -270,7 +272,9 @@ public:
 	// Merge the amounts in two stacks, moving as much as possible from stack A to stack B.
 	// The remainder in stack A will be returned, if some remains.
 	int32 MergeStacks(FStackKey A, FStackKey B);
-	TTuple<FKeyedStack, FKeyedStack> SplitStack(FStackKey Key, int32 Amount);
+
+	// Split a stack into two. Returns the new stack key made.
+	FStackKey SplitStack(FStackKey Key, int32 Amount);
 
 	bool IsValid() const;
 

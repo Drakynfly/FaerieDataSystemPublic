@@ -178,7 +178,7 @@ struct FFaerieClientAction_RequestMoveEntryToEquipmentSlot : public FFaerieClien
 	TObjectPtr<UFaerieEquipmentSlot> Slot = nullptr;
 
 	UPROPERTY(BlueprintReadWrite, Category = "RequestMoveEntryToEquipmentSlot")
-	int32 Amount = 1; 
+	int32 Amount = 1;
 };
 
 USTRUCT(BlueprintType)
@@ -248,7 +248,7 @@ struct FFaerieClientAction_RequestSplitStack : public FFaerieClientActionBase
 	FInventoryKey Key;
 
 	UPROPERTY(BlueprintReadWrite, Category = "RequestRotateSpatialEntry")
-	int32 Amount;
+	int32 Amount = 1;
 };
 
 

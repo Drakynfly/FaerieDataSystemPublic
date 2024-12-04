@@ -59,16 +59,6 @@ int32 UInventoryEntryStorageProxy::GetCopies() const
 	return EntryView.Get().StackSum();
 }
 
-bool UInventoryEntryStorageProxy::CanMutate() const
-{
-	if (!VerifyStatus())
-	{
-		return false;
-	}
-
-	return GetStorage()->CanEditEntry(GetKey());
-}
-
 TScriptInterface<IFaerieItemOwnerInterface> UInventoryEntryStorageProxy::GetOwner() const
 {
 	return GetStorage();

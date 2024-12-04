@@ -8,12 +8,12 @@
 
 bool UFaerieItemMutator::CanApply(const FFaerieItemProxy Proxy) const
 {
-	return Proxy->CanMutate() &&
+	return Proxy.IsInstanceMutable() &&
 		IsValid(ApplicationFilter) &&
 		ApplicationFilter->TryMatch(Proxy);
 }
 
-bool UFaerieItemMutator::TryApply(const FFaerieItemStack Stack)
+bool UFaerieItemMutator::TryApply(const FFaerieItemStack& Stack)
 {
 	if (IsValid(ApplicationFilter) &&
 		!ApplicationFilter->TryMatch(Stack))

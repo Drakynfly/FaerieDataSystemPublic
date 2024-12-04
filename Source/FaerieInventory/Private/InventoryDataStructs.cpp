@@ -17,12 +17,12 @@ LLM_DEFINE_TAG(ItemStorage, NAME_None, NAME_None, GET_STATFNAME(STAT_StorageLLM)
 
 FEntryKey FEntryKey::InvalidKey;
 
-int32 FInventoryEntry::GetStackIndex(const FStackKey& Key) const
+int32 FInventoryEntry::GetStackIndex(const FStackKey Key) const
 {
 	return Algo::BinarySearchBy(Stacks, Key, &FKeyedStack::Key);
 }
 
-FKeyedStack* FInventoryEntry::GetStackPtr(const FStackKey& Key)
+FKeyedStack* FInventoryEntry::GetStackPtr(const FStackKey Key)
 {
 	if (const int32 StackIndex = GetStackIndex(Key);
 		StackIndex != INDEX_NONE)
@@ -32,7 +32,7 @@ FKeyedStack* FInventoryEntry::GetStackPtr(const FStackKey& Key)
 	return nullptr;
 }
 
-const FKeyedStack* FInventoryEntry::GetStackPtr(const FStackKey& Key) const
+const FKeyedStack* FInventoryEntry::GetStackPtr(const FStackKey Key) const
 {
 	if (const int32 StackIndex = GetStackIndex(Key);
 		StackIndex != INDEX_NONE)
@@ -42,7 +42,12 @@ const FKeyedStack* FInventoryEntry::GetStackPtr(const FStackKey& Key) const
 	return nullptr;
 }
 
-int32 FInventoryEntry::GetStack(const FStackKey& Key) const
+bool FInventoryEntry::Contains(const FStackKey Key) const
+{
+	return GetStackIndex(Key) != INDEX_NONE;
+}
+
+int32 FInventoryEntry::GetStack(const FStackKey Key) const
 {
 	if (auto&& KeyedStack = GetStackPtr(Key))
 	{
@@ -70,7 +75,7 @@ int32 FInventoryEntry::StackSum() const
 	return Out;
 }
 
-void FInventoryEntry::SetStack(const FStackKey& Key, const int32 Stack)
+void FInventoryEntry::SetStack(const FStackKey Key, const int32 Stack)
 {
 	if (Stack <= 0)
 	{
@@ -94,6 +99,7 @@ void FInventoryEntry::SetStack(const FStackKey& Key, const int32 Stack)
 
 void FInventoryEntry::AddToAnyStack(int32 Amount, TArray<FStackKey>* OutAddedKeys)
 {
+	// Fill existing stacks first
 	for (auto& KeyedStack : Stacks)
 	{
 		if (Limit == Faerie::ItemData::UnlimitedStack)
@@ -191,7 +197,7 @@ int32 FInventoryEntry::RemoveFromAnyStack(int32 Amount, TArray<FStackKey>* OutAl
 		*OutRemovedKeys = RemovedStacks;
 	}
 
-	return Amount; // Return the remainder, if we didn't remove it all.
+	return Amount; // Return the remainder if we didn't remove it all.
 }
 
 int32 FInventoryEntry::MergeStacks(const FStackKey A, const FStackKey B)
@@ -210,22 +216,12 @@ int32 FInventoryEntry::MergeStacks(const FStackKey A, const FStackKey B)
 	return StackA.Stack;
 }
 
-TTuple<FKeyedStack, FKeyedStack> FInventoryEntry::SplitStack(const FStackKey Key, const int32 Amount)
+FStackKey FInventoryEntry::SplitStack(const FStackKey Key, const int32 Amount)
 {
-	const int32 StackIndex = GetStackIndex(Key);
-	FKeyedStack& Stack = Stacks[StackIndex];
-	TArray<FStackKey> AddedStacks;
-	AddedStacks.Reserve(1);
-	//Added Stacks should never return more than 1 element, since amount must be less than the current stack
-	//and how would that stack have exceeded its limit in the first place?
-	if(Stack.Stack > Amount)
-	{
-		Stack.Stack -= Amount;
-		AddToNewStacks(Amount, &AddedStacks);
-	}
-	const int32 NewStackIndex = GetStackIndex(AddedStacks.Last());
-	const FKeyedStack& NewStack = Stacks[NewStackIndex];
-	return TTuple<FKeyedStack, FKeyedStack>(Stack, NewStack);
+	GetStackPtr(Key)->Stack -= Amount;
+	const FStackKey NewKey = KeyGen.NextKey();
+	Stacks.Emplace(FKeyedStack(NewKey, Amount));
+	return NewKey;
 }
 
 bool FInventoryEntry::IsValid() const

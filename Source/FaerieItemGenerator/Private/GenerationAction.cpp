@@ -177,7 +177,7 @@ void UCraftingActionWithSlots::ConsumeSlotCosts(const IFaerieItemSlotInterface* 
 				return false;
 			}
 
-			if (!ItemProxy->CanMutate())
+			if (!ItemProxy.IsInstanceMutable())
 			{
 				UE_LOG(LogGenerationAction, Error, TEXT("ConsumeSlotCosts is unable to mutate the item in slot [%s]!"), *Slot.Key.ToString())
 				return false;
@@ -232,7 +232,7 @@ void UCraftingActionWithSlots::Run()
 	{
 		if (!Element.Value.IsValid() ||
 			!IsValid(Element.Value->GetItemObject()) ||
-			!Element.Value->CanMutate())
+			!Element.Value.IsInstanceMutable())
 		{
 			UE_LOG(LogGenerationAction, Error, TEXT("A filled slot [%s] is invalid!)"), *Element.Key.ToString())
 			Fail();

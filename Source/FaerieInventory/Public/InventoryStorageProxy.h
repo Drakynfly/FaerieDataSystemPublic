@@ -45,7 +45,6 @@ public:
 	//~ IFaerieItemDataProxy
 	virtual const UFaerieItem* GetItemObject() const override;
 	virtual int32 GetCopies() const override;
-	virtual bool CanMutate() const override;
 	virtual TScriptInterface<IFaerieItemOwnerInterface> GetOwner() const override;
 	//~ IFaerieItemDataProxy
 

@@ -18,10 +18,10 @@ class FAERIEINVENTORYCONTENT_API UInventorySpatialGridExtension : public UInvent
 protected:
 	//~ UItemContainerExtensionBase
 	virtual void InitializeExtension(const UFaerieItemContainerBase* Container) override;
-	virtual EEventExtensionResponse AllowsAddition(const UFaerieItemContainerBase* Container, FFaerieItemStackView Stack, EFaerieStorageAddStackBehavior AddStackBehavior) override;
-	virtual EEventExtensionResponse AllowsEdit(const UFaerieItemContainerBase* Container, FEntryKey Key, FFaerieInventoryTag EditType) override;
+	virtual EEventExtensionResponse AllowsAddition(const UFaerieItemContainerBase* Container, FFaerieItemStackView Stack, EFaerieStorageAddStackBehavior AddStackBehavior) const override;
 	virtual void PostAddition(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) override;
 	virtual void PostRemoval(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) override;
+	virtual EEventExtensionResponse AllowsEdit(const UFaerieItemContainerBase* Container, FEntryKey Key, FFaerieInventoryTag EditType) const override;
 	virtual void PostEntryChanged(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) override;
 	//~ UItemContainerExtensionBase
 
@@ -71,6 +71,6 @@ protected:
 
 	bool MoveSingleItem(const FInventoryKey Key, FFaerieGridPlacement& Placement, const FIntPoint& NewPosition);
 
-	void AddItemPosition(const FFaerieGridShapeConstView ItemShape, FFaerieGridPlacement& Placement, const FIntPoint& NewPosition);
+	void AddItemPosition(const FFaerieGridShapeConstView ItemShape, const FFaerieGridPlacement& Placement);
 	void RemoveItemPosition(const FFaerieGridShapeConstView& ItemShape, const FFaerieGridPlacement& Placement);
 };

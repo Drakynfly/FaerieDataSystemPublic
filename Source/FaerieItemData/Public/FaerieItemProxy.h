@@ -35,10 +35,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Faerie|ItemDataProxy")
 	virtual int32 GetCopies() const PURE_VIRTUAL(UFaerieItemDataProxy::GetCopies, return -1; )
 
-	// KINDA TEMP. Can the Item be modified through this proxy. NO NON-CONST ACCESSOR CURRENTLY EXISTS.
-	UFUNCTION(BlueprintCallable, Category = "Faerie|ItemDataProxy")
-	virtual bool CanMutate() const PURE_VIRTUAL(UFaerieItemDataProxy::CanMutate, return false; )
-
 	// Get the Object that owns the item this proxy represents.
 	UFUNCTION(BlueprintCallable, Category = "Faerie|ItemDataProxy")
 	virtual TScriptInterface<IFaerieItemOwnerInterface> GetOwner() const PURE_VIRTUAL(UFaerieItemDataProxy::GetOwner, return nullptr; )
@@ -88,6 +84,7 @@ public:
 	const UFaerieItem* GetItemObject() const;
 	int32 GetCopies() const;
 	TScriptInterface<IFaerieItemOwnerInterface> GetOwner() const;
+	bool IsInstanceMutable() const;
 
 	const IFaerieItemDataProxy* operator->() const { return Cast<IFaerieItemDataProxy>(Proxy.Get()); }
 

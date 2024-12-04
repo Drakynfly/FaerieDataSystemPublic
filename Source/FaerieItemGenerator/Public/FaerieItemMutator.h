@@ -21,7 +21,7 @@ protected:
 	virtual bool Apply(FFaerieItemStack Stack) PURE_VIRTUAL(UFaerieItemMutator::Apply, return false; )
 
 public:
-	bool TryApply(FFaerieItemStack Stack);
+	bool TryApply(const FFaerieItemStack& Stack);
 
 	// Any soft assets required to be loaded when Apply is called should be registered here.
 	UFUNCTION(BlueprintNativeEvent, Category = "Mutator")

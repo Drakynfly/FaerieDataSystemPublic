@@ -20,7 +20,6 @@ public:
 	//~ UFaerieItemDataProxy
 	virtual const UFaerieItem* GetItemObject() const override;
 	virtual int32 GetCopies() const override;
-	virtual bool CanMutate() const override { return true; }
 	virtual TScriptInterface<IFaerieItemOwnerInterface> GetOwner() const override { return const_cast<ThisClass*>(this); }
 	//~ UFaerieItemDataProxy
 

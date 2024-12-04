@@ -31,3 +31,13 @@ TScriptInterface<IFaerieItemOwnerInterface> FFaerieItemProxy::GetOwner() const
 	}
 	return nullptr;
 }
+
+bool FFaerieItemProxy::IsInstanceMutable() const
+{
+	if (auto&& Object = GetItemObject();
+		::IsValid(Object))
+	{
+		return Object->IsInstanceMutable();
+	}
+	return false;
+}

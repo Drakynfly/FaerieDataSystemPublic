@@ -77,9 +77,9 @@ void UInventoryCapacityExtension::DeinitializeExtension(const UFaerieItemContain
 	HandleStateChanged();
 }
 
-EEventExtensionResponse UInventoryCapacityExtension::AllowsAddition(const UFaerieItemContainerBase* Container,
+EEventExtensionResponse UInventoryCapacityExtension::AllowsAddition(const UFaerieItemContainerBase*,
 																	const FFaerieItemStackView Stack,
-																	EFaerieStorageAddStackBehavior)
+																	EFaerieStorageAddStackBehavior) const
 {
 	if (!CanContain(Stack))
 	{

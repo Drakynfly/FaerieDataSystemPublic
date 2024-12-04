@@ -118,7 +118,7 @@ void UItemContainerExtensionGroup::DeinitializeExtension(const UFaerieItemContai
 
 EEventExtensionResponse UItemContainerExtensionGroup::AllowsAddition(const UFaerieItemContainerBase* Container,
 																	 const FFaerieItemStackView Stack,
-																	 const EFaerieStorageAddStackBehavior AddStackBehavior)
+																	 const EFaerieStorageAddStackBehavior AddStackBehavior) const
 {
 	EEventExtensionResponse Response = EEventExtensionResponse::NoExplicitResponse;
 
@@ -138,35 +138,6 @@ EEventExtensionResponse UItemContainerExtensionGroup::AllowsAddition(const UFaer
 		case EEventExtensionResponse::Disallowed:
 			// Return false immediately if any Extension bars the reason.
 			return EEventExtensionResponse::Disallowed;
-		default: ;
-		}
-	}
-
-	return Response;
-}
-
-EEventExtensionResponse UItemContainerExtensionGroup::AllowsEdit(const UFaerieItemContainerBase* Container,
-																	 const FEntryKey Key,
-																	 const FFaerieInventoryTag EditType)
-{
-	EEventExtensionResponse Response = EEventExtensionResponse::NoExplicitResponse;
-
-	// Check each extension, to see if the reason is allowed or denied.
-	for (auto&& Extension : Extensions)
-	{
-		if (!ensure(IsValid(Extension))) continue;
-
-		switch (Extension->AllowsEdit(Container, Key, EditType))
-		{
-		case EEventExtensionResponse::NoExplicitResponse:
-			break;
-		case EEventExtensionResponse::Allowed:
-			// Flag response as allowed, unless another extension bars with a Disallowed
-				Response = EEventExtensionResponse::Allowed;
-			break;
-		case EEventExtensionResponse::Disallowed:
-			// Return false immediately if any Extension bars the reason.
-				return EEventExtensionResponse::Disallowed;
 		default: ;
 		}
 	}
@@ -238,6 +209,35 @@ void UItemContainerExtensionGroup::PostRemoval(const UFaerieItemContainerBase* C
 		{
 			Extension->PostRemoval(Container, Event);
 		});
+}
+
+EEventExtensionResponse UItemContainerExtensionGroup::AllowsEdit(const UFaerieItemContainerBase* Container,
+																 const FEntryKey Key,
+																 const FFaerieInventoryTag EditTag) const
+{
+	EEventExtensionResponse Response = EEventExtensionResponse::NoExplicitResponse;
+
+	// Check each extension, to see if the edit tag is allowed or denied.
+	for (auto&& Extension : Extensions)
+	{
+		if (!ensure(IsValid(Extension))) continue;
+
+		switch (Extension->AllowsEdit(Container, Key, EditTag))
+		{
+		case EEventExtensionResponse::NoExplicitResponse:
+			break;
+		case EEventExtensionResponse::Allowed:
+			// Flag response as allowed, unless another extension bars with a Disallowed
+				Response = EEventExtensionResponse::Allowed;
+			break;
+		case EEventExtensionResponse::Disallowed:
+			// Return false immediately if any Extension bars the reason.
+				return EEventExtensionResponse::Disallowed;
+		default: ;
+		}
+	}
+
+	return Response;
 }
 
 void UItemContainerExtensionGroup::PostEntryChanged(const UFaerieItemContainerBase* Container,

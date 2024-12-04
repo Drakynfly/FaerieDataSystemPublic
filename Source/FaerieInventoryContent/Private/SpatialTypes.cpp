@@ -95,7 +95,7 @@ bool FFaerieGridShape::IsSymmetrical() const
 	return ShapeCopy == *this;
 }
 
-bool FFaerieGridShape::Contains(const FFaerieGridShape& Other) const
+bool FFaerieGridShape::Overlaps(const FFaerieGridShape& Other) const
 {
 	TSet<FIntPoint> SeenPoints;
 	SeenPoints.Append(Points);

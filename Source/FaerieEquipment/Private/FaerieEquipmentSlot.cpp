@@ -134,12 +134,6 @@ int32 UFaerieEquipmentSlot::GetCopies() const
 	return ItemStack.Copies;
 }
 
-bool UFaerieEquipmentSlot::CanMutate() const
-{
-	// Items should not be modified while in an equipment slot. Remove them first.
-	return false;
-}
-
 TScriptInterface<IFaerieItemOwnerInterface> UFaerieEquipmentSlot::GetOwner() const
 {
 	return const_cast<ThisClass*>(this);

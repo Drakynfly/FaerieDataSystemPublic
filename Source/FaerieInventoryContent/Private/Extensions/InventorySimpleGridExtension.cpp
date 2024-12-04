@@ -38,7 +38,7 @@ void UInventorySimpleGridExtension::InitializeExtension(const UFaerieItemContain
 
 EEventExtensionResponse UInventorySimpleGridExtension::AllowsAddition(const UFaerieItemContainerBase* Container,
 																	   const FFaerieItemStackView Stack,
-																	   EFaerieStorageAddStackBehavior)
+																	   EFaerieStorageAddStackBehavior) const
 {
 	// @todo add boolean in config to allow items without a shape
 	if (!CanAddItemToGrid())
@@ -57,7 +57,7 @@ void UInventorySimpleGridExtension::PostAddition(const UFaerieItemContainerBase*
 	FInventoryKey NewKey;
 	NewKey.EntryKey = Event.EntryTouched;
 
-	for (const FStackKey& StackKey : Event.StackKeys)
+	for (const FStackKey StackKey : Event.StackKeys)
 	{
 		NewKey.StackKey = StackKey;
 		AddItemToGrid(NewKey, Event.Item.Get());
@@ -86,6 +86,21 @@ void UInventorySimpleGridExtension::PostRemoval(const UFaerieItemContainerBase* 
 		}
 		RemoveItemBatch(KeysToRemove, Event.Item.Get());
 	}
+}
+
+EEventExtensionResponse UInventorySimpleGridExtension::AllowsEdit(const UFaerieItemContainerBase* Container,
+																  const FEntryKey Key,
+																  const FFaerieInventoryTag EditType) const
+{
+	if (EditType == Faerie::Inventory::Tags::Split)
+	{
+		if (!CanAddItemToGrid())
+		{
+			return EEventExtensionResponse::Disallowed;
+		}
+	}
+
+	return EEventExtensionResponse::NoExplicitResponse;
 }
 
 void UInventorySimpleGridExtension::PostEntryChanged(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event)
