@@ -19,4 +19,7 @@ class UFaerieGridLibrary : public UBlueprintFunctionLibrary
 public:
 	UFUNCTION(BlueprintCallable, Category = "Faerie|GridLibrary")
 	static FFaerieGridShape RotateShape(const FFaerieGridShape& InShape, ESpatialItemRotation Rotation);
+
+	UFUNCTION(BlueprintPure, Category = "Faerie|GridLibrary")
+	static FIntPoint GetSize(const FFaerieGridShape& InShape);
 };

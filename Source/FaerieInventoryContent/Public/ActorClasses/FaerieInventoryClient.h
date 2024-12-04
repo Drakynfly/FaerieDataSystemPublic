@@ -176,6 +176,9 @@ struct FFaerieClientAction_RequestMoveEntryToEquipmentSlot : public FFaerieClien
 
 	UPROPERTY(BlueprintReadWrite, Category = "RequestMoveEntryToEquipmentSlot")
 	TObjectPtr<UFaerieEquipmentSlot> Slot = nullptr;
+
+	UPROPERTY(BlueprintReadWrite, Category = "RequestMoveEntryToEquipmentSlot")
+	int32 Amount = 1; 
 };
 
 USTRUCT(BlueprintType)
@@ -230,6 +233,24 @@ struct FFaerieClientAction_RequestRotateSpatialEntry : public FFaerieClientActio
 
 	// @todo should also pass a 90 degree / 180 degree parameter...
 };
+
+USTRUCT(BlueprintType)
+struct FFaerieClientAction_RequestSplitStack : public FFaerieClientActionBase
+{
+	GENERATED_BODY()
+
+	virtual bool Server_Execute(const UFaerieInventoryClient* Client) const override;
+
+	UPROPERTY(BlueprintReadWrite, Category = "RequestRotateSpatialEntry")
+	TObjectPtr<UFaerieItemStorage> Storage = nullptr;
+
+	UPROPERTY(BlueprintReadWrite, Category = "RequestRotateSpatialEntry")
+	FInventoryKey Key;
+
+	UPROPERTY(BlueprintReadWrite, Category = "RequestRotateSpatialEntry")
+	int32 Amount;
+};
+
 
 USTRUCT(BlueprintType)
 struct FFaerieClientAction_RequestMoveEquipmentSlotToSpatialInventory : public FFaerieClientActionBase

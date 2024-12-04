@@ -9,3 +9,8 @@ FFaerieGridShape UFaerieGridLibrary::RotateShape(const FFaerieGridShape& InShape
 {
 	return InShape.Rotate(Rotation);
 }
+
+FIntPoint UFaerieGridLibrary::GetSize(const FFaerieGridShape& InShape)
+{
+	return InShape.GetSize();
+}

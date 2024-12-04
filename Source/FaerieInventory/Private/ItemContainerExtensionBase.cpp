@@ -145,6 +145,35 @@ EEventExtensionResponse UItemContainerExtensionGroup::AllowsAddition(const UFaer
 	return Response;
 }
 
+EEventExtensionResponse UItemContainerExtensionGroup::AllowsEdit(const UFaerieItemContainerBase* Container,
+																	 const FEntryKey Key,
+																	 const FFaerieInventoryTag EditType)
+{
+	EEventExtensionResponse Response = EEventExtensionResponse::NoExplicitResponse;
+
+	// Check each extension, to see if the reason is allowed or denied.
+	for (auto&& Extension : Extensions)
+	{
+		if (!ensure(IsValid(Extension))) continue;
+
+		switch (Extension->AllowsEdit(Container, Key, EditType))
+		{
+		case EEventExtensionResponse::NoExplicitResponse:
+			break;
+		case EEventExtensionResponse::Allowed:
+			// Flag response as allowed, unless another extension bars with a Disallowed
+				Response = EEventExtensionResponse::Allowed;
+			break;
+		case EEventExtensionResponse::Disallowed:
+			// Return false immediately if any Extension bars the reason.
+				return EEventExtensionResponse::Disallowed;
+		default: ;
+		}
+	}
+
+	return Response;
+}
+
 void UItemContainerExtensionGroup::PreAddition(const UFaerieItemContainerBase* Container, const FFaerieItemStackView Stack)
 {
 	ForEachExtension(

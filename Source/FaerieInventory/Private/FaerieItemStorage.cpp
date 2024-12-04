@@ -817,6 +817,17 @@ bool UFaerieItemStorage::CanAddStack(const FFaerieItemStackView Stack, const EFa
 	}
 }
 
+bool UFaerieItemStorage::CanEditStack(const FInventoryKey StackKey, const FFaerieInventoryTag EditType) const
+{
+	switch (Extensions->AllowsEdit(this, StackKey.EntryKey, EditType))
+	{
+	case EEventExtensionResponse::NoExplicitResponse:
+	case EEventExtensionResponse::Allowed:				return true;
+	case EEventExtensionResponse::Disallowed:			return false;
+	default: return false;
+	}
+}
+
 bool UFaerieItemStorage::CanEditEntry(FEntryKey EntryKey) const
 {
 	// @todo Expose this to extensions
@@ -1061,13 +1072,16 @@ bool UFaerieItemStorage::MergeStacks(const FEntryKey Entry, const FStackKey Stac
 		return false;
 	}
 
+
 	auto&& EntryView = GetEntryViewImpl(Entry);
 	const FKeyedStack* KeyedStackB = EntryView.Get().Stacks.FindByKey(StackB);
 
 	// Ensure both stacks exist and B isn't already full
 	if (!EntryView.Get().Stacks.FindByKey(StackA) ||
 		!KeyedStackB ||
-		KeyedStackB->Stack == EntryView.Get().Limit)
+		KeyedStackB->Stack == EntryView.Get().Limit ||
+		!CanEditStack({Entry, StackA}, Faerie::Inventory::Tags::Merge) ||
+		!CanEditStack({Entry, StackB}, Faerie::Inventory::Tags::Merge))
 	{
 		return false;
 	}
@@ -1090,6 +1104,47 @@ bool UFaerieItemStorage::MergeStacks(const FEntryKey Entry, const FStackKey Stac
 
 	Event.Amount = KeyedStackB->Stack - Event.Amount; // This creates a diff to let us know how many were moved.
 
+	Extensions->PostEntryChanged(this, Event);
+
+	return true;
+}
+
+bool UFaerieItemStorage::SplitStack(FEntryKey Entry, FStackKey Stack, const int32 Amount)
+{
+	if (!IsValidKey(Entry) || !CanEditEntry(Entry))
+	{
+		return false;
+	}
+	
+	auto&& EntryView = GetEntryViewImpl(Entry);
+	const FKeyedStack* KeyedStack = EntryView.Get<const FInventoryEntry>().Stacks.FindByKey(Stack);
+    
+	// Validate requested amount is less than whats in stack, and that a new stack of the target size can be added
+	auto&& StackView = View(Entry);
+	StackView.Copies = Amount;
+	if (!CanEditStack({Entry, Stack}, Faerie::Inventory::Tags::Split) || 
+		Amount >= KeyedStack->Stack)
+	{
+		return false;
+	}
+	
+	Faerie::Inventory::FEventLog Event;
+	Event.Item = EntryView.Get().ItemObject;
+	Event.EntryTouched = Entry;
+	Event.StackKeys.Add(Stack);
+	Event.Type = Faerie::Inventory::Tags::Split;
+	Event.Success = true;
+
+	// Split the stack
+	{
+		const FInventoryContent::FScopedItemHandle Handle = EntryMap.GetHandle(Entry);
+		const TTuple<FKeyedStack, FKeyedStack> AffectedStacks = Handle->SplitStack(Stack, Amount);
+
+		// Update event with final stack information
+		Event.Amount = AffectedStacks.Key.Stack;
+		Event.StackKeys.Add(AffectedStacks.Value.Key);
+	}
+	
 	Extensions->PostEntryChanged(this, Event);
 
 	return true;

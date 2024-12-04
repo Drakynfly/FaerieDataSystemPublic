@@ -19,6 +19,7 @@ protected:
 	//~ UItemContainerExtensionBase
 	virtual void InitializeExtension(const UFaerieItemContainerBase* Container) override;
 	virtual EEventExtensionResponse AllowsAddition(const UFaerieItemContainerBase* Container, FFaerieItemStackView Stack, EFaerieStorageAddStackBehavior AddStackBehavior) override;
+	virtual EEventExtensionResponse AllowsEdit(const UFaerieItemContainerBase* Container, FEntryKey Key, FFaerieInventoryTag EditType) override;
 	virtual void PostAddition(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) override;
 	virtual void PostRemoval(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) override;
 	virtual void PostEntryChanged(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) override;
@@ -49,9 +50,9 @@ public:
 	bool MoveItem(const FInventoryKey& Key, const FIntPoint& TargetPoint);
 	bool RotateItem(const FInventoryKey& Key);
 
-	bool FitsInGrid(const FFaerieGridShapeConstView& Shape, const FFaerieGridPlacement& PlacementData, TConstArrayView<FInventoryKey> ExcludedKeys = {}, FIntPoint* OutCandidate = nullptr) const;
+	bool FitsInGrid(const FFaerieGridShapeConstView& Shape, const FFaerieGridPlacement& PlacementData, TConstArrayView<FInventoryKey> ExcludedKeys = {}) const;
 
-	bool FitsInGridAnyRotation(const FFaerieGridShapeConstView& Shape, FFaerieGridPlacement& PlacementData, TConstArrayView<FInventoryKey> ExcludedKeys = {}, FIntPoint* OutCandidate = nullptr) const;
+	bool FitsInGridAnyRotation(const FFaerieGridShapeConstView& Shape, FFaerieGridPlacement& PlacementData, TConstArrayView<FInventoryKey> ExcludedKeys = {}) const;
 
 	FFaerieGridPlacement FindFirstEmptyLocation(const FFaerieGridShapeConstView& Shape) const;
 
@@ -70,5 +71,6 @@ protected:
 
 	bool MoveSingleItem(const FInventoryKey Key, FFaerieGridPlacement& Placement, const FIntPoint& NewPosition);
 
-	void UpdateItemPosition(const FInventoryKey Key, FFaerieGridPlacement& Placement, const FIntPoint& NewPosition);
+	void AddItemPosition(const FFaerieGridShapeConstView ItemShape, FFaerieGridPlacement& Placement, const FIntPoint& NewPosition);
+	void RemoveItemPosition(const FFaerieGridShapeConstView& ItemShape, const FFaerieGridPlacement& Placement);
 };

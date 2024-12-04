@@ -94,7 +94,6 @@ void FInventoryEntry::SetStack(const FStackKey& Key, const int32 Stack)
 
 void FInventoryEntry::AddToAnyStack(int32 Amount, TArray<FStackKey>* OutAddedKeys)
 {
-	// Fill existing stacks first
 	for (auto& KeyedStack : Stacks)
 	{
 		if (Limit == Faerie::ItemData::UnlimitedStack)
@@ -106,9 +105,19 @@ void FInventoryEntry::AddToAnyStack(int32 Amount, TArray<FStackKey>* OutAddedKey
 
 		if (KeyedStack.Stack < Limit)
 		{
-			auto&& AddToStack = Limit - KeyedStack.Stack;
-			Amount -= AddToStack;
-			KeyedStack.Stack += AddToStack;
+			// Calculate how much we can add to this stack
+			const int32 SpaceInStack = Limit - KeyedStack.Stack;
+			// Add either the remaining amount or the available space, whichever is smaller
+			const int32 AmountToAdd = FMath::Min(Amount, SpaceInStack);
+
+			KeyedStack.Stack += AmountToAdd;
+			Amount -= AmountToAdd;
+
+			// If we've used up all the amount, we can return
+			if (Amount <= 0)
+			{
+				return;
+			}
 		}
 	}
 
@@ -199,6 +208,24 @@ int32 FInventoryEntry::MergeStacks(const FStackKey A, const FStackKey B)
 		return 0;
 	}
 	return StackA.Stack;
+}
+
+TTuple<FKeyedStack, FKeyedStack> FInventoryEntry::SplitStack(const FStackKey Key, const int32 Amount)
+{
+	const int32 StackIndex = GetStackIndex(Key);
+	FKeyedStack& Stack = Stacks[StackIndex];
+	TArray<FStackKey> AddedStacks;
+	AddedStacks.Reserve(1);
+	//Added Stacks should never return more than 1 element, since amount must be less than the current stack
+	//and how would that stack have exceeded its limit in the first place?
+	if(Stack.Stack > Amount)
+	{
+		Stack.Stack -= Amount;
+		AddToNewStacks(Amount, &AddedStacks);
+	}
+	const int32 NewStackIndex = GetStackIndex(AddedStacks.Last());
+	const FKeyedStack& NewStack = Stacks[NewStackIndex];
+	return TTuple<FKeyedStack, FKeyedStack>(Stack, NewStack);
 }
 
 bool FInventoryEntry::IsValid() const

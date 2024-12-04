@@ -208,6 +208,9 @@ public:
 	bool CanAddStack(FFaerieItemStackView Stack, EFaerieStorageAddStackBehavior AddStackBehavior) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Storage")
+	bool CanEditStack(FInventoryKey StackKey, FFaerieInventoryTag EditType) const;
+
+	UFUNCTION(BlueprintCallable, Category = "Storage")
 	bool CanEditEntry(FEntryKey EntryKey) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Storage")
@@ -287,6 +290,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Storage", BlueprintAuthorityOnly)
 	bool MergeStacks(FEntryKey Entry, FStackKey StackA, FStackKey StackB);
 
+	UFUNCTION(BlueprintCallable, Category = "Storage", BlueprintAuthorityOnly)
+	bool SplitStack(FEntryKey Entry, FStackKey Stack, const int32 Amount);
+	
 	/** Call MoveEntry on all entries in this storage. */
 	UFUNCTION(BlueprintCallable, Category = "Storage", BlueprintAuthorityOnly)
 	void Dump(UFaerieItemStorage* ToStorage);

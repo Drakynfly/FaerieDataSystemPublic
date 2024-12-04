@@ -56,6 +56,9 @@ protected:
 	/* Does this extension allow this item to be added to the container? */
 	virtual EEventExtensionResponse AllowsAddition(const UFaerieItemContainerBase* Container, FFaerieItemStackView Stack, EFaerieStorageAddStackBehavior AddStackBehavior) { return EEventExtensionResponse::NoExplicitResponse; }
 
+	/* Does this extensions allow this item to be edited? */
+	virtual EEventExtensionResponse AllowsEdit(const UFaerieItemContainerBase* Container, FEntryKey Key, FFaerieInventoryTag EditType) { return EEventExtensionResponse::NoExplicitResponse; }
+	
 	/* Allows us to react before an item is added */
 	virtual void PreAddition(const UFaerieItemContainerBase* Container, FFaerieItemStackView Stack) {}
 	/* Allows us to use the key from the last addition */
@@ -108,6 +111,8 @@ public:
 	virtual void InitializeExtension(const UFaerieItemContainerBase* Container) override;
 	virtual void DeinitializeExtension(const UFaerieItemContainerBase* Container) override;
 	virtual EEventExtensionResponse AllowsAddition(const UFaerieItemContainerBase* Container, FFaerieItemStackView Stack, EFaerieStorageAddStackBehavior AddStackBehavior) override;
+	virtual EEventExtensionResponse AllowsEdit(const UFaerieItemContainerBase* Container, FEntryKey Key,
+										FFaerieInventoryTag EditType) override;
 	virtual void PreAddition(const UFaerieItemContainerBase* Container, FFaerieItemStackView Stack) override;
 	virtual void PostAddition(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) override;
 	virtual EEventExtensionResponse AllowsRemoval(const UFaerieItemContainerBase* Container, FEntryKey Key, FFaerieInventoryTag Reason) const override;
