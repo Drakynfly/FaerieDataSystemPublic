@@ -76,6 +76,7 @@ void UInventoryEjectionHandlerExtension::HandleNextInQueue()
 	}
 	else
 	{
+		IsStreaming = true;
 		UAssetManager::GetStreamableManager().RequestAsyncLoad(ClassToSpawn.ToSoftObjectPath(),
 			FStreamableDelegate::CreateUObject(this, &ThisClass::PostLoadClassToSpawn, ClassToSpawn));
 	}
@@ -83,6 +84,8 @@ void UInventoryEjectionHandlerExtension::HandleNextInQueue()
 
 void UInventoryEjectionHandlerExtension::PostLoadClassToSpawn(const TSoftClassPtr<AItemRepresentationActor> ClassToSpawn)
 {
+	IsStreaming = false;
+
 	const TSubclassOf<AItemRepresentationActor> ActorClass = ClassToSpawn.Get();
 
 	if (!IsValid(ActorClass))
