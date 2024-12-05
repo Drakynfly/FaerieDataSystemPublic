@@ -281,7 +281,7 @@ bool FFaerieClientAction_RequestMoveEquipmentSlotToSpatialInventory::Server_Exec
 		return false;
 	}
 
-	if (!SpatialExtension->FitsInGridAnyRotation(Shape->GetShape(), TargetPoint))
+	if (!SpatialExtension->CanAddAtLocation(Shape->GetShape(), TargetPoint))
 	{
 		return false;
 	}

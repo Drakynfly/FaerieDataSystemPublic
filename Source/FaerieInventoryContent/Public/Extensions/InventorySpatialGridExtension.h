@@ -56,15 +56,23 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Faerie|Grid")
 	FIntPoint GetStackBounds(const FInventoryKey& Key) const;
 
+	UFUNCTION(BlueprintCallable, Category = "Faerie|Grid")
+	bool CanAddAtLocation(const FFaerieGridShape& Shape, FIntPoint Position) const;
+
 protected:
+	using FExclusionSet = TSet<FIntPoint>;
+
 	[[nodiscard]] static FFaerieGridShape ApplyPlacement(const FFaerieGridShapeConstView& Shape, const FFaerieGridPlacement& Placement);
 	static void ApplyPlacementInline(FFaerieGridShape& Shape, const FFaerieGridPlacement& Placement);
 
+	FExclusionSet MakeExclusionSet(FInventoryKey ExcludedKey) const;
+	FExclusionSet MakeExclusionSet(const TConstArrayView<FInventoryKey> ExcludedKeys) const;
+
 	FFaerieGridPlacement FindFirstEmptyLocation(const FFaerieGridShapeConstView& Shape) const;
 
-	bool FitsInGrid(const FFaerieGridShapeConstView& TranslatedShape, TConstArrayView<FInventoryKey> ExcludedKeys = {}) const;
+	bool FitsInGrid(const FFaerieGridShapeConstView& TranslatedShape, const FExclusionSet& ExclusionSet) const;
 
-	bool FitsInGridAnyRotation(const FFaerieGridShapeConstView& Shape, FIntPoint Origin, TConstArrayView<FInventoryKey> ExcludedKeys = {}) const;
+	bool FitsInGridAnyRotation(const FFaerieGridShapeConstView& Shape, FIntPoint Origin, const FExclusionSet& ExclusionSet) const;
 
 	FInventoryKey FindOverlappingItem(const FFaerieGridShapeConstView& TranslatedShape, const FInventoryKey& ExcludeKey) const;
 
