@@ -5,7 +5,7 @@
 namespace Type
 {
 	template <typename TOut, typename TIn>
-	static [[nodiscard]] TOut Cast(TIn&& In)
+	[[nodiscard]] static TOut Cast(TIn&& In)
 	{
 		return *reinterpret_cast<TOut*>(&In);
 	}

@@ -50,12 +50,6 @@ public:
 	bool MoveItem(const FInventoryKey& Key, const FIntPoint& TargetPoint);
 	bool RotateItem(const FInventoryKey& Key);
 
-	bool FitsInGrid(const FFaerieGridShapeConstView& TranslatedShape, TConstArrayView<FInventoryKey> ExcludedKeys = {}) const;
-
-	bool FitsInGridAnyRotation(const FFaerieGridShapeConstView& Shape, FIntPoint Origin, TConstArrayView<FInventoryKey> ExcludedKeys = {}) const;
-
-	FFaerieGridPlacement FindFirstEmptyLocation(const FFaerieGridShapeConstView& Shape) const;
-
 	UFUNCTION(BlueprintCallable, Category = "Faerie|Grid")
 	FFaerieGridShape GetItemShape(FEntryKey Key) const;
 
@@ -63,7 +57,14 @@ public:
 	FIntPoint GetStackBounds(const FInventoryKey& Key) const;
 
 protected:
-	static FFaerieGridShape ApplyPlacement(const FFaerieGridShapeConstView& Shape, const FFaerieGridPlacement& Placement);
+	[[nodiscard]] static FFaerieGridShape ApplyPlacement(const FFaerieGridShapeConstView& Shape, const FFaerieGridPlacement& Placement);
+	static void ApplyPlacementInline(FFaerieGridShape& Shape, const FFaerieGridPlacement& Placement);
+
+	FFaerieGridPlacement FindFirstEmptyLocation(const FFaerieGridShapeConstView& Shape) const;
+
+	bool FitsInGrid(const FFaerieGridShapeConstView& TranslatedShape, TConstArrayView<FInventoryKey> ExcludedKeys = {}) const;
+
+	bool FitsInGridAnyRotation(const FFaerieGridShapeConstView& Shape, FIntPoint Origin, TConstArrayView<FInventoryKey> ExcludedKeys = {}) const;
 
 	FInventoryKey FindOverlappingItem(const FFaerieGridShapeConstView& TranslatedShape, const FInventoryKey& ExcludeKey) const;
 
