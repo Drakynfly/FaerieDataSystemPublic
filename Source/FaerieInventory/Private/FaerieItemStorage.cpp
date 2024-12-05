@@ -1066,20 +1066,20 @@ FEntryKey UFaerieItemStorage::MoveEntry(UFaerieItemStorage* ToStorage, const FEn
 	return ToStorage->AddStackImpl(Stack, IfOnlyNewStacks(AddStackBehavior)).EntryTouched;
 }
 
-bool UFaerieItemStorage::MergeStacks(const FEntryKey Entry, const FStackKey StackA, const FStackKey StackB)
+bool UFaerieItemStorage::MergeStacks(const FEntryKey Entry, const FStackKey FromStack, const FStackKey ToStack, const int32 Amount)
 {
 	if (!IsValidKey(Entry) ||
-		!CanEditStack({Entry, StackA}, Faerie::Inventory::Tags::Merge) ||
-		!CanEditStack({Entry, StackB}, Faerie::Inventory::Tags::Merge))
+		!CanEditStack({Entry, FromStack}, Faerie::Inventory::Tags::Merge) ||
+		!CanEditStack({Entry, ToStack}, Faerie::Inventory::Tags::Merge))
 	{
 		return false;
 	}
 
 	auto&& EntryView = GetEntryViewImpl(Entry);
-	const int32 AmountB = EntryView.Get().GetStack(StackB);
+	const int32 AmountB = EntryView.Get().GetStack(ToStack);
 
 	// Ensure both stacks exist and B isn't already full
-	if (EntryView.Get().Contains(StackA) ||
+	if (EntryView.Get().Contains(FromStack) ||
 		AmountB != INDEX_NONE ||
 		AmountB == EntryView.Get().Limit)
 	{
@@ -1090,15 +1090,15 @@ bool UFaerieItemStorage::MergeStacks(const FEntryKey Entry, const FStackKey Stac
 	Event.Amount = AmountB; // Initially store the amount in stack B here.
 	Event.Item = EntryView.Get().ItemObject;
 	Event.EntryTouched = Entry;
-	Event.StackKeys.Add(StackA);
-	Event.StackKeys.Add(StackB);
+	Event.StackKeys.Add(FromStack);
+	Event.StackKeys.Add(ToStack);
 	Event.Type = Faerie::Inventory::Tags::Merge;
 	Event.Success = true;
 
 	// Open Mutable Scope
 	{
 		const FInventoryContent::FScopedItemHandle Handle = EntryMap.GetHandle(Entry);
-		const int32 Remainder = Handle->MergeStacks(StackA, StackB);
+		const int32 Remainder = Handle->MoveStack(FromStack, ToStack, Amount);
 
 		// We didn't move this many.
 		Event.Amount -= Remainder;

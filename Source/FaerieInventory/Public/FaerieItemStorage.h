@@ -208,7 +208,7 @@ public:
 	bool CanAddStack(FFaerieItemStackView Stack, EFaerieStorageAddStackBehavior AddStackBehavior) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Storage")
-	bool CanEditEntry(FEntryKey Key, const FFaerieInventoryTag EditTag) const;
+	bool CanEditEntry(FEntryKey Key, FFaerieInventoryTag EditTag) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Storage")
 	bool CanEditStack(FInventoryKey StackKey, FFaerieInventoryTag EditTag) const;
@@ -244,7 +244,7 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Storage", BlueprintAuthorityOnly)
 	bool RemoveEntry(FEntryKey Key,
-		UPARAM(meta = (Categories = "Fae.Inventory.Removal")) FFaerieInventoryTag RemovalTag, const int32 Amount = -1);
+		UPARAM(meta = (Categories = "Fae.Inventory.Removal")) FFaerieInventoryTag RemovalTag, int32 Amount = -1);
 
 	/**
 	 * Removes the entry with this key if it exists.
@@ -252,7 +252,7 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Storage", BlueprintAuthorityOnly)
 	bool RemoveStack(FInventoryKey Key,
-		UPARAM(meta = (Categories = "Fae.Inventory.Removal")) FFaerieInventoryTag RemovalTag, const int32 Amount = -1);
+		UPARAM(meta = (Categories = "Fae.Inventory.Removal")) FFaerieInventoryTag RemovalTag, int32 Amount = -1);
 
 	/**
 	 * Removes and returns the entry with this key if it exists.
@@ -260,7 +260,7 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Storage", BlueprintAuthorityOnly)
 	bool TakeEntry(FEntryKey Key, FFaerieItemStack& OutStack,
-		UPARAM(meta = (Categories = "Fae.Inventory.Removal")) FFaerieInventoryTag RemovalTag, const int32 Amount = -1);
+		UPARAM(meta = (Categories = "Fae.Inventory.Removal")) FFaerieInventoryTag RemovalTag, int32 Amount = -1);
 
 	/**
 	 * Removes and returns the entry with this key if it exists.
@@ -268,7 +268,7 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Storage", BlueprintAuthorityOnly)
 	bool TakeStack(FInventoryKey Key, FFaerieItemStack& OutStack,
-		UPARAM(meta = (Categories = "Fae.Inventory.Removal")) FFaerieInventoryTag RemovalTag, const int32 Amount = -1);
+		UPARAM(meta = (Categories = "Fae.Inventory.Removal")) FFaerieInventoryTag RemovalTag, int32 Amount = -1);
 
 	/**
 	 * Clear out the entire contents of the storage.
@@ -281,17 +281,17 @@ public:
 	 * @return The key used by the ToStorage to store the entry.
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Storage", BlueprintAuthorityOnly)
-	FEntryKey MoveStack(UFaerieItemStorage* ToStorage, FInventoryKey Key, const int32 Amount = -1,
+	FEntryKey MoveStack(UFaerieItemStorage* ToStorage, FInventoryKey Key, int32 Amount = -1,
 		EFaerieStorageAddStackBehavior AddStackBehavior = EFaerieStorageAddStackBehavior::AddToAnyStack);
 
 	UFUNCTION(BlueprintCallable, Category = "Storage", BlueprintAuthorityOnly)
 	FEntryKey MoveEntry(UFaerieItemStorage* ToStorage, FEntryKey Key, EFaerieStorageAddStackBehavior AddStackBehavior);
 
 	UFUNCTION(BlueprintCallable, Category = "Storage", BlueprintAuthorityOnly)
-	bool MergeStacks(FEntryKey Entry, FStackKey StackA, FStackKey StackB);
+	bool MergeStacks(FEntryKey Entry, FStackKey FromStack, FStackKey ToStack, int32 Amount = -1);
 
 	UFUNCTION(BlueprintCallable, Category = "Storage", BlueprintAuthorityOnly)
-	bool SplitStack(FEntryKey Entry, FStackKey Stack, const int32 Amount);
+	bool SplitStack(FEntryKey Entry, FStackKey Stack, int32 Amount);
 
 	/** Call MoveEntry on all entries in this storage. */
 	UFUNCTION(BlueprintCallable, Category = "Storage", BlueprintAuthorityOnly)

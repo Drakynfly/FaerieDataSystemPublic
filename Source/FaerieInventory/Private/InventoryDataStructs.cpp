@@ -200,20 +200,20 @@ int32 FInventoryEntry::RemoveFromAnyStack(int32 Amount, TArray<FStackKey>* OutAl
 	return Amount; // Return the remainder if we didn't remove it all.
 }
 
-int32 FInventoryEntry::MergeStacks(const FStackKey A, const FStackKey B)
+int32 FInventoryEntry::MoveStack(const FStackKey From, const FStackKey To, const int32 Amount)
 {
-	const int32 StackIndexA = GetStackIndex(A);
-	FKeyedStack& StackA = Stacks[StackIndexA];
-	FKeyedStack& StackB = *GetStackPtr(B);
-	const int32 Merging = FMath::Min(StackA.Stack, Limit - StackB.Stack);
-	StackA.Stack -= Merging;
-	StackB.Stack += Merging;
-	if (StackA.Stack == 0)
+	const int32 StackIndexA = GetStackIndex(From);
+	FKeyedStack& FromStack = Stacks[StackIndexA];
+	FKeyedStack& ToStack = *GetStackPtr(To);
+	const int32 Moving = FMath::Min(FMath::Min(Amount, FromStack.Stack), Limit - ToStack.Stack);
+	FromStack.Stack -= Moving;
+	ToStack.Stack += Moving;
+	if (FromStack.Stack == 0)
 	{
 		Stacks.RemoveAt(StackIndexA);
 		return 0;
 	}
-	return StackA.Stack;
+	return FromStack.Stack;
 }
 
 FStackKey FInventoryEntry::SplitStack(const FStackKey Key, const int32 Amount)

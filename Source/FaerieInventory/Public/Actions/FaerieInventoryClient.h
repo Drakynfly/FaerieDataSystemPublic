@@ -87,10 +87,10 @@ struct FFaerieClientAction_RequestDeleteEntry : public FFaerieClientActionBase
 
 	virtual bool Server_Execute(const UFaerieInventoryClient* Client) const override;
 
-	UPROPERTY(BlueprintReadWrite, Category = "RequestDeleteEntry")
+	UPROPERTY(BlueprintReadWrite, Category = "DeleteEntry")
 	FInventoryKeyHandle Handle;
 
-	UPROPERTY(BlueprintReadWrite, Category = "RequestDeleteEntry")
+	UPROPERTY(BlueprintReadWrite, Category = "DeleteEntry")
 	int32 Amount = -1;
 };
 
@@ -101,14 +101,38 @@ struct FFaerieClientAction_RequestMoveEntry : public FFaerieClientActionBase
 
 	virtual bool Server_Execute(const UFaerieInventoryClient* Client) const override;
 
-	UPROPERTY(BlueprintReadWrite, Category = "RequestMoveEntry")
+	UPROPERTY(BlueprintReadWrite, Category = "MoveEntry")
 	FInventoryKeyHandle Handle;
 
-	UPROPERTY(BlueprintReadWrite, Category = "RequestMoveEntry")
+	UPROPERTY(BlueprintReadWrite, Category = "MoveEntry")
 	int32 Amount = -1;
 
-	UPROPERTY(BlueprintReadWrite, Category = "RequestMoveEntry")
+	UPROPERTY(BlueprintReadWrite, Category = "MoveEntry")
 	TObjectPtr<UFaerieItemStorage> ToStorage = nullptr;
+};
+
+USTRUCT(BlueprintType)
+struct FFaerieClientAction_MergeStacks : public FFaerieClientActionBase
+{
+	GENERATED_BODY()
+
+	virtual bool Server_Execute(const UFaerieInventoryClient* Client) const override;
+
+	UPROPERTY(BlueprintReadWrite, Category = "MergeStacks")
+	TObjectPtr<UFaerieItemStorage> Storage = nullptr;
+
+	UPROPERTY(BlueprintReadWrite, Category = "MergeStacks")
+	FEntryKey Entry;
+
+	UPROPERTY(BlueprintReadWrite, Category = "MergeStacks")
+	FStackKey FromStack;
+
+	UPROPERTY(BlueprintReadWrite, Category = "MergeStacks")
+	FStackKey ToStack;
+
+	// Amount to move from A to B. If equal to -1, the entire stack will attempt to merge.
+	UPROPERTY(BlueprintReadWrite, Category = "MergeStacks")
+	int32 Amount = -1;
 };
 
 USTRUCT(BlueprintType)
@@ -118,12 +142,12 @@ struct FFaerieClientAction_RequestSplitStack : public FFaerieClientActionBase
 
 	virtual bool Server_Execute(const UFaerieInventoryClient* Client) const override;
 
-	UPROPERTY(BlueprintReadWrite, Category = "RequestRotateSpatialEntry")
+	UPROPERTY(BlueprintReadWrite, Category = "SplitStack")
 	TObjectPtr<UFaerieItemStorage> Storage = nullptr;
 
-	UPROPERTY(BlueprintReadWrite, Category = "RequestRotateSpatialEntry")
+	UPROPERTY(BlueprintReadWrite, Category = "SplitStack")
 	FInventoryKey Key;
 
-	UPROPERTY(BlueprintReadWrite, Category = "RequestRotateSpatialEntry")
+	UPROPERTY(BlueprintReadWrite, Category = "SplitStack")
 	int32 Amount = 1;
 };

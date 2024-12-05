@@ -77,6 +77,13 @@ bool FFaerieClientAction_RequestMoveEntry::Server_Execute(const UFaerieInventory
 	return Storage->MoveStack(ToStorage, Handle.Key, Amount).IsValid();
 }
 
+bool FFaerieClientAction_MergeStacks::Server_Execute(const UFaerieInventoryClient* Client) const
+{
+	if (!IsValid(Storage)) return false;
+	if (!Client->CanAccessStorage(Storage)) return false;
+	return Storage->MergeStacks(Entry, FromStack, ToStack, Amount);
+}
+
 bool FFaerieClientAction_RequestSplitStack::Server_Execute(const UFaerieInventoryClient* Client) const
 {
 	if (!IsValid(Storage)) return false;

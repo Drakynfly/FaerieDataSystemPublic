@@ -269,9 +269,9 @@ public:
 	// ReturnValue is 0 if Stack was successfully removed, or the remainder, if not.
 	int32 RemoveFromAnyStack(int32 Amount, TArray<FStackKey>* OutAllModifiedKeys = nullptr, TArray<FStackKey>* OutRemovedKeys = nullptr);
 
-	// Merge the amounts in two stacks, moving as much as possible from stack A to stack B.
-	// The remainder in stack A will be returned, if some remains.
-	int32 MergeStacks(FStackKey A, FStackKey B);
+	// Move an amount from one stack to another.
+	// The amount not moved will be returned, if some remains.
+	int32 MoveStack(FStackKey From, FStackKey To, int32 Amount);
 
 	// Split a stack into two. Returns the new stack key made.
 	FStackKey SplitStack(FStackKey Key, int32 Amount);
