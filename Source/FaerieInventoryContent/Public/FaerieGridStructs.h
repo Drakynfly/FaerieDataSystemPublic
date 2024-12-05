@@ -75,7 +75,7 @@ struct FFaerieGridContent : public FFastArraySerializer,
 	friend class UInventoryGridExtensionBase;
 
 private:
-	UPROPERTY(VisibleAnywhere, Category = "FaerieSpatialGridContent")
+	UPROPERTY(VisibleAnywhere, Category = "FaerieGridContent")
 	TArray<FFaerieGridKeyedStack> Items;
 
 	TArray<FFaerieGridKeyedStack>& GetArray() { return Items; }

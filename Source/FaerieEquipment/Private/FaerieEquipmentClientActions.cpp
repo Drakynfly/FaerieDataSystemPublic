@@ -3,7 +3,7 @@
 #include "FaerieEquipmentClientActions.h"
 #include "FaerieEquipmentSlot.h"
 #include "FaerieItemStorage.h"
-#include "Extensions/InventorySpatialGridExtension.h"
+#include "Extensions/InventoryGridExtensionBase.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FaerieEquipmentClientActions)
 
@@ -138,14 +138,14 @@ bool FFaerieClientAction_RequestMoveEquipmentSlotToSpatialInventory::Server_Exec
 		return false;
 	}
 
-	// Fetch the Spatial Extension and ensure it exists
-	auto&& SpatialExtension = GetExtension<UInventoryGridExtensionBase>(ToStorage);
-	if (!IsValid(SpatialExtension))
+	// Fetch the Grid Extension and ensure it exists
+	auto&& GridExtension = GetExtension<UInventoryGridExtensionBase>(ToStorage);
+	if (!IsValid(GridExtension))
 	{
 		return false;
 	}
 
-	if (!SpatialExtension->CanAddAtLocation(Slot->View(), TargetPoint))
+	if (!GridExtension->CanAddAtLocation(Slot->View(), TargetPoint))
 	{
 		return false;
 	}
@@ -167,7 +167,7 @@ bool FFaerieClientAction_RequestMoveEquipmentSlotToSpatialInventory::Server_Exec
 		const FInventoryKey TargetKey(Event.Event.EntryTouched, Event.Event.StackKeys.Last());
 
 		// Finally, move item to the cell client requested.
-		return SpatialExtension->MoveItem(TargetKey, TargetPoint);
+		return GridExtension->MoveItem(TargetKey, TargetPoint);
 	}
 
 	return false;
