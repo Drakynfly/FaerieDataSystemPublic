@@ -12,7 +12,7 @@ public class FaerieInventoryContentEditor : ModuleRules
             new []
             {
                 "Core",
-                "FaerieEquipmentEditor",
+                "FaerieInventory",
                 "FaerieInventoryContent",
                 "FaerieDataSystemEditor",
                 "InputCore"

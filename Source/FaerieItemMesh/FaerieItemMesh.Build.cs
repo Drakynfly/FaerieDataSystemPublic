@@ -26,8 +26,6 @@ public class FaerieItemMesh : ModuleRules
             {
                 "CoreUObject",
                 "Engine",
-                "Slate",
-                "SlateCore",
                 "SkeletalMerging"
             });
 

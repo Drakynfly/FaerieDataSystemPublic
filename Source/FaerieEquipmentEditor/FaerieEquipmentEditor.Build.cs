@@ -29,5 +29,15 @@ public class FaerieEquipmentEditor : ModuleRules
                 "SlateCore"
             }
         );
+
+        // Plugin dependencies
+        PublicDependencyModuleNames.AddRange(
+            new []
+            {
+                "FaerieInventory",
+                "FaerieItemGenerator",
+                "FaerieItemData",
+                "FaerieItemMesh"
+            });
     }
 }

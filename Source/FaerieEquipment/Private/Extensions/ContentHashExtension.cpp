@@ -1,7 +1,7 @@
 ﻿// Copyright Guy (Drakynfly) Lundvall. All Rights Reserved.
 
 #include "Extensions/ContentHashExtension.h"
-#include "EquipmentHashStatics.h"
+#include "FaerieInventoryHashStatics.h"
 #include "FaerieItemContainerBase.h"
 #include "Net/UnrealNetwork.h"
 

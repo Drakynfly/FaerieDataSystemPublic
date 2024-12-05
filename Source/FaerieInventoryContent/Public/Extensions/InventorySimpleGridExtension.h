@@ -29,6 +29,10 @@ protected:
 	virtual void PreStackRemove_Server(const FFaerieGridKeyedStack& Stack, const UFaerieItem* Item) override;
 	virtual void PostStackAdd(const FFaerieGridKeyedStack& Stack) override;
 	virtual void PostStackChange(const FFaerieGridKeyedStack& Stack) override;
+
+	virtual bool CanAddAtLocation(FFaerieItemStackView Stack, FIntPoint IntPoint) const override;
+	virtual bool MoveItem(const FInventoryKey& Key, const FIntPoint& TargetPoint) override;
+	virtual bool RotateItem(const FInventoryKey& Key) override;
 	//~ UInventoryGridExtensionBase
 
 private:
@@ -38,9 +42,6 @@ private:
 
 public:
 	bool CanAddItemToGrid() const;
-
-	bool MoveItem(const FInventoryKey& Key, const FIntPoint& TargetPoint);
-	bool RotateItem(const FInventoryKey& Key);
 
 	FFaerieGridPlacement FindFirstEmptyLocation() const;
 

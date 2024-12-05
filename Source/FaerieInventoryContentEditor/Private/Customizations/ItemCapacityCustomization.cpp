@@ -1,8 +1,8 @@
 ﻿// Copyright Guy (Drakynfly) Lundvall. All Rights Reserved.
 
 #include "ItemCapacityCustomization.h"
-#include "FaerieEquipmentEditorSettings.h"
 #include "Tokens/FaerieCapacityToken.h"
+//#include "FaerieEquipmentEditorSettings.h"
 
 #include "Math/UnitConversion.h"
 #include "IDetailChildrenBuilder.h"
@@ -141,6 +141,8 @@ void FItemCapacityCustomization::UpdateInfo()
 
         FString InfoString = FString::Printf(TEXT("Weight/cm3: %i (%.2f)"), WeightPerCentimeter, SuccessiveWeightPerCentimeter);
 
+        // @todo re-implement?
+        /*
         auto&& CompareStrings = GetDefault<UFaerieEquipmentEditorSettings>()->GetDebugInfoForCCM(static_cast<float>(CubicSpace));
 
         for (const FString& Str : CompareStrings)
@@ -148,6 +150,7 @@ void FItemCapacityCustomization::UpdateInfo()
             InfoString += LINE_TERMINATOR;
             InfoString += Str;
         }
+        */
 
         InfoText->SetText(FText::FromString(InfoString));
     }

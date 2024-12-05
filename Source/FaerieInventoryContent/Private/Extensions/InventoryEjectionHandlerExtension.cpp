@@ -3,6 +3,7 @@
 #include "Extensions/InventoryEjectionHandlerExtension.h"
 
 #include "FaerieItemDataProxy.h"
+#include "FaerieItemStorage.h"
 #include "ItemContainerEvent.h"
 #include "Tokens/FaerieVisualActorClassToken.h"
 #include "Actors/ItemRepresentationActor.h"
@@ -120,4 +121,13 @@ void UInventoryEjectionHandlerExtension::PostLoadClassToSpawn(const TSoftClassPt
 	PendingEjectionQueue.RemoveAt(0);
 
 	HandleNextInQueue();
+}
+
+bool FFaerieClientAction_RequestEjectEntry::Server_Execute(const UFaerieInventoryClient* Client) const
+{
+	auto&& Storage = Handle.ItemStorage.Get();
+	if (!IsValid(Storage)) return false;
+	if (!Client->CanAccessStorage(Storage)) return false;
+
+	return Storage->RemoveStack(Handle.Key, Faerie::Inventory::Tags::RemovalEject, Amount);
 }

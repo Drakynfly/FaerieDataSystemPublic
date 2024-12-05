@@ -10,10 +10,11 @@
 
 #include "FaerieEquipmentManager.generated.h"
 
-class UItemContainerExtensionGroup;
 class UFaerieEquipmentSlot;
 class UFaerieEquipmentSlotDescription;
+class UFaerieInventoryClient;
 class UItemContainerExtensionBase;
+class UItemContainerExtensionGroup;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogEquipmentManager, Log, All)
 
@@ -74,6 +75,9 @@ public:
 	virtual bool AddExtension(UItemContainerExtensionBase* Extension) override;
 	virtual bool RemoveExtension(UItemContainerExtensionBase* Extension) override;
 	//~ IFaerieContainerExtensionInterface
+
+	// Can the client request to run arbitrary actions on this equipment manager.
+	virtual bool CanClientRunActions(const UFaerieInventoryClient* Client) const;
 
 private:
 	void AddDefaultSlots();

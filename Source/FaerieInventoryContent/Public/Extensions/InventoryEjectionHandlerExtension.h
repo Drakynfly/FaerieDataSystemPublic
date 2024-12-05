@@ -5,6 +5,7 @@
 #include "ItemContainerExtensionBase.h"
 #include "FaerieItemStack.h"
 #include "TypedGameplayTags.h"
+#include "Actions/FaerieInventoryClient.h"
 
 #include "InventoryEjectionHandlerExtension.generated.h"
 
@@ -53,4 +54,18 @@ protected:
 
 private:
 	bool IsStreaming = false;
+};
+
+USTRUCT(BlueprintType)
+struct FFaerieClientAction_RequestEjectEntry : public FFaerieClientActionBase
+{
+	GENERATED_BODY()
+
+	virtual bool Server_Execute(const UFaerieInventoryClient* Client) const override;
+
+	UPROPERTY(BlueprintReadWrite, Category = "RequestEjectEntry")
+	FInventoryKeyHandle Handle;
+
+	UPROPERTY(BlueprintReadWrite, Category = "RequestEjectEntry")
+	int32 Amount = -1;
 };

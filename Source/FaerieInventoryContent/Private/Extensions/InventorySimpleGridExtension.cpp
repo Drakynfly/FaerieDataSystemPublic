@@ -160,10 +160,49 @@ void UInventorySimpleGridExtension::PostStackChange(const FFaerieGridKeyedStack&
 	}
 }
 
-bool UInventorySimpleGridExtension::CanAddItemToGrid() const
+bool UInventorySimpleGridExtension::CanAddAtLocation(const FFaerieItemStackView Stack, const FIntPoint IntPoint) const
 {
-	const FFaerieGridPlacement TestPlacement = FindFirstEmptyLocation();
-	return TestPlacement.Origin != FIntPoint::NoneValue;
+	return !IsCellOccupied(IntPoint);
+}
+
+bool UInventorySimpleGridExtension::MoveItem(const FInventoryKey& Key, const FIntPoint& TargetPoint)
+{
+	if (const FInventoryKey OverlappingKey = FindOverlappingItem(Key);
+		OverlappingKey.IsValid())
+	{
+		// If the Entry keys are identical, it gives us some other things to test before Swapping.
+		if (Key.EntryKey == OverlappingKey.EntryKey)
+		{
+			if (Key.StackKey == OverlappingKey.StackKey)
+			{
+				// It's the same stack? No point in this!
+				return false;
+			}
+
+			// Try merging them. This is known to be safe, since all stacks with the same key share immutability.
+			if (UFaerieItemStorage* Storage = Cast<UFaerieItemStorage>(InitializedContainer);
+				Storage->MergeStacks(Key.EntryKey, Key.StackKey, OverlappingKey.StackKey))
+			{
+				return true;
+			}
+		}
+
+		const FFaerieGridContent::FScopedStackHandle HandleA = GridContent.GetHandle(Key);
+		const FFaerieGridContent::FScopedStackHandle HandleB = GridContent.GetHandle(OverlappingKey);
+		SwapItems(HandleA.Get(), HandleB.Get());
+		return true;
+	}
+
+	const FFaerieGridContent::FScopedStackHandle Handle = GridContent.GetHandle(Key);
+	MoveSingleItem(Handle.Get(), TargetPoint);
+	return true;
+}
+
+bool UInventorySimpleGridExtension::RotateItem(const FInventoryKey& Key)
+{
+	const FFaerieGridContent::FScopedStackHandle Handle = GridContent.GetHandle(Key);
+	Handle->Rotation = GetNextRotation(Handle->Rotation);
+	return true;
 }
 
 bool UInventorySimpleGridExtension::AddItemToGrid(const FInventoryKey& Key, const UFaerieItem* Item)
@@ -196,16 +235,23 @@ void UInventorySimpleGridExtension::RemoveItem(const FInventoryKey& Key, const U
 		[Item, this](const FFaerieGridKeyedStack& Stack)
 		{
 			PreStackRemove_Server(Stack, Item);
-			GridContent.MarkArrayDirty();
 		});
 }
 
 void UInventorySimpleGridExtension::RemoveItemBatch(const TConstArrayView<FInventoryKey>& Keys, const UFaerieItem* Item)
 {
-	for (auto&& InvKey : Keys)
+	for (const FInventoryKey& KeyToRemove : Keys)
 	{
-		RemoveItem(InvKey, Item);
+		RemoveItem(KeyToRemove, Item);
+		BroadcastEvent(KeyToRemove, EFaerieGridEventType::ItemRemoved);
 	}
+	GridContent.MarkArrayDirty();
+}
+
+bool UInventorySimpleGridExtension::CanAddItemToGrid() const
+{
+	const FFaerieGridPlacement TestPlacement = FindFirstEmptyLocation();
+	return TestPlacement.Origin != FIntPoint::NoneValue;
 }
 
 FFaerieGridPlacement UInventorySimpleGridExtension::FindFirstEmptyLocation() const
@@ -235,38 +281,6 @@ FFaerieGridPlacement UInventorySimpleGridExtension::FindFirstEmptyLocation() con
 	return FFaerieGridPlacement{FIntPoint::NoneValue};
 }
 
-bool UInventorySimpleGridExtension::MoveItem(const FInventoryKey& Key, const FIntPoint& TargetPoint)
-{
-	const FFaerieGridContent::FScopedStackHandle Handle = GridContent.GetHandle(Key);
-	if (const FInventoryKey OverlappingKey = FindOverlappingItem(Key);
-		OverlappingKey.IsValid())
-	{
-		// If the Entry keys are identical, it gives us some other things to test before Swapping.
-		if (Key.EntryKey == OverlappingKey.EntryKey)
-		{
-			if (Key.StackKey == OverlappingKey.StackKey)
-			{
-				// It's the same stack? No point in this!
-				return false;
-			}
-
-			// Try merging them. This is known to be safe, since all stacks with the same key share immutability.
-			if (UFaerieItemStorage* Storage = Cast<UFaerieItemStorage>(InitializedContainer);
-				Storage->MergeStacks(Key.EntryKey, Key.StackKey, OverlappingKey.StackKey))
-			{
-				return true;
-			}
-		}
-
-		const FFaerieGridContent::FScopedStackHandle OverlappingHandle = GridContent.GetHandle(OverlappingKey);
-		SwapItems(Handle.Get(), OverlappingHandle.Get());
-		return true;
-	}
-
-	MoveSingleItem(Handle.Get(), TargetPoint);
-	return true;
-}
-
 FInventoryKey UInventorySimpleGridExtension::FindOverlappingItem(const FInventoryKey& ExcludeKey) const
 {
 	if (GridContent.Contains(ExcludeKey))
@@ -291,11 +305,4 @@ void UInventorySimpleGridExtension::MoveSingleItem(FFaerieGridPlacement& Placeme
 	MarkCell(NewPosition);
 
 	Placement.Origin = NewPosition;
-}
-
-bool UInventorySimpleGridExtension::RotateItem(const FInventoryKey& Key)
-{
-	const FFaerieGridContent::FScopedStackHandle Handle = GridContent.GetHandle(Key);
-	Handle->Rotation = GetNextRotation(Handle->Rotation);
-	return true;
 }

@@ -31,6 +31,10 @@ protected:
 
 	virtual void PostStackAdd(const FFaerieGridKeyedStack& Stack) override;
 	virtual void PostStackChange(const FFaerieGridKeyedStack& Stack) override;
+
+	virtual bool CanAddAtLocation(FFaerieItemStackView Stack, FIntPoint IntPoint) const override;
+	virtual bool MoveItem(const FInventoryKey& Key, const FIntPoint& TargetPoint) override;
+	virtual bool RotateItem(const FInventoryKey& Key) override;
 	//~ UInventoryGridExtensionBase
 
 private:
@@ -47,16 +51,13 @@ private:
 public:
 	bool CanAddItemToGrid(const FFaerieGridShapeConstView& Shape) const;
 
-	bool MoveItem(const FInventoryKey& Key, const FIntPoint& TargetPoint);
-	bool RotateItem(const FInventoryKey& Key);
-
-	UFUNCTION(BlueprintCallable, Category = "Faerie|Grid")
+	UFUNCTION(BlueprintCallable, Category = "Faerie|SpatialGrid")
 	FFaerieGridShape GetItemShape(FEntryKey Key) const;
 
-	UFUNCTION(BlueprintCallable, Category = "Faerie|Grid")
+	UFUNCTION(BlueprintCallable, Category = "Faerie|SpatialGrid")
 	FIntPoint GetStackBounds(const FInventoryKey& Key) const;
 
-	UFUNCTION(BlueprintCallable, Category = "Faerie|Grid")
+	UFUNCTION(BlueprintCallable, Category = "Faerie|SpatialGrid")
 	bool CanAddAtLocation(const FFaerieGridShape& Shape, FIntPoint Position) const;
 
 protected:

@@ -22,7 +22,8 @@ public class FaerieItemData : ModuleRules
             {
                 "CoreUObject",
                 "Engine",
-                "NetCore"
+                "NetCore",
+                "Squirrel"
             }
         );
     }

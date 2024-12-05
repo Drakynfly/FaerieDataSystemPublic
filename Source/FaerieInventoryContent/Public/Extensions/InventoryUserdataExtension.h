@@ -6,7 +6,7 @@
 #include "ItemContainerExtensionBase.h"
 #include "InventoryReplicatedDataExtensionBase.h"
 #include "TypedGameplayTags.h"
-#include "ActorClasses/FaerieInventoryClient.h"
+#include "Actions/FaerieInventoryClient.h"
 #include "InventoryUserdataExtension.generated.h"
 
 /**

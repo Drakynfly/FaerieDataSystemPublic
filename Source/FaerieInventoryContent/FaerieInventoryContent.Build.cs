@@ -26,7 +26,6 @@ public class FaerieInventoryContent : ModuleRules
         PublicDependencyModuleNames.AddRange(
             new []
             {
-                "FaerieEquipment",
                 "FaerieInventory",
                 "FaerieItemGenerator",
                 "FaerieItemData",

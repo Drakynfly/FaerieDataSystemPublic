@@ -18,6 +18,13 @@ public class FaerieEquipment : ModuleRules
 				"GameplayTags"
 			});
 
+		// @TODO temporary
+		PublicDependencyModuleNames.AddRange(
+			new []
+			{
+				"FaerieInventoryContent"
+			});
+
 		PublicDependencyModuleNames.AddRange(
 			new []
 			{

@@ -167,92 +167,10 @@ void UInventorySpatialGridExtension::PostStackChange(const FFaerieGridKeyedStack
 	}
 }
 
-bool UInventorySpatialGridExtension::AddItemToGrid(const FInventoryKey& Key, const UFaerieItem* Item)
+bool UInventorySpatialGridExtension::CanAddAtLocation(const FFaerieItemStackView Stack, const FIntPoint IntPoint) const
 {
-	if (!Key.IsValid())
-	{
-		return false;
-	}
-
-	if (GridContent.Find(Key) != nullptr)
-	{
-		return true;
-	}
-
-	FFaerieGridShape Shape = GetItemShape_Impl(Item);
-
-	const FFaerieGridPlacement DesiredItemPlacement = FindFirstEmptyLocation(Shape);
-
-	if (DesiredItemPlacement.Origin == FIntPoint::NoneValue)
-	{
-		return false;
-	}
-
-	GridContent.Insert(Key, DesiredItemPlacement);
-
-	ApplyPlacementInline(Shape, DesiredItemPlacement);
-	AddItemPosition(Shape);
-
-	return true;
-}
-
-void UInventorySpatialGridExtension::RemoveItem(const FInventoryKey& Key, const UFaerieItem* Item)
-{
-	GridContent.BSOA::Remove(Key,
-		[Item, this](const FFaerieGridKeyedStack& Stack)
-		{
-			PreStackRemove_Server(Stack, Item);
-		});
-}
-
-void UInventorySpatialGridExtension::RemoveItemBatch(const TConstArrayView<FInventoryKey>& Keys, const UFaerieItem* Item)
-{
-	for (const FInventoryKey& KeyToRemove : Keys)
-	{
-		RemoveItem(KeyToRemove, Item);
-		BroadcastEvent(KeyToRemove, EFaerieGridEventType::ItemRemoved);
-	}
-	GridContent.MarkArrayDirty();
-}
-
-void UInventorySpatialGridExtension::RebuildOccupiedCells()
-{
-	SCOPE_CYCLE_COUNTER(STAT_Client_CellRebuild);
-
-	UnmarkAllCells();
-
-	for (const auto& SpatialEntry : GridContent)
-	{
-		if (!InitializedContainer->IsValidKey(SpatialEntry.Key.EntryKey))
-		{
-			continue;
-		}
-
-		if (auto&& Item = InitializedContainer->View(SpatialEntry.Key.EntryKey).Item.Get())
-		{
-			const FFaerieGridShape Translated = ApplyPlacement(GetItemShape_Impl(Item), SpatialEntry.Value);
-			AddItemPosition(Translated);
-		}
-	}
-}
-
-FFaerieGridShape UInventorySpatialGridExtension::GetItemShape_Impl(const UFaerieItem* Item) const
-{
-	if (IsValid(Item))
-	{
-		if (const UFaerieShapeToken* ShapeToken = Item->GetToken<UFaerieShapeToken>())
-		{
-			return ShapeToken->GetShape();
-		}
-		return FFaerieGridShape::MakeSquare(1);
-	}
-	return FFaerieGridShape();
-}
-
-bool UInventorySpatialGridExtension::CanAddItemToGrid(const FFaerieGridShapeConstView& Shape) const
-{
-	const FFaerieGridPlacement TestPlacement = FindFirstEmptyLocation(Shape);
-	return TestPlacement.Origin != FIntPoint::NoneValue;
+	const FFaerieGridShape Shape = GetItemShape_Impl(Stack.Item.Get());
+	return CanAddAtLocation(Shape, IntPoint);
 }
 
 bool UInventorySpatialGridExtension::MoveItem(const FInventoryKey& Key, const FIntPoint& TargetPoint)
@@ -345,6 +263,94 @@ bool UInventorySpatialGridExtension::RotateItem(const FInventoryKey& Key)
 	AddItemPosition(NewShape);
 
 	return true;
+}
+
+bool UInventorySpatialGridExtension::AddItemToGrid(const FInventoryKey& Key, const UFaerieItem* Item)
+{
+	if (!Key.IsValid())
+	{
+		return false;
+	}
+
+	if (GridContent.Find(Key) != nullptr)
+	{
+		return true;
+	}
+
+	FFaerieGridShape Shape = GetItemShape_Impl(Item);
+
+	const FFaerieGridPlacement DesiredItemPlacement = FindFirstEmptyLocation(Shape);
+
+	if (DesiredItemPlacement.Origin == FIntPoint::NoneValue)
+	{
+		return false;
+	}
+
+	GridContent.Insert(Key, DesiredItemPlacement);
+
+	ApplyPlacementInline(Shape, DesiredItemPlacement);
+	AddItemPosition(Shape);
+
+	return true;
+}
+
+void UInventorySpatialGridExtension::RemoveItem(const FInventoryKey& Key, const UFaerieItem* Item)
+{
+	GridContent.BSOA::Remove(Key,
+		[Item, this](const FFaerieGridKeyedStack& Stack)
+		{
+			PreStackRemove_Server(Stack, Item);
+		});
+}
+
+void UInventorySpatialGridExtension::RemoveItemBatch(const TConstArrayView<FInventoryKey>& Keys, const UFaerieItem* Item)
+{
+	for (const FInventoryKey& KeyToRemove : Keys)
+	{
+		RemoveItem(KeyToRemove, Item);
+		BroadcastEvent(KeyToRemove, EFaerieGridEventType::ItemRemoved);
+	}
+	GridContent.MarkArrayDirty();
+}
+
+void UInventorySpatialGridExtension::RebuildOccupiedCells()
+{
+	SCOPE_CYCLE_COUNTER(STAT_Client_CellRebuild);
+
+	UnmarkAllCells();
+
+	for (const auto& SpatialEntry : GridContent)
+	{
+		if (!InitializedContainer->IsValidKey(SpatialEntry.Key.EntryKey))
+		{
+			continue;
+		}
+
+		if (auto&& Item = InitializedContainer->View(SpatialEntry.Key.EntryKey).Item.Get())
+		{
+			const FFaerieGridShape Translated = ApplyPlacement(GetItemShape_Impl(Item), SpatialEntry.Value);
+			AddItemPosition(Translated);
+		}
+	}
+}
+
+FFaerieGridShape UInventorySpatialGridExtension::GetItemShape_Impl(const UFaerieItem* Item) const
+{
+	if (IsValid(Item))
+	{
+		if (const UFaerieShapeToken* ShapeToken = Item->GetToken<UFaerieShapeToken>())
+		{
+			return ShapeToken->GetShape();
+		}
+		return FFaerieGridShape::MakeSquare(1);
+	}
+	return FFaerieGridShape();
+}
+
+bool UInventorySpatialGridExtension::CanAddItemToGrid(const FFaerieGridShapeConstView& Shape) const
+{
+	const FFaerieGridPlacement TestPlacement = FindFirstEmptyLocation(Shape);
+	return TestPlacement.Origin != FIntPoint::NoneValue;
 }
 
 FFaerieGridShape UInventorySpatialGridExtension::GetItemShape(const FEntryKey Key) const

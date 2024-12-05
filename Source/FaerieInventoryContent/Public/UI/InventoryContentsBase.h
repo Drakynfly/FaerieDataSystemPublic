@@ -3,10 +3,10 @@
 #pragma once
 
 #include "Blueprint/UserWidget.h"
-#include "ActorClasses/FaerieInventoryClient.h"
 #include "FaerieItemStorage.h"
 #include "InventoryContentsBase.generated.h"
 
+class UFaerieInventoryClient;
 class UFaerieItemDataComparator;
 class UFaerieItemDataFilter;
 

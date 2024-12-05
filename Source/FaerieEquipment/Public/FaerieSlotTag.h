@@ -7,7 +7,7 @@
 #include "FaerieSlotTag.generated.h"
 
 /**
- * The key used to flag entries with custom data.
+ * Tag type to identify equipment slots in a UFaerieEquipmentManager
  */
 USTRUCT(BlueprintType, meta = (Categories = "Fae.Slot"))
 struct FFaerieSlotTag : public FGameplayTag
@@ -18,13 +18,12 @@ struct FFaerieSlotTag : public FGameplayTag
 
 namespace Faerie::Equipment::Tags
 {
+	// Basic equipment slots @todo move these out of plugin to demo project
 	FAERIEEQUIPMENT_API UE_DECLARE_GAMEPLAY_TAG_TYPED_EXTERN(FFaerieSlotTag, SlotBody)
 	FAERIEEQUIPMENT_API UE_DECLARE_GAMEPLAY_TAG_TYPED_EXTERN(FFaerieSlotTag, SlotHandRight)
 	FAERIEEQUIPMENT_API UE_DECLARE_GAMEPLAY_TAG_TYPED_EXTERN(FFaerieSlotTag, SlotHandLeft)
-}
 
-namespace Faerie::Slot::Tags
-{
+	// Default slots, eg, for a hot-bar.
 	FAERIEEQUIPMENT_API UE_DECLARE_GAMEPLAY_TAG_TYPED_EXTERN(FFaerieSlotTag, Slot1)
 	FAERIEEQUIPMENT_API UE_DECLARE_GAMEPLAY_TAG_TYPED_EXTERN(FFaerieSlotTag, Slot2)
 	FAERIEEQUIPMENT_API UE_DECLARE_GAMEPLAY_TAG_TYPED_EXTERN(FFaerieSlotTag, Slot3)

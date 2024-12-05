@@ -34,9 +34,6 @@ class UFaerieEquipmentHashLibrary : public UBlueprintFunctionLibrary
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(BlueprintPure, Category = "Faerie|EquipmentHash")
-	static int64 BreakEquipmentHash(const FFaerieHash Hash) { return Hash.Hash; }
-
 	// Generate a hash from a set of slots. Typically used for checksum'ing.
 	UFUNCTION(BlueprintCallable, Category = "Faerie|EquipmentHashing")
 	static FFaerieHash HashEquipment(const UFaerieEquipmentManager* Manager, const FFaerieEquipmentHashConfig& Config);

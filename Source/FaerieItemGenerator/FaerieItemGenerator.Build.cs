@@ -30,8 +30,6 @@ public class FaerieItemGenerator : ModuleRules
                 "CoreUObject",
                 "Engine",
                 "NetCore",
-                "Slate",
-                "SlateCore",
                 "Squirrel"
             }
         );

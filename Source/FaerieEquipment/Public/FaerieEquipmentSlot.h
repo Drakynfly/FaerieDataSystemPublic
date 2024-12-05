@@ -7,6 +7,7 @@
 #include "FaerieItemDataProxy.h"
 #include "FaerieSlotTag.h"
 #include "FlakesData.h"
+#include "Actions/FaerieInventoryClient.h"
 #include "FaerieEquipmentSlot.generated.h"
 
 struct FFaerieAssetInfo;
@@ -84,6 +85,8 @@ public:
 	virtual FFaerieItemStack Release(FFaerieItemStackView Stack) override;
 	virtual bool Possess(FFaerieItemStack Stack) override;
 	//~ IFaerieItemOwnerInterface
+
+	virtual bool CanClientRunActions(const UFaerieInventoryClient* Client);
 
 protected:
 	virtual void BroadcastChange();

@@ -1,7 +1,7 @@
 ﻿// Copyright Guy (Drakynfly) Lundvall. All Rights Reserved.
 
 #include "BasicItemHashInstructions.h"
-#include "EquipmentHashStatics.h"
+#include "FaerieHashStatics.h"
 #include "FaerieItem.h"
 #include "FaerieItemDataFilter.h"
 #include "Squirrel.h"

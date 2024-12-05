@@ -161,7 +161,14 @@ bool UFaerieEquipmentSlot::Possess(const FFaerieItemStack Stack)
 
 	return false;
 }
+
 //~ IFaerieItemOwnerInterface
+
+bool UFaerieEquipmentSlot::CanClientRunActions(const UFaerieInventoryClient* Client)
+{
+	// @todo implement permissions
+	return true;
+}
 
 void UFaerieEquipmentSlot::BroadcastChange()
 {

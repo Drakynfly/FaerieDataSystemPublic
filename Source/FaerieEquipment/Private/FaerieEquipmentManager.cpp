@@ -264,8 +264,14 @@ bool UFaerieEquipmentManager::RemoveExtension(UItemContainerExtensionBase* Exten
 	return ExtensionGroup->RemoveExtension(Extension);
 }
 
+bool UFaerieEquipmentManager::CanClientRunActions(const UFaerieInventoryClient* Client) const
+{
+	// @todo implement permissions
+	return true;
+}
+
 UItemContainerExtensionBase* UFaerieEquipmentManager::AddExtensionToSlot(const FFaerieSlotTag SlotID,
-																	 const TSubclassOf<UItemContainerExtensionBase> ExtensionClass)
+																		 const TSubclassOf<UItemContainerExtensionBase> ExtensionClass)
 {
 	if (!ensure(
 			IsValid(ExtensionClass) &&
