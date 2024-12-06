@@ -3,11 +3,10 @@
 #include "FaerieEquipmentClientActions.h"
 #include "FaerieEquipmentSlot.h"
 #include "FaerieItemStorage.h"
-#include "Extensions/InventoryGridExtensionBase.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FaerieEquipmentClientActions)
 
-bool FFaerieClientAction_RequestSetItemInSlot::Server_Execute(const UFaerieInventoryClient* Client) const
+bool FFaerieClientAction_SetItemInSlot::Server_Execute(const UFaerieInventoryClient* Client) const
 {
 	if (!IsValid(Slot)) return false;
 	if (!Slot->CanClientRunActions(Client)) return false;
@@ -22,153 +21,68 @@ bool FFaerieClientAction_RequestSetItemInSlot::Server_Execute(const UFaerieInven
 	return false;
 }
 
-bool FFaerieClientAction_RequestMoveItemBetweenSlots::Server_Execute(const UFaerieInventoryClient* Client) const
+bool FFaerieClientAction_MoveFromSlot::IsValid(const UFaerieInventoryClient* Client) const
 {
-	// Instant failure states
-	if (!IsValid(FromSlot) ||
-		!IsValid(ToSlot) ||
-		!FromSlot->CanClientRunActions(Client) ||
-		!ToSlot->CanClientRunActions(Client)) return false;
-
-	// If we are not in Swap mode, return if either FromSlot is *not* filled or ToSlot *is* filled.
-	if (!CanSwapSlots &&
-		(!FromSlot->IsFilled() || ToSlot->IsFilled()))
-	{
-		return false;
-	}
-
-	// This must always pass.
-	if (FromSlot->IsFilled() &&
-		!ToSlot->CouldSetInSlot(FromSlot->View()))
-	{
-		return false;
-	}
-
-	TOptional<FFaerieItemStack> ToSlotStack;
-	if (ToSlot->IsFilled())
-	{
-		if (!FromSlot->CouldSetInSlot(ToSlot->View()))
-		{
-			// If we are in Swap mode, but the FromSlot cannot take the item in the ToSlot then we must abort
-			return false;
-		}
-
-		ToSlotStack = ToSlot->TakeItemFromSlot(Faerie::ItemData::UnlimitedStack);
-	}
-
-	if (const FFaerieItemStack FromSlotStack = FromSlot->TakeItemFromSlot(Faerie::ItemData::UnlimitedStack);
-		IsValid(FromSlotStack.Item))
-	{
-		ToSlot->SetItemInSlot(FromSlotStack);
-	}
-
-	if (ToSlotStack.IsSet())
-	{
-		FromSlot->SetItemInSlot(ToSlotStack.GetValue());
-	}
-
+	if (!::IsValid(Slot) ||
+		!Slot->CanClientRunActions(Client) ||
+		!Slot->IsFilled()) return false;
 	return true;
 }
 
-bool FFaerieClientAction_RequestMoveEntryToEquipmentSlot::Server_Execute(const UFaerieInventoryClient* Client) const
+bool FFaerieClientAction_MoveFromSlot::View(FFaerieItemStackView& View) const
 {
-	auto&& Storage = Handle.ItemStorage.Get();
-	if (!IsValid(Storage)) return false;
-	if (!Client->CanAccessStorage(Storage)) return false;
-	if (!IsValid(Slot)) return false;
-	if (!Slot->CanClientRunActions(Client)) return false;
-	if (!Slot->CanSetInSlot(Storage->View(Handle.Key.EntryKey).Resize(Amount))) return false;
-
-	FFaerieItemStack OutStack;
-	if (!Storage->TakeStack(Handle.Key, OutStack, Faerie::Inventory::Tags::RemovalMoving, Amount))
-	{
-		return false;
-	}
-
-	if (IsValid(OutStack.Item) && OutStack.Copies == Amount)
-	{
-		Slot->SetItemInSlot(OutStack);
-		return true;
-	}
-
-	return false;
+	View = Slot->View();
+	return true;
 }
 
-bool FFaerieClientAction_RequestMoveEquipmentSlotToInventory::Server_Execute(const UFaerieInventoryClient* Client) const
+bool FFaerieClientAction_MoveFromSlot::CanMove(const FFaerieItemStackView& View) const
 {
-	if (!IsValid(Slot)) return false;
-	if (!Slot->IsFilled()) return false;
-	if (!Slot->CanClientRunActions(Client)) return false;
-	if (!IsValid(ToStorage)) return false;
-	if (!Client->CanAccessStorage(ToStorage)) return false;
-
-	int32 StackAmount = Amount;
-
-	// We should verify that we can perform this move here first, before we call AddItemStack (even tho it does it too),
-	// Otherwise we would have to remove the Item from the slot, and then add it back again if the Add failed :/
-	if (StackAmount == Faerie::ItemData::UnlimitedStack)
-	{
-		StackAmount = Slot->GetCopies();
-	}
-
-	if (!ToStorage->CanAddStack({Slot->GetItemObject(), StackAmount}, AddStackBehavior))
-	{
-		return false;
-	}
-
-	if (const FFaerieItemStack Stack = Slot->TakeItemFromSlot(StackAmount);
-		IsValid(Stack.Item))
-	{
-		return ToStorage->AddItemStack(Stack, AddStackBehavior);
-	}
-
-	return false;
+	return Slot->CouldSetInSlot(View);
 }
 
-bool FFaerieClientAction_RequestMoveEquipmentSlotToSpatialInventory::Server_Execute(const UFaerieInventoryClient* Client) const
+bool FFaerieClientAction_MoveFromSlot::Release(FFaerieItemStack& Stack) const
 {
-	// Validate Slot and Storage access
-	if (!IsValid(Slot) ||
-		!Slot->IsFilled() ||
-		TargetPoint == FIntPoint::NoneValue ||
-		!Slot->CanClientRunActions(Client) ||
-		!IsValid(ToStorage) ||
-		!Client->CanAccessStorage(ToStorage))
-	{
-		return false;
-	}
+	Stack = Slot->TakeItemFromSlot(Faerie::ItemData::UnlimitedStack);
+	return ::IsValid(Stack.Item);
+}
 
-	// Fetch the Grid Extension and ensure it exists
-	auto&& GridExtension = GetExtension<UInventoryGridExtensionBase>(ToStorage);
-	if (!IsValid(GridExtension))
-	{
-		return false;
-	}
+bool FFaerieClientAction_MoveFromSlot::Possess(const FFaerieItemStack& Stack) const
+{
+	Slot->SetItemInSlot(Stack);
+	return true;
+}
 
-	if (!GridExtension->CanAddAtLocation(Slot->View(), TargetPoint))
-	{
-		return false;
-	}
+bool FFaerieClientAction_MoveToSlot::IsValid(const UFaerieInventoryClient* Client) const
+{
+	if (!::IsValid(Slot) ||
+		!Slot->CanClientRunActions(Client)) return false;
+	return true;
+}
 
-	// Determine the stack amount to transfer
-	const int32 StackAmount = Amount == Faerie::ItemData::UnlimitedStack ? Slot->GetCopies() : Amount;
+bool FFaerieClientAction_MoveToSlot::View(FFaerieItemStackView& View) const
+{
+	View = Slot->View();
+	return true;
+}
 
-	// Attempt to transfer the item stack
-	if (const FFaerieItemStack Stack = Slot->TakeItemFromSlot(StackAmount);
-		IsValid(Stack.Item))
-	{
-		// Must be a new stack, since we intend to manually place it in the grid.
-		const FLoggedInventoryEvent Event = ToStorage->AddItemStackWithLog(Stack, EFaerieStorageAddStackBehavior::OnlyNewStacks);
-		if (!Event.Event.Success)
-		{
-			return false;
-		}
+bool FFaerieClientAction_MoveToSlot::CanMove(const FFaerieItemStackView& View) const
+{
+	return Slot->CouldSetInSlot(View);
+}
 
-		const FInventoryKey TargetKey(Event.Event.EntryTouched, Event.Event.StackKeys.Last());
+bool FFaerieClientAction_MoveToSlot::Release(FFaerieItemStack& Stack) const
+{
+	Stack = Slot->TakeItemFromSlot(Faerie::ItemData::UnlimitedStack);
+	return ::IsValid(Stack.Item);
+}
 
-		// Finally, move item to the cell client requested.
-		return GridExtension->MoveItem(TargetKey, TargetPoint);
-	}
+bool FFaerieClientAction_MoveToSlot::Possess(const FFaerieItemStack& Stack) const
+{
+	Slot->SetItemInSlot(Stack);
+	return true;
+}
 
-	return false;
+bool FFaerieClientAction_MoveToSlot::IsSwap() const
+{
+	return CanSwapSlots && Slot->IsFilled();
 }

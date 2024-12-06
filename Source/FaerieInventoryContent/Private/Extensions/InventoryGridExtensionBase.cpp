@@ -2,6 +2,7 @@
 
 #include "Extensions/InventoryGridExtensionBase.h"
 #include "FaerieItemContainerBase.h"
+#include "FaerieItemStorage.h"
 #include "Net/UnrealNetwork.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(InventoryGridExtensionBase)
@@ -96,6 +97,16 @@ void UInventoryGridExtensionBase::OnRep_GridSize()
 	GridSizeChangedDelegate.Broadcast(GridSize);
 }
 
+FFaerieItemStackView UInventoryGridExtensionBase::ViewAt(const FIntPoint& Position) const
+{
+	if (const FInventoryKey Key = GetKeyAt(Position);
+		Key.IsValid())
+	{
+		return Cast<UFaerieItemStorage>(InitializedContainer)->GetStackView(Key);
+	}
+	return FFaerieItemStackView();
+}
+
 FFaerieGridPlacement UInventoryGridExtensionBase::GetStackPlacementData(const FInventoryKey& Key) const
 {
 	if (auto&& Placement = GridContent.Find(Key))
@@ -106,7 +117,7 @@ FFaerieGridPlacement UInventoryGridExtensionBase::GetStackPlacementData(const FI
 	return FFaerieGridPlacement();
 }
 
-void UInventoryGridExtensionBase::SetGridSize(const FIntPoint NewGridSize)
+void UInventoryGridExtensionBase::SetGridSize(const FIntPoint& NewGridSize)
 {
 	if (GridSize != NewGridSize)
 	{

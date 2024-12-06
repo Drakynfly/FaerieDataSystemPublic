@@ -75,29 +75,29 @@ public:
 };
 
 USTRUCT(BlueprintType)
-struct FFaerieClientAction_RequestMarkStackWithTag : public FFaerieClientActionBase
+struct FFaerieClientAction_MarkStackWithTag final : public FFaerieClientActionBase
 {
 	GENERATED_BODY()
 
 	virtual bool Server_Execute(const UFaerieInventoryClient* Client) const override;
 
-	UPROPERTY(BlueprintReadWrite, Category = "FaerieClientAction_RequestMarkStackWithTag")
+	UPROPERTY(BlueprintReadWrite, Category = "MarkStackWithTag")
 	FInventoryKeyHandle Handle;
 
-	UPROPERTY(BlueprintReadWrite, Category = "FaerieClientAction_RequestMarkStackWithTag")
+	UPROPERTY(BlueprintReadWrite, Category = "MarkStackWithTag")
 	FFaerieInventoryUserTag Tag;
 };
 
 USTRUCT(BlueprintType)
-struct FFaerieClientAction_RequestClearTagFromStack : public FFaerieClientActionBase
+struct FFaerieClientAction_ClearTagFromStack final : public FFaerieClientActionBase
 {
 	GENERATED_BODY()
 
 	virtual bool Server_Execute(const UFaerieInventoryClient* Client) const override;
 
-	UPROPERTY(BlueprintReadWrite, Category = "FaerieClientAction_RequestClearTagFromStack")
+	UPROPERTY(BlueprintReadWrite, Category = "ClearTagFromStack")
 	FInventoryKeyHandle Handle;
 
-	UPROPERTY(BlueprintReadWrite, Category = "FaerieClientAction_RequestClearTagFromStack")
+	UPROPERTY(BlueprintReadWrite, Category = "ClearTagFromStack")
 	FFaerieInventoryUserTag Tag;
 };

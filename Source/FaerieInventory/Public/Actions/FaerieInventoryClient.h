@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "InventoryDataEnums.h"
 #include "StructUtils/InstancedStruct.h"
 #include "Components/ActorComponent.h"
 #include "InventoryDataStructs.h"
@@ -28,6 +29,39 @@ struct FAERIEINVENTORY_API FFaerieClientActionBase
 
 template<>
 struct TStructOpsTypeTraits<FFaerieClientActionBase> : public TStructOpsTypeTraitsBase2<FFaerieClientActionBase>
+{
+	enum
+	{
+		WithPureVirtual = true,
+	};
+};
+
+namespace Faerie
+{
+	struct IMoveHandler : public FVirtualDestructor
+	{
+		virtual bool IsValid(const UFaerieInventoryClient* Client) const { return false; }
+		virtual bool View(FFaerieItemStackView& View) const { return false; }
+		virtual bool CanMove(const FFaerieItemStackView& View) const { return false; }
+		virtual bool Possess(const FFaerieItemStack& Stack) const { return false; }
+		virtual bool Release(FFaerieItemStack& Stack) const { return false; }
+
+		// Only needs to be implemented for Target handlers
+		virtual bool IsSwap() const { return false; }
+	};
+}
+
+USTRUCT()
+struct FAERIEINVENTORY_API FFaerieClientAction_MoveHandlerBase
+#if CPP
+	: public Faerie::IMoveHandler
+#endif
+{
+	GENERATED_BODY()
+};
+
+template<>
+struct TStructOpsTypeTraits<FFaerieClientAction_MoveHandlerBase> : public TStructOpsTypeTraitsBase2<FFaerieClientAction_MoveHandlerBase>
 {
 	enum
 	{
@@ -78,10 +112,61 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Server, Reliable, Category = "Faerie|InventoryClient")
 	void RequestExecuteAction_Batch(const TArray<TInstancedStruct<FFaerieClientActionBase>>& Args, EFaerieClientRequestBatchType Type);
+
+protected:
+	/**
+	 *
+	 */
+	UFUNCTION(BlueprintCallable, Server, Reliable, Category = "Faerie|InventoryClient")
+	void RequestMoveAction(const TInstancedStruct<FFaerieClientAction_MoveHandlerBase>& MoveFrom, const TInstancedStruct<FFaerieClientAction_MoveHandlerBase>& MoveTo);
+
+public:
+	void RequestMoveAction(const FFaerieClientAction_MoveHandlerBase& MoveFrom, const FFaerieClientAction_MoveHandlerBase& MoveTo);
 };
 
 USTRUCT(BlueprintType)
-struct FFaerieClientAction_RequestDeleteEntry : public FFaerieClientActionBase
+struct FFaerieClientAction_MoveFromStorage final : public FFaerieClientAction_MoveHandlerBase
+{
+	GENERATED_BODY()
+
+	virtual bool IsValid(const UFaerieInventoryClient* Client) const override;
+	virtual bool View(FFaerieItemStackView& View) const override;
+	virtual bool CanMove(const FFaerieItemStackView& View) const override;
+	virtual bool Release(FFaerieItemStack& Stack) const override;
+	virtual bool Possess(const FFaerieItemStack& Stack) const override;
+
+	UPROPERTY(BlueprintReadWrite, Category = "MoveFromStorage")
+	TObjectPtr<UFaerieItemStorage> Storage = nullptr;
+
+	UPROPERTY(BlueprintReadWrite, Category = "MoveFromStorage")
+	FInventoryKey Key;
+
+	UPROPERTY(BlueprintReadWrite, Category = "MoveFromStorage")
+	int32 Amount = -1;
+};
+
+USTRUCT(BlueprintType)
+struct FFaerieClientAction_MoveToStorage final : public FFaerieClientAction_MoveHandlerBase
+{
+	GENERATED_BODY()
+
+	virtual bool IsValid(const UFaerieInventoryClient* Client) const override;
+	virtual bool CanMove(const FFaerieItemStackView& View) const override;
+	virtual bool Possess(const FFaerieItemStack& Stack) const override;
+
+	// MoveToStorage doesn't support swaps.
+	virtual bool View(FFaerieItemStackView& View) const override { return false; }
+	virtual bool Release(FFaerieItemStack& Stack) const override { return false; }
+
+	UPROPERTY(BlueprintReadWrite, Category = "MoveToStorage")
+	TObjectPtr<UFaerieItemStorage> Storage = nullptr;
+
+	UPROPERTY(BlueprintReadWrite, Category = "MoveToStorage")
+	EFaerieStorageAddStackBehavior AddStackBehavior = EFaerieStorageAddStackBehavior::AddToAnyStack;
+};
+
+USTRUCT(BlueprintType)
+struct FFaerieClientAction_DeleteEntry final : public FFaerieClientActionBase
 {
 	GENERATED_BODY()
 
@@ -95,7 +180,7 @@ struct FFaerieClientAction_RequestDeleteEntry : public FFaerieClientActionBase
 };
 
 USTRUCT(BlueprintType)
-struct FFaerieClientAction_RequestMoveEntry : public FFaerieClientActionBase
+struct FFaerieClientAction_RequestMoveEntry final : public FFaerieClientActionBase
 {
 	GENERATED_BODY()
 
@@ -112,7 +197,7 @@ struct FFaerieClientAction_RequestMoveEntry : public FFaerieClientActionBase
 };
 
 USTRUCT(BlueprintType)
-struct FFaerieClientAction_MergeStacks : public FFaerieClientActionBase
+struct FFaerieClientAction_MergeStacks final : public FFaerieClientActionBase
 {
 	GENERATED_BODY()
 
@@ -136,7 +221,7 @@ struct FFaerieClientAction_MergeStacks : public FFaerieClientActionBase
 };
 
 USTRUCT(BlueprintType)
-struct FFaerieClientAction_RequestSplitStack : public FFaerieClientActionBase
+struct FFaerieClientAction_SplitStack final : public FFaerieClientActionBase
 {
 	GENERATED_BODY()
 

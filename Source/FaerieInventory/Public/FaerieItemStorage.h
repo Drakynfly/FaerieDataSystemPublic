@@ -129,6 +129,8 @@ public:
 
 	FInventoryEntryView GetEntryView(FEntryKey Key) const;
 
+	FFaerieItemStackView GetStackView(FInventoryKey Key) const;
+
 	// Convert an entry key into an array of Inventory Keys.
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Storage|Key")
 	TArray<FInventoryKey> GetInvKeysForEntry(FEntryKey Key) const;

@@ -32,6 +32,7 @@ protected:
 	virtual void PostStackAdd(const FFaerieGridKeyedStack& Stack) override;
 	virtual void PostStackChange(const FFaerieGridKeyedStack& Stack) override;
 
+	virtual FInventoryKey GetKeyAt(const FIntPoint& Position) const override;
 	virtual bool CanAddAtLocation(FFaerieItemStackView Stack, FIntPoint IntPoint) const override;
 	virtual bool MoveItem(const FInventoryKey& Key, const FIntPoint& TargetPoint) override;
 	virtual bool RotateItem(const FInventoryKey& Key) override;
@@ -51,8 +52,13 @@ private:
 public:
 	bool CanAddItemToGrid(const FFaerieGridShapeConstView& Shape) const;
 
+	// Gets the normalized shape for an item.
 	UFUNCTION(BlueprintCallable, Category = "Faerie|SpatialGrid")
 	FFaerieGridShape GetItemShape(FEntryKey Key) const;
+
+	// Gets the shape of an item transposed on the grid according to its placement.
+	UFUNCTION(BlueprintCallable, Category = "Faerie|SpatialGrid")
+	FFaerieGridShape GetItemShapeOnGrid(const FInventoryKey& Key) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Faerie|SpatialGrid")
 	FIntPoint GetStackBounds(const FInventoryKey& Key) const;

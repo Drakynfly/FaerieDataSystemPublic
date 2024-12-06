@@ -44,6 +44,7 @@ protected:
 
 public:
 	// Publicly accessible actions. Only call on server.
+	virtual FInventoryKey GetKeyAt(const FIntPoint& Position) const PURE_VIRTUAL(UInventoryGridExtensionBase::GetKeyAt, return FInventoryKey(); )
 	virtual bool CanAddAtLocation(FFaerieItemStackView Stack, FIntPoint IntPoint) const PURE_VIRTUAL(UInventoryGridExtensionBase::CanAddAtLocation, return false; )
 	virtual bool MoveItem(const FInventoryKey& Key, const FIntPoint& TargetPoint) PURE_VIRTUAL(UInventoryGridExtensionBase::MoveItem, return false; )
 	virtual bool RotateItem(const FInventoryKey& Key) PURE_VIRTUAL(UInventoryGridExtensionBase::RotateItem, return false; )
@@ -65,6 +66,10 @@ protected:
 	virtual void OnRep_GridSize();
 
 public:
+	// View the stack on a specified position on the grid.
+	UFUNCTION(BlueprintCallable, Category = "Faerie|Grid")
+	FFaerieItemStackView ViewAt(const FIntPoint& Position) const;
+
 	UFUNCTION(BlueprintCallable, Category = "Faerie|Grid")
 	bool IsCellOccupied(const FIntPoint& Point) const;
 
@@ -72,7 +77,7 @@ public:
 	FFaerieGridPlacement GetStackPlacementData(const FInventoryKey& Key) const;
 
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Faerie|Grid")
-	void SetGridSize(FIntPoint NewGridSize);
+	void SetGridSize(const FIntPoint& NewGridSize);
 
 	FFaerieGridStackChangedNative::RegistrationType& GetOnSpatialStackChanged() { return SpatialStackChangedNative; }
 	FFaerieGridSizeChangedNative::RegistrationType& GetOnGridSizeChanged() { return GridSizeChangedNative; }

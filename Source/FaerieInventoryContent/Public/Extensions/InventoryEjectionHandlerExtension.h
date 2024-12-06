@@ -57,7 +57,7 @@ private:
 };
 
 USTRUCT(BlueprintType)
-struct FFaerieClientAction_RequestEjectEntry : public FFaerieClientActionBase
+struct FFaerieClientAction_EjectEntry final : public FFaerieClientActionBase
 {
 	GENERATED_BODY()
 

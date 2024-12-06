@@ -30,6 +30,7 @@ protected:
 	virtual void PostStackAdd(const FFaerieGridKeyedStack& Stack) override;
 	virtual void PostStackChange(const FFaerieGridKeyedStack& Stack) override;
 
+	virtual FInventoryKey GetKeyAt(const FIntPoint& Position) const override;
 	virtual bool CanAddAtLocation(FFaerieItemStackView Stack, FIntPoint IntPoint) const override;
 	virtual bool MoveItem(const FInventoryKey& Key, const FIntPoint& TargetPoint) override;
 	virtual bool RotateItem(const FInventoryKey& Key) override;

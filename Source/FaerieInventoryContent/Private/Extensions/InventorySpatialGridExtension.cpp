@@ -167,6 +167,24 @@ void UInventorySpatialGridExtension::PostStackChange(const FFaerieGridKeyedStack
 	}
 }
 
+FInventoryKey UInventorySpatialGridExtension::GetKeyAt(const FIntPoint& Position) const
+{
+	for (auto&& Element : GridContent)
+	{
+		// Easy check first
+		if (Element.Value.Origin == Position) return Element.Key;
+
+		FFaerieGridShape Shape = GetItemShape(Element.Key.EntryKey);
+		ApplyPlacementInline(Shape, Element.Value);
+		if (Shape.Contains(Position))
+		{
+			return Element.Key;
+		}
+	}
+
+	return FInventoryKey();
+}
+
 bool UInventorySpatialGridExtension::CanAddAtLocation(const FFaerieItemStackView Stack, const FIntPoint IntPoint) const
 {
 	const FFaerieGridShape Shape = GetItemShape_Impl(Stack.Item.Get());
@@ -359,6 +377,20 @@ FFaerieGridShape UInventorySpatialGridExtension::GetItemShape(const FEntryKey Ke
 	{
 		const FFaerieItemStackView View = InitializedContainer->View(Key);
 		return GetItemShape_Impl(View.Item.Get());
+	}
+
+	return FFaerieGridShape();
+}
+
+FFaerieGridShape UInventorySpatialGridExtension::GetItemShapeOnGrid(const FInventoryKey& Key) const
+{
+	if (IsValid(InitializedContainer))
+	{
+		const FFaerieItemStackView View = InitializedContainer->View(Key.EntryKey);
+		const FFaerieGridPlacement Placement = GetStackPlacementData(Key);
+		FFaerieGridShape Shape = GetItemShape_Impl(View.Item.Get());
+		ApplyPlacementInline(Shape, Placement);
+		return Shape;
 	}
 
 	return FFaerieGridShape();

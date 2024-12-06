@@ -160,6 +160,18 @@ void UInventorySimpleGridExtension::PostStackChange(const FFaerieGridKeyedStack&
 	}
 }
 
+FInventoryKey UInventorySimpleGridExtension::GetKeyAt(const FIntPoint& Position) const
+{
+	for (auto&& Element : GridContent)
+	{
+		if (Element.Value.Origin == Position)
+		{
+			return Element.Key;
+		}
+	}
+	return FInventoryKey();
+}
+
 bool UInventorySimpleGridExtension::CanAddAtLocation(const FFaerieItemStackView Stack, const FIntPoint IntPoint) const
 {
 	return !IsCellOccupied(IntPoint);

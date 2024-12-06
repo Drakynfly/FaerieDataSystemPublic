@@ -485,7 +485,7 @@ Faerie::Inventory::FEventLog UFaerieItemStorage::RemoveFromEntryImpl(const FEntr
 }
 
 Faerie::Inventory::FEventLog UFaerieItemStorage::RemoveFromStackImpl(const FInventoryKey Key, const int32 Amount,
-																const FFaerieInventoryTag Reason)
+																	 const FFaerieInventoryTag Reason)
 {
 	// RemoveEntryImpl should not be called with unvalidated parameters.
 	check(Faerie::ItemData::IsValidStack(Amount));
@@ -556,6 +556,19 @@ Faerie::Inventory::FEventLog UFaerieItemStorage::RemoveFromStackImpl(const FInve
 FInventoryEntryView UFaerieItemStorage::GetEntryView(const FEntryKey Key) const
 {
 	return GetEntryViewImpl(Key);
+}
+
+FFaerieItemStackView UFaerieItemStorage::GetStackView(const FInventoryKey Key) const
+{
+	if (const FInventoryEntryView EntryView = GetEntryViewImpl(Key.EntryKey);
+		EntryView.IsValid())
+	{
+		FFaerieItemStackView View;
+		View.Item = EntryView.Get().ItemObject;
+		View.Copies = EntryView.Get().GetStack(Key.StackKey);
+		return View;
+	}
+	return FFaerieItemStackView();
 }
 
 TArray<FInventoryKey> UFaerieItemStorage::GetInvKeysForEntry(const FEntryKey Key) const
@@ -900,9 +913,7 @@ bool UFaerieItemStorage::RemoveEntry(const FEntryKey Key, const FFaerieInventory
 	if (!IsValidKey(Key)) return false;
 	if (!CanRemoveEntry(Key, RemovalTag)) return false;
 
-	const int32 Stack = Amount == Faerie::ItemData::UnlimitedStack ? Faerie::ItemData::UnlimitedStack : Amount;
-
-	RemoveFromEntryImpl(Key, Stack, RemovalTag);
+	RemoveFromEntryImpl(Key, Amount, RemovalTag);
 	return true;
 }
 
@@ -915,9 +926,7 @@ bool UFaerieItemStorage::RemoveStack(const FInventoryKey Key, const FFaerieInven
 
 	if (!CanRemoveStack(Key, RemovalTag)) return false;
 
-	const int32 Stack = Amount == Faerie::ItemData::UnlimitedStack ? Faerie::ItemData::UnlimitedStack : Amount;
-
-	RemoveFromStackImpl(Key, Stack, RemovalTag);
+	RemoveFromStackImpl(Key, Amount, RemovalTag);
 	return true;
 }
 
@@ -931,9 +940,7 @@ bool UFaerieItemStorage::TakeEntry(const FEntryKey Key, FFaerieItemStack& OutSta
 
 	if (!CanRemoveEntry(Key, RemovalTag)) return false;
 
-	const int32 Stack = Amount == Faerie::ItemData::UnlimitedStack ? Faerie::ItemData::UnlimitedStack : Amount;
-
-	auto&& Event = RemoveFromEntryImpl(Key, Stack, RemovalTag);
+	auto&& Event = RemoveFromEntryImpl(Key, Amount, RemovalTag);
 
 	if (Event.Success)
 	{
@@ -954,9 +961,7 @@ bool UFaerieItemStorage::TakeStack(const FInventoryKey Key, FFaerieItemStack& Ou
 
 	if (!CanRemoveStack(Key, RemovalTag)) return false;
 
-	const int32 Stack = Amount == Faerie::ItemData::UnlimitedStack ? Faerie::ItemData::UnlimitedStack : Amount;
-
-	auto&& Event = RemoveFromStackImpl(Key, Stack, RemovalTag);
+	auto&& Event = RemoveFromStackImpl(Key, Amount, RemovalTag);
 
 	if (Event.Success)
 	{
@@ -995,6 +1000,7 @@ void UFaerieItemStorage::Clear(FFaerieInventoryTag RemovalTag)
 FEntryKey UFaerieItemStorage::MoveStack(UFaerieItemStorage* ToStorage, const FInventoryKey Key, const int32 Amount, const EFaerieStorageAddStackBehavior AddStackBehavior)
 {
 	if (!IsValid(ToStorage) ||
+		ToStorage == this ||
 		!IsValidKey(Key.EntryKey) ||
 		!Faerie::ItemData::IsValidStack(Amount) ||
 		!CanRemoveStack(Key, Faerie::Inventory::Tags::RemovalMoving))
@@ -1002,33 +1008,22 @@ FEntryKey UFaerieItemStorage::MoveStack(UFaerieItemStorage* ToStorage, const FIn
 		return FEntryKey::InvalidKey;
 	}
 
-	const int32 Stack = Amount == Faerie::ItemData::UnlimitedStack ? Faerie::ItemData::UnlimitedStack : Amount;
+	FFaerieItemStackView View = GetStackView(Key);
+	if (Amount > 0)
+	{
+		View.Copies = FMath::Min(View.Copies, Amount);
+	}
 
-	const FInventoryEntryView EntryView = GetEntryView(Key.EntryKey);
-	if (!ensure(EntryView.IsValid()))
+	if (!ToStorage->CanAddStack(View, AddStackBehavior))
 	{
 		return FEntryKey::InvalidKey;
 	}
-
-	const FInventoryEntry& Entry = EntryView.Get();
 
 	FFaerieItemStack ItemStack;
-	ItemStack.Item = Entry.ItemObject;
-	ItemStack.Copies = Stack == Faerie::ItemData::UnlimitedStack ? Entry.StackSum() : FMath::Min(Stack, Entry.StackSum());
-
-	if (!ToStorage->CanAddStack(ItemStack, AddStackBehavior))
+	if (!TakeStack(Key, ItemStack, Faerie::Inventory::Tags::RemovalMoving, Amount))
 	{
 		return FEntryKey::InvalidKey;
 	}
-
-	const Faerie::Inventory::FEventLog Removed = RemoveFromStackImpl(Key, Stack, Faerie::Inventory::Tags::RemovalMoving);
-
-	if (!ensure(Removed.Success))
-	{
-		return FEntryKey::InvalidKey;
-	}
-
-	ItemStack.Copies = Removed.Amount;
 
 	return ToStorage->AddStackImpl(ItemStack, IfOnlyNewStacks(AddStackBehavior)).EntryTouched;
 }
@@ -1036,6 +1031,7 @@ FEntryKey UFaerieItemStorage::MoveStack(UFaerieItemStorage* ToStorage, const FIn
 FEntryKey UFaerieItemStorage::MoveEntry(UFaerieItemStorage* ToStorage, const FEntryKey Key, const EFaerieStorageAddStackBehavior AddStackBehavior)
 {
 	if (!IsValid(ToStorage) ||
+		ToStorage == this ||
 		!IsValidKey(Key) ||
 		!CanRemoveEntry(Key, Faerie::Inventory::Tags::RemovalMoving))
 	{
@@ -1151,6 +1147,14 @@ bool UFaerieItemStorage::SplitStack(const FEntryKey Entry, const FStackKey Stack
 
 void UFaerieItemStorage::Dump(UFaerieItemStorage* ToStorage)
 {
+	// @todo this is not very optimized...
+
+	if (!IsValid(ToStorage) ||
+		ToStorage == this)
+	{
+		return;
+	}
+
 	for (const FKeyedInventoryEntry& Element : EntryMap)
 	{
 		MoveEntry(ToStorage, Element.Key, EFaerieStorageAddStackBehavior::AddToAnyStack);

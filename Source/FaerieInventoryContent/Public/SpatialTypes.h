@@ -25,6 +25,7 @@ struct FAERIEINVENTORYCONTENT_API FFaerieGridShape
 	FIntPoint GetShapeCenter() const;
 	FIntPoint GetShapeAverageCenter() const;
 	bool IsSymmetrical() const;
+	bool Contains(const FIntPoint& Position) const;
 	[[nodiscard]] bool Overlaps(const FFaerieGridShape& Other) const;
 
 	void TranslateInline(const FIntPoint& Position);
@@ -69,6 +70,7 @@ struct FAERIEINVENTORYCONTENT_API FFaerieGridShapeView
 	FIntPoint GetShapeCenter() const;
 	FIntPoint GetShapeAverageCenter() const;
 	bool IsSymmetrical() const;
+	bool Contains(const FIntPoint& Position) const;
 	bool Overlaps(const FFaerieGridShapeView& Other) const;
 
 	void TranslateInline(const FIntPoint& Position);
@@ -111,6 +113,7 @@ struct FAERIEINVENTORYCONTENT_API FFaerieGridShapeConstView
 	FIntPoint GetShapeCenter() const;
 	FIntPoint GetShapeAverageCenter() const;
 	bool IsSymmetrical() const;
+	bool Contains(const FIntPoint& Position) const;
 	bool Overlaps(const FFaerieGridShapeConstView& Other) const;
 
 	FFaerieGridShape Copy() const;
