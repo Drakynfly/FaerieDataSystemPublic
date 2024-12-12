@@ -23,6 +23,7 @@ struct FAERIEINVENTORYCONTENT_API FFaerieGridShape
 	FIntPoint GetSize() const;
 	FInt32Rect GetBounds() const;
 	FIntPoint GetShapeCenter() const;
+	FIntPoint GetIndexedShapeCenter() const;
 	FIntPoint GetShapeAverageCenter() const;
 	bool IsSymmetrical() const;
 	bool Contains(const FIntPoint& Position) const;

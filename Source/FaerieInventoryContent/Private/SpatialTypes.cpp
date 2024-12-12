@@ -62,6 +62,13 @@ FIntPoint FFaerieGridShape::GetShapeCenter() const
 	return GetSize() / 2;
 }
 
+FIntPoint FFaerieGridShape::GetIndexedShapeCenter() const
+{
+	auto ShapeCenter = (GetSize() + FIntPoint{-1, -1}) / 2;
+	UE_LOG(LogTemp, Warning, TEXT("Shape Center: X: %d Y: %d"), ShapeCenter.X, ShapeCenter.Y);
+	return ShapeCenter;
+}
+
 FIntPoint FFaerieGridShape::GetShapeAverageCenter() const
 {
 	if (Points.IsEmpty())
@@ -138,13 +145,13 @@ void FFaerieGridShape::RotateInline(const ESpatialItemRotation Rotation)
 	switch (Rotation)
 	{
 	case ESpatialItemRotation::Ninety:
-		RotateAroundInline_90(GetShapeCenter());
+		RotateAroundInline_90(GetIndexedShapeCenter());
 		break;
 	case ESpatialItemRotation::One_Eighty:
-		RotateAroundInline_180(GetShapeCenter());
+		RotateAroundInline_180(GetIndexedShapeCenter());
 		break;
 	case ESpatialItemRotation::Two_Seventy:
-		RotateAroundInline_270(GetShapeCenter());
+		RotateAroundInline_270(GetIndexedShapeCenter());
 		break;
 	case ESpatialItemRotation::None:
 	case ESpatialItemRotation::MAX:
@@ -158,11 +165,11 @@ FFaerieGridShape FFaerieGridShape::Rotate(const ESpatialItemRotation Rotation) c
 	switch (Rotation)
 	{
 	case ESpatialItemRotation::Ninety:
-		return RotateAround_90(GetShapeCenter());
+		return RotateAround_90(GetIndexedShapeCenter());
 	case ESpatialItemRotation::One_Eighty:
-		return RotateAround_180(GetShapeCenter());
+		return RotateAround_180(GetIndexedShapeCenter());
 	case ESpatialItemRotation::Two_Seventy:
-		return RotateAround_270(GetShapeCenter());
+		return RotateAround_270(GetIndexedShapeCenter());
 	case ESpatialItemRotation::None:
 	case ESpatialItemRotation::MAX:
 	default:
@@ -182,7 +189,6 @@ void FFaerieGridShape::RotateAroundInline_90(const FIntPoint& PivotPoint)
 
 		// Flip X - Clockwise
 		Point.X *= -1;
-
 		// Remove rebase
 		Point += PivotPoint;
 	}
@@ -204,7 +210,6 @@ void FFaerieGridShape::RotateAroundInline_180(const FIntPoint& PivotPoint)
 
 		// Flip
 		Point *= -1;
-
 		// Remove rebase
 		Point += PivotPoint;
 	}
@@ -229,7 +234,7 @@ void FFaerieGridShape::RotateAroundInline_270(const FIntPoint& PivotPoint)
 
 		// Flip Y - Clockwise
 		Point.Y *= -1;
-
+		
 		// Remove rebase
 		Point += PivotPoint;
 	}

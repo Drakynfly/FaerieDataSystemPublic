@@ -7,7 +7,7 @@
 
 FFaerieGridShape UFaerieGridLibrary::RotateShape(const FFaerieGridShape& InShape, const ESpatialItemRotation Rotation)
 {
-	return InShape.Rotate(Rotation);
+	return InShape.Rotate(Rotation).Normalize();
 }
 
 FIntPoint UFaerieGridLibrary::GetSize(const FFaerieGridShape& InShape)
