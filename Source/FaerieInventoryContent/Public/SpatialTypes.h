@@ -26,6 +26,14 @@ struct FAERIEINVENTORYCONTENT_API FFaerieGridShape
 	FIntPoint GetIndexedShapeCenter() const;
 	FIntPoint GetShapeAverageCenter() const;
 	bool IsSymmetrical() const;
+	TArray<TArray<int32>> ToMatrix() const;
+	TArray<FIntPoint> MatrixToPoints(const TArray<TArray<int32>>& Matrix, FIntPoint Origin);
+	template<typename T>
+	void TransposeMatrix(TArray<TArray<T>>& Matrix);
+	template<typename T>
+	void ReverseMatrix(TArray<TArray<T>>& Matrix);
+	template<typename T>
+	TArray<TArray<T>> RotateMatrix90Clockwise(const TArray<TArray<T>>& Matrix);
 	bool Contains(const FIntPoint& Position) const;
 	[[nodiscard]] bool Overlaps(const FFaerieGridShape& Other) const;
 

@@ -102,6 +102,102 @@ bool FFaerieGridShape::IsSymmetrical() const
 	return ShapeCopy == *this;
 }
 
+TArray<TArray<int32>> FFaerieGridShape::ToMatrix() const
+{
+	FIntPoint Min(INT32_MAX, INT32_MAX);
+	FIntPoint Max(INT32_MIN, INT32_MIN);
+
+	for (const FIntPoint& Point : Points)
+	{
+		Min.X = FMath::Min(Min.X, Point.X);
+		Min.Y = FMath::Min(Min.Y, Point.Y);
+		Max.X = FMath::Max(Max.X, Point.X);
+		Max.Y = FMath::Max(Max.Y, Point.Y);
+	}
+
+	int32 Width = Max.X - Min.X + 1;
+	int32 Height = Max.Y - Min.Y + 1;
+
+	TArray<TArray<int32>> Matrix;
+	Matrix.SetNum(Height);
+	for (TArray<int32>& Row : Matrix)
+	{
+		Row.SetNum(Width);
+	}
+
+	for (const FIntPoint& Point : Points)
+	{
+		int32 Row = Point.Y - Min.Y;
+		int32 Col = Point.X - Min.X;
+		Matrix[Row][Col] = 1;
+	}
+
+	return Matrix;
+}
+
+TArray<FIntPoint> FFaerieGridShape::MatrixToPoints(const TArray<TArray<int32>>& Matrix, FIntPoint Origin)
+{
+	TArray<FIntPoint> NewPoints;
+	for (int32 Row = 0; Row < Matrix.Num(); ++Row)
+	{
+		for (int32 Col = 0; Col < Matrix[Row].Num(); ++Col)
+		{
+			if (Matrix[Row][Col] == 1)
+			{
+				NewPoints.Add(FIntPoint(Origin.X + Col, Origin.Y + Row));
+			}
+		}
+	}
+	return NewPoints;
+}
+
+template<typename T>
+void FFaerieGridShape::TransposeMatrix(TArray<TArray<T>>& Matrix)
+{
+	const int32 Size = Matrix.Num();
+	if (Size == 0 || Matrix[0].Num() != Size) {
+		return;
+	}
+
+	for (int32 i = 0; i < Size; i++) {
+		for (int32 j = i + 1; j < Size; j++) {
+			Swap(Matrix[i][j], Matrix[j][i]);
+		}
+	}
+}
+
+template<typename T>
+void FFaerieGridShape::ReverseMatrix(TArray<TArray<T>>& Matrix)
+{
+	auto Size = Matrix.Num();
+	for (int i = 0; i < Size; i++)
+		Algo::Reverse(Matrix[i]);
+}
+
+template<typename T>
+TArray<TArray<T>> FFaerieGridShape::RotateMatrix90Clockwise(const TArray<TArray<T>>& Matrix)
+{
+	int32 Rows = Matrix.Num();
+	int32 Cols = Matrix[0].Num();
+
+	TArray<TArray<int32>> RotatedMatrix;
+	RotatedMatrix.SetNum(Cols);
+	for (TArray<int32>& Row : RotatedMatrix)
+	{
+		Row.SetNum(Rows);
+	}
+
+	for (int32 Row = 0; Row < Rows; ++Row)
+	{
+		for (int32 Col = 0; Col < Cols; ++Col)
+		{
+			RotatedMatrix[Col][Rows - Row - 1] = Matrix[Row][Col];
+		}
+	}
+
+	return RotatedMatrix;
+}
+
 bool FFaerieGridShape::Contains(const FIntPoint& Position) const
 {
 	return Points.Contains(Position);
@@ -142,39 +238,94 @@ FFaerieGridShape FFaerieGridShape::Translate(const FIntPoint& Position) const
 
 void FFaerieGridShape::RotateInline(const ESpatialItemRotation Rotation)
 {
+	auto Matrix = ToMatrix();
+
 	switch (Rotation)
 	{
 	case ESpatialItemRotation::Ninety:
-		RotateAroundInline_90(GetIndexedShapeCenter());
+		Matrix = RotateMatrix90Clockwise(Matrix);
 		break;
 	case ESpatialItemRotation::One_Eighty:
-		RotateAroundInline_180(GetIndexedShapeCenter());
+		Matrix = RotateMatrix90Clockwise(Matrix);
+		Matrix = RotateMatrix90Clockwise(Matrix);
 		break;
 	case ESpatialItemRotation::Two_Seventy:
-		RotateAroundInline_270(GetIndexedShapeCenter());
+		Matrix = RotateMatrix90Clockwise(Matrix);
+		Matrix = RotateMatrix90Clockwise(Matrix);
+		Matrix = RotateMatrix90Clockwise(Matrix);
 		break;
 	case ESpatialItemRotation::None:
 	case ESpatialItemRotation::MAX:
 	default:
 		break;
 	}
+
+	// Convert back to points
+	Points = MatrixToPoints(Matrix, FIntPoint(0, 0));
 }
 
 FFaerieGridShape FFaerieGridShape::Rotate(const ESpatialItemRotation Rotation) const
 {
-	switch (Rotation)
-	{
-	case ESpatialItemRotation::Ninety:
-		return RotateAround_90(GetIndexedShapeCenter());
-	case ESpatialItemRotation::One_Eighty:
-		return RotateAround_180(GetIndexedShapeCenter());
-	case ESpatialItemRotation::Two_Seventy:
-		return RotateAround_270(GetIndexedShapeCenter());
-	case ESpatialItemRotation::None:
-	case ESpatialItemRotation::MAX:
-	default:
-		return *this;
-	}
+    FFaerieGridShape OutShape = *this;
+    auto Matrix = ToMatrix();
+    
+    FIntPoint OriginalSize = GetSize();
+
+    ESpatialItemRotation PreviousRotation;
+    switch (Rotation)
+    {
+    case ESpatialItemRotation::Ninety:
+        PreviousRotation = ESpatialItemRotation::None;
+        break;
+    case ESpatialItemRotation::One_Eighty:
+        PreviousRotation = ESpatialItemRotation::Ninety;
+        break;
+    case ESpatialItemRotation::Two_Seventy:
+        PreviousRotation = ESpatialItemRotation::One_Eighty;
+        break;
+    default:
+        PreviousRotation = ESpatialItemRotation::Two_Seventy;
+        break;
+    }
+
+    // Get size at previous rotation
+    FIntPoint PreviousSize;
+    if (PreviousRotation == ESpatialItemRotation::Ninety || 
+        PreviousRotation == ESpatialItemRotation::Two_Seventy) {
+        PreviousSize = FIntPoint(OriginalSize.Y, OriginalSize.X);
+    } else {
+        PreviousSize = OriginalSize;
+    }
+	
+    switch (Rotation)
+    {
+    case ESpatialItemRotation::Ninety:
+        Matrix = OutShape.RotateMatrix90Clockwise(Matrix);
+        break;
+    case ESpatialItemRotation::One_Eighty:
+        Matrix = OutShape.RotateMatrix90Clockwise(Matrix);
+        Matrix = OutShape.RotateMatrix90Clockwise(Matrix);
+        break;
+    case ESpatialItemRotation::Two_Seventy:
+        Matrix = OutShape.RotateMatrix90Clockwise(Matrix);
+        Matrix = OutShape.RotateMatrix90Clockwise(Matrix);
+        Matrix = OutShape.RotateMatrix90Clockwise(Matrix);
+        break;
+    case ESpatialItemRotation::MAX:
+    case ESpatialItemRotation::None:
+    default:
+        break;
+    }
+
+    // Calculate the origin offset based on previous and new size difference
+    FIntPoint OriginOffset(
+        (PreviousSize.X - PreviousSize.Y) / 2,
+        (PreviousSize.Y - PreviousSize.X) / 2
+    );
+	UE_LOG(LogTemp, Warning, TEXT("Current Diff: X: %d Y: %d"), OriginOffset.X, OriginOffset.Y);
+    // Convert back to points using calculated offset
+    OutShape.Points = OutShape.MatrixToPoints(Matrix, OriginOffset);
+    return OutShape;
 }
 
 void FFaerieGridShape::RotateAroundInline_90(const FIntPoint& PivotPoint)
