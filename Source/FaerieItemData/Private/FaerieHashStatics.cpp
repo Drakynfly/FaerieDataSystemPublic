@@ -11,7 +11,7 @@
 
 namespace Faerie::Hash
 {
-	FORCEINLINE [[nodiscard]] uint32 Combine(const uint32 A, const uint32 B)
+	[[nodiscard]] uint32 Combine(const uint32 A, const uint32 B)
 	{
 		return Squirrel::HashCombine(A, B);
 	}
