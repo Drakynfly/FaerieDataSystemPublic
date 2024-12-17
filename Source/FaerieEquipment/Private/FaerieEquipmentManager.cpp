@@ -78,8 +78,13 @@ void UFaerieEquipmentManager::AddDefaultSlots()
 
 	for (auto&& Element : InstanceDefaultSlots)
 	{
-		if (auto&& DefaultSlot = AddSlot(Element.SlotConfig);
-			IsValid(DefaultSlot))
+		auto&& DefaultSlot = AddSlot(Element.SlotConfig);
+		if (!IsValid(DefaultSlot))
+		{
+			continue;
+		}
+
+		if (IsValid(Element.ExtensionGroup))
 		{
 			DefaultSlot->AddExtension(DuplicateObject(Element.ExtensionGroup, DefaultSlot));
 		}
