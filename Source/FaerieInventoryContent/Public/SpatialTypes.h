@@ -7,7 +7,7 @@
 
 namespace Faerie
 {
-	class BitMatrix;
+	class FBitMatrix;
 }
 
 /*
@@ -31,11 +31,11 @@ struct FAERIEINVENTORYCONTENT_API FFaerieGridShape
 	FIntPoint GetIndexedShapeCenter() const;
 	FIntPoint GetShapeAverageCenter() const;
 	bool IsSymmetrical() const;
-	
+
 	//Matrix
-	Faerie::BitMatrix ToMatrix() const;
-	TArray<FIntPoint> MatrixToPoints(const Faerie::BitMatrix& Matrix, FIntPoint Origin);
-	Faerie::BitMatrix RotateMatrixClockwise(Faerie::BitMatrix& Matrix, ESpatialItemRotation Rotation = ESpatialItemRotation::None) const;
+	Faerie::FBitMatrix ToMatrix() const;
+	static TArray<FIntPoint> MatrixToPoints(const Faerie::FBitMatrix& Matrix, FIntPoint Origin);
+	static void RotateMatrixClockwise(Faerie::FBitMatrix& Matrix, ESpatialItemRotation Rotation = ESpatialItemRotation::None);
 
 	bool Contains(const FIntPoint& Position) const;
 	[[nodiscard]] bool Overlaps(const FFaerieGridShape& Other) const;
@@ -45,7 +45,7 @@ struct FAERIEINVENTORYCONTENT_API FFaerieGridShape
 
 	void RotateInline(ESpatialItemRotation Rotation, const bool Reset = false);
 	[[nodiscard]] FFaerieGridShape Rotate(ESpatialItemRotation Rotation, const bool Reset = false) const;
-	
+
 	void RotateAroundInline_90(const FIntPoint& PivotPoint);
 	[[nodiscard]] FFaerieGridShape RotateAround_90(const FIntPoint& PivotPoint) const;
 	void RotateAroundInline_180(const FIntPoint& PivotPoint);

@@ -251,41 +251,40 @@ bool UInventorySpatialGridExtension::MoveItem(const FInventoryKey& Key, const FI
 
 bool UInventorySpatialGridExtension::RotateItem(const FInventoryKey& Key)
 {
-	FFaerieGridShape ItemShape = GetItemShape(Key.EntryKey);
+	const FFaerieGridShape ItemShape = GetItemShape(Key.EntryKey);
 
 	// No Point in Trying to Rotate
 	if (ItemShape.IsSymmetrical()) return false;
 
+	const FFaerieGridContent::FScopedStackHandle Handle = GridContent.GetHandle(Key);
+
+	// Store old points before transformations so we can clear them from the bit grid
+	const FFaerieGridShape OldShape = ApplyPlacement(ItemShape, Handle.Get(), true);
+
 	FFaerieGridPlacement NewPlacement = GetStackPlacementData(Key);
 	NewPlacement.Rotation = GetNextRotation(NewPlacement.Rotation);
-	FFaerieGridShape NewShape = ApplyPlacement(ItemShape, NewPlacement, false, NewPlacement.Rotation == ESpatialItemRotation::None);
-	//Get New Origin Before Returning Normalized Shape
-	
+	const FFaerieGridShape NewShape = ApplyPlacement(ItemShape, NewPlacement, false, NewPlacement.Rotation == ESpatialItemRotation::None);
+
 	const FExclusionSet ExclusionSet = MakeExclusionSet(Key);
 	if (!FitsInGrid(NewShape, ExclusionSet))
 	{
 		return false;
 	}
 
-	const auto NewBounds = NewShape.GetBounds();
-	
-	const FFaerieGridContent::FScopedStackHandle Handle = GridContent.GetHandle(Key);
-
-	// Store old points before transformations so we can clear them from the bit grid
-	ApplyPlacementInline(ItemShape, Handle.Get(), true);
-	auto OldBounds = ItemShape.GetBounds();
+	const FIntRect OldBounds = OldShape.GetBounds();
+	const FIntRect NewBounds = NewShape.GetBounds();
 
 	// Clear old occupied cells
-	RemoveItemPosition(ItemShape);
+	RemoveItemPosition(OldShape);
 
 	Handle->Rotation = NewPlacement.Rotation;
-	if(OldBounds != NewBounds)
+	if (OldBounds != NewBounds)
 	{
 		Handle->Origin = NewBounds.Min;
 	}
 	// Set new occupied cells taking into account rotation
 	AddItemPosition(NewShape);
-	
+
 	return true;
 }
 
@@ -404,7 +403,7 @@ FFaerieGridShape UInventorySpatialGridExtension::GetItemShapeOnGrid(const FInven
 
 FIntPoint UInventorySpatialGridExtension::GetStackBounds(const FInventoryKey& Key) const
 {
-	FFaerieGridPlacement Placement = GetStackPlacementData(Key);
+	const FFaerieGridPlacement Placement = GetStackPlacementData(Key);
 	return GetItemShape(Key.EntryKey).Rotate(Placement.Rotation).Normalize().GetSize();
 }
 
@@ -415,7 +414,7 @@ bool UInventorySpatialGridExtension::CanAddAtLocation(const FFaerieGridShape& Sh
 
 FFaerieGridShape UInventorySpatialGridExtension::ApplyPlacement(const FFaerieGridShapeConstView& Shape, const FFaerieGridPlacement& Placement, bool bNormalize, bool Reset)
 {
-	if(bNormalize)
+	if (bNormalize)
 	{
 		return Shape.Copy().Rotate(Placement.Rotation, Reset).Normalize().Translate(Placement.Origin);
 	}
@@ -425,7 +424,7 @@ FFaerieGridShape UInventorySpatialGridExtension::ApplyPlacement(const FFaerieGri
 void UInventorySpatialGridExtension::ApplyPlacementInline(FFaerieGridShape& Shape, const FFaerieGridPlacement& Placement, bool bNormalize)
 {
 	Shape.RotateInline(Placement.Rotation);
-	if(bNormalize)
+	if (bNormalize)
 	{
 		Shape.NormalizeInline();
 	}
