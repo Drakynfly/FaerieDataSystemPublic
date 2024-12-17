@@ -278,7 +278,7 @@ bool UInventorySpatialGridExtension::RotateItem(const FInventoryKey& Key)
 	const FFaerieGridContent::FScopedStackHandle Handle = GridContent.GetHandle(Key);
 
 	// Store old points before transformations so we can clear them from the bit grid
-	ApplyPlacementInline(ItemShape, Handle.Get(), true);
+	ApplyPlacementInline(ItemShape, Handle.Get());
 	auto OldBounds = ItemShape.GetBounds();
 
 	// Clear old occupied cells

@@ -5,6 +5,7 @@
 #include "FaerieGridEnums.h"
 #include "SpatialTypes.generated.h"
 
+struct FBitMatrix;
 /*
  * A shape composed of 2D points.
  */
@@ -26,14 +27,14 @@ struct FAERIEINVENTORYCONTENT_API FFaerieGridShape
 	FIntPoint GetIndexedShapeCenter() const;
 	FIntPoint GetShapeAverageCenter() const;
 	bool IsSymmetrical() const;
-	TArray<TArray<int32>> ToMatrix() const;
-	TArray<FIntPoint> MatrixToPoints(const TArray<TArray<int32>>& Matrix, FIntPoint Origin);
 	template<typename T>
-	void TransposeMatrix(TArray<TArray<T>>& Matrix);
+	T ToMatrix() const;
 	template<typename T>
-	void ReverseMatrix(TArray<TArray<T>>& Matrix);
+	TArray<FIntPoint> MatrixToPoints(const T& Matrix, FIntPoint Origin);
+	void TransposeMatrix(FBitMatrix& Matrix) const;
+	void ReverseMatrix(FBitMatrix& Matrix) const;
 	template<typename T>
-	TArray<TArray<T>> RotateMatrix90Clockwise(const TArray<TArray<T>>& Matrix);
+	T RotateMatrixClockwise(const T& Matrix, ESpatialItemRotation Rotation = ESpatialItemRotation::None) const;
 	bool Contains(const FIntPoint& Position) const;
 	[[nodiscard]] bool Overlaps(const FFaerieGridShape& Other) const;
 
@@ -129,4 +130,45 @@ struct FAERIEINVENTORYCONTENT_API FFaerieGridShapeConstView
 
 	friend bool operator==(const FFaerieGridShapeConstView& Lhs, const FFaerieGridShapeConstView& Rhs);
 	friend bool operator!=(const FFaerieGridShapeConstView& Lhs, const FFaerieGridShapeConstView& Rhs) { return !(Lhs == Rhs); }
+};
+
+// Add this to your class declaration
+struct FBitMatrix
+{
+	TArray<uint32> Data;
+	int32 Width;
+	int32 Height;
+
+	void Init(int32 InWidth, int32 InHeight)
+	{
+		Width = InWidth;
+		Height = InHeight;
+		// Calculate how many uint32s we need to store all bits
+		int32 NumInts = (Width * Height + 31) / 32;
+		Data.SetNum(NumInts, false);
+	}
+
+	void Set(int32 X, int32 Y, bool Value)
+	{
+		int32 Index = Y * Width + X;
+		int32 IntIndex = Index / 32;
+		int32 BitIndex = Index % 32;
+        
+		if (Value)
+		{
+			Data[IntIndex] |= (1u << BitIndex);
+		}
+		else
+		{
+			Data[IntIndex] &= ~(1u << BitIndex);
+		}
+	}
+
+	bool Get(int32 X, int32 Y) const
+	{
+		int32 Index = Y * Width + X;
+		int32 IntIndex = Index / 32;
+		int32 BitIndex = Index % 32;
+		return (Data[IntIndex] & (1u << BitIndex)) != 0;
+	}
 };
