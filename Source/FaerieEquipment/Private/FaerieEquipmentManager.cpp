@@ -287,6 +287,7 @@ UItemContainerExtensionBase* UFaerieEquipmentManager::AddExtensionToSlot(const F
 	}
 
 	UItemContainerExtensionBase* NewExtension = NewObject<UItemContainerExtensionBase>(Slot, ExtensionClass);
+	NewExtension->SetIdentifier();
 
 	AddReplicatedSubObject(NewExtension);
 	NewExtension->AddSubobjectsForReplication(GetOwner());
