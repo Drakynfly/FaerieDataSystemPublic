@@ -83,12 +83,6 @@ void UFaerieEquipmentSlot::OnItemMutated(const UFaerieItem* InItem, const UFaeri
 	Super::OnItemMutated(InItem, Token);
 	check(ItemStack.Item == InItem);
 
-	// Since we should be the only owner of Item, it shouldn't change under us, unless it has a child slot that has an item
-	// added or removed from it. Verify this by checking the class of the token.
-	// If at somepoint this ensure trips, first assume that something has wrongly mutated an item inside a slot (which
-	// shouldn't happen) or that a slot is wrongly holding onto something it shouldn't.
-	ensure(Token->IsA<UFaerieItemContainerToken>());
-
 	BroadcastDataChange();
 }
 
