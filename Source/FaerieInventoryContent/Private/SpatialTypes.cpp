@@ -111,28 +111,26 @@ FBitMatrix FFaerieGridShape::ToMatrix() const
 	// Find bounds
 	for (const FIntPoint& Point : Points)
 	{
-		Min.X = FMath::Min(Min.X, Point.X);
-		Min.Y = FMath::Min(Min.Y, Point.Y);
-		Max.X = FMath::Max(Max.X, Point.X);
-		Max.Y = FMath::Max(Max.Y, Point.Y);
+		Min = Min.ComponentMin(Point);
+		Max = Max.ComponentMax(Point);
 	}
 
-	int32 Width = Max.X - Min.X + 1;
-	int32 Height = Max.Y - Min.Y + 1;
+	const int32 Width = Max.X - Min.X + 1;
+	const int32 Height = Max.Y - Min.Y + 1;
 
 	// Create square matrix
 	FBitMatrix BitMatrix;
-	int32 Size = FMath::Max(Width, Height);
+	const int32 Size = FMath::Max(Width, Height);
 	BitMatrix.Init(Size, Size);
 
 	// Calculate vertical offset to center the shape
-	int32 VerticalPadding = (Size - Height) / 2;
+	const int32 VerticalPadding = (Size - Height) / 2;
 
 	// Set bits for points, with vertical offset
 	for (const FIntPoint& Point : Points)
 	{
-		int32 Col = Point.X - Min.X;
-		int32 Row = Point.Y - Min.Y + VerticalPadding; // Add padding to center vertically
+		const int32 Col = Point.X - Min.X;
+		const int32 Row = Point.Y - Min.Y + VerticalPadding; // Add padding to center vertically
 		BitMatrix.Set(Col, Row, true);
 	}
 
