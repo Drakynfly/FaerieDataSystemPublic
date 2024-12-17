@@ -515,7 +515,7 @@ FFaerieGridPlacement UInventorySpatialGridExtension::FindFirstEmptyLocation(cons
 bool UInventorySpatialGridExtension::FitsInGrid(const FFaerieGridShapeConstView& TranslatedShape, const FExclusionSet& ExclusionSet) const
 {
 	// Calculate shape bounds
-	const FInt32Rect Bounds = TranslatedShape.GetBounds();
+	const FIntRect Bounds = TranslatedShape.GetBounds();
 
 	// Early exit if shape is obviously too large
 	if (Bounds.Max.X > GridSize.X || Bounds.Max.Y > GridSize.Y)

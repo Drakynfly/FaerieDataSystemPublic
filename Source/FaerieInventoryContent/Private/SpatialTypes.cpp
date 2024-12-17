@@ -40,14 +40,14 @@ FIntPoint FFaerieGridShape::GetSize() const
 	return Size + FIntPoint(1);
 }
 
-FInt32Rect FFaerieGridShape::GetBounds() const
+FIntRect FFaerieGridShape::GetBounds() const
 {
 	if (Points.IsEmpty())
 	{
-		return FInt32Rect{0, 0};
+		return FIntRect{0, 0};
 	}
 
-	FInt32Rect Bounds{ TNumericLimits<int32>::Max(), TNumericLimits<int32>::Min() };
+	FIntRect Bounds{ TNumericLimits<int32>::Max(), TNumericLimits<int32>::Min() };
 
 	for (auto&& Point : Points)
 	{
@@ -352,14 +352,14 @@ FIntPoint FFaerieGridShapeView::GetSize() const
 }
 
 
-FInt32Rect FFaerieGridShapeView::GetBounds() const
+FIntRect FFaerieGridShapeView::GetBounds() const
 {
 	if (Points.IsEmpty())
 	{
-		return FInt32Rect{0, 0};
+		return FIntRect{0, 0};
 	}
 
-	FInt32Rect Bounds{ TNumericLimits<int32>::Max(), TNumericLimits<int32>::Min() };
+	FIntRect Bounds{ TNumericLimits<int32>::Max(), TNumericLimits<int32>::Min() };
 
 	for (auto&& Point : Points)
 	{
@@ -631,14 +631,14 @@ FIntPoint FFaerieGridShapeConstView::GetSize() const
 }
 
 
-FInt32Rect FFaerieGridShapeConstView::GetBounds() const
+FIntRect FFaerieGridShapeConstView::GetBounds() const
 {
 	if (Points.IsEmpty())
 	{
-		return FInt32Rect{0, 0};
+		return FIntRect{0, 0};
 	}
 
-	FInt32Rect Bounds{ TNumericLimits<int32>::Max(), TNumericLimits<int32>::Min() };
+	FIntRect Bounds{ TNumericLimits<int32>::Max(), TNumericLimits<int32>::Min() };
 
 	for (auto&& Point : Points)
 	{

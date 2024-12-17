@@ -21,7 +21,7 @@ struct FAERIEINVENTORYCONTENT_API FFaerieGridShape
 	static FFaerieGridShape MakeRect(int32 Height, int32 Width);
 
 	FIntPoint GetSize() const;
-	FInt32Rect GetBounds() const;
+	FIntRect GetBounds() const;
 	FIntPoint GetShapeCenter() const;
 	FIntPoint GetShapeAverageCenter() const;
 	bool IsSymmetrical() const;
@@ -66,7 +66,7 @@ struct FAERIEINVENTORYCONTENT_API FFaerieGridShapeView
 	  : Points(Shape.Points) {}
 
 	FIntPoint GetSize() const;
-	FInt32Rect GetBounds() const;
+	FIntRect GetBounds() const;
 	FIntPoint GetShapeCenter() const;
 	FIntPoint GetShapeAverageCenter() const;
 	bool IsSymmetrical() const;
@@ -109,7 +109,7 @@ struct FAERIEINVENTORYCONTENT_API FFaerieGridShapeConstView
 	  : Points(Shape.Points) {}
 
 	FIntPoint GetSize() const;
-	FInt32Rect GetBounds() const;
+	FIntRect GetBounds() const;
 	FIntPoint GetShapeCenter() const;
 	FIntPoint GetShapeAverageCenter() const;
 	bool IsSymmetrical() const;
