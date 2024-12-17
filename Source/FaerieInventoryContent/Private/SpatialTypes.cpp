@@ -2,6 +2,8 @@
 
 #include "SpatialTypes.h"
 
+#include "BitMatrix.h"
+
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpatialTypes)
 
 FFaerieGridShape FFaerieGridShape::MakeSquare(const int32 Size)
@@ -62,6 +64,13 @@ FIntPoint FFaerieGridShape::GetShapeCenter() const
 	return GetSize() / 2;
 }
 
+FIntPoint FFaerieGridShape::GetIndexedShapeCenter() const
+{
+	auto ShapeCenter = (GetSize() + FIntPoint{-1, -1}) / 2;
+	UE_LOG(LogTemp, Warning, TEXT("Shape Center: X: %d Y: %d"), ShapeCenter.X, ShapeCenter.Y);
+	return ShapeCenter;
+}
+
 FIntPoint FFaerieGridShape::GetShapeAverageCenter() const
 {
 	if (Points.IsEmpty())
@@ -93,6 +102,90 @@ bool FFaerieGridShape::IsSymmetrical() const
 	ShapeCopy.NormalizeInline();
 	// Compare the shapes
 	return ShapeCopy == *this;
+}
+
+Faerie::BitMatrix FFaerieGridShape::ToMatrix() const
+{
+	FIntPoint Min(INT32_MAX, INT32_MAX);
+	FIntPoint Max(INT32_MIN, INT32_MIN);
+
+	// Find bounds
+	for (const FIntPoint& Point : Points)
+	{
+		Min = Min.ComponentMin(Point);
+		Max = Max.ComponentMax(Point);
+	}
+
+	const int32 Width = Max.X - Min.X + 1;
+	const int32 Height = Max.Y - Min.Y + 1;
+
+	// Create square matrix
+	Faerie::BitMatrix BitMatrix;
+	const int32 Size = FMath::Max(Width, Height);
+	BitMatrix.Init(Size, Size);
+
+	// Only apply padding to the smaller dimension
+	const int32 VerticalPadding = (Width > Height) ? (Size - Height) / 2 : 0;
+	const int32 HorizontalPadding = (Height > Width) ? (Size - Width) / 2 : 0;
+
+	// Set bits for points with appropriate padding
+	for (const FIntPoint& Point : Points)
+	{
+		const int32 Col = Point.X - Min.X + HorizontalPadding;
+		const int32 Row = Point.Y - Min.Y + VerticalPadding;
+		BitMatrix.Set(Col, Row, true);
+	}
+
+	return BitMatrix;
+}
+
+TArray<FIntPoint> FFaerieGridShape::MatrixToPoints(const Faerie::BitMatrix& Matrix, const FIntPoint Origin)
+{
+	TArray<FIntPoint> NewPoints;
+
+	FIntPoint Min(Matrix.Width, Matrix.Height);
+	FIntPoint Max(-1, -1);
+
+	for (int32 Row = 0; Row < Matrix.Height; ++Row)
+	{
+		for (int32 Col = 0; Col < Matrix.Width; ++Col)
+		{
+			if (Matrix.Get(Col, Row))
+			{
+				Min = Min.ComponentMin({Col, Row});
+				Max = Max.ComponentMax({Col, Row});
+				NewPoints.Add(FIntPoint(Col, Row));
+			}
+		}
+	}
+
+	for (FIntPoint& Point : NewPoints)
+	{
+		Point.X = Origin.X + (Point.X - Min.X);
+		Point.Y = Origin.Y + (Point.Y - Min.Y);
+	}
+
+	return NewPoints;
+}
+
+Faerie::BitMatrix FFaerieGridShape::RotateMatrixClockwise(Faerie::BitMatrix& Matrix, const ESpatialItemRotation Rotation) const
+{
+	if (Matrix.Width == 0 || Matrix.Height == 0 ||
+		Rotation == ESpatialItemRotation::None ||
+		Rotation == ESpatialItemRotation::MAX)
+	{
+		return Matrix;
+	}
+	Faerie::BitMatrix Result = Matrix;
+	const int32 NumRotations = static_cast<int32>(Rotation);
+
+	for (int32 i = 0; i < NumRotations; ++i)
+	{
+		// Transpose then reverse for 90-degree clockwise rotation
+		Result.Transpose();
+		Result.Reverse();
+	}
+	return Result;
 }
 
 bool FFaerieGridShape::Contains(const FIntPoint& Position) const
@@ -133,41 +226,54 @@ FFaerieGridShape FFaerieGridShape::Translate(const FIntPoint& Position) const
 	return OutShape;
 }
 
-void FFaerieGridShape::RotateInline(const ESpatialItemRotation Rotation)
+void FFaerieGridShape::RotateInline(const ESpatialItemRotation Rotation, const bool Reset)
 {
-	switch (Rotation)
-	{
-	case ESpatialItemRotation::Ninety:
-		RotateAroundInline_90(GetShapeCenter());
-		break;
-	case ESpatialItemRotation::One_Eighty:
-		RotateAroundInline_180(GetShapeCenter());
-		break;
-	case ESpatialItemRotation::Two_Seventy:
-		RotateAroundInline_270(GetShapeCenter());
-		break;
-	case ESpatialItemRotation::None:
-	case ESpatialItemRotation::MAX:
-	default:
-		break;
-	}
+	if (!Reset && Rotation == ESpatialItemRotation::None) return;
+	Faerie::BitMatrix Matrix = ToMatrix();
+	Matrix = RotateMatrixClockwise(Matrix, Rotation);
+	auto ShapeCopy = *this;
+	// Get Size when rotated
+	ShapeCopy.Points = MatrixToPoints(Matrix, {0, 0});
+	ShapeCopy.NormalizeInline();
+	auto Size = ShapeCopy.GetSize();
+
+	const FIntPoint OriginalSize = {Size.X, Size.Y};
+	const FIntPoint NewSize = {Size.Y, Size.X};
+	const auto Multiplier = NewSize.X > OriginalSize.Y ? 1 : -1;
+
+	FIntPoint OriginOffset = {
+		((NewSize.Y - OriginalSize.Y) / 2) * Multiplier,
+		((NewSize.X - OriginalSize.X) / 2) * Multiplier
+	};
+	
+	// Convert back to points
+	Points = MatrixToPoints(Matrix, OriginOffset);
 }
 
-FFaerieGridShape FFaerieGridShape::Rotate(const ESpatialItemRotation Rotation) const
+FFaerieGridShape FFaerieGridShape::Rotate(const ESpatialItemRotation Rotation, const bool Reset) const
 {
-	switch (Rotation)
-	{
-	case ESpatialItemRotation::Ninety:
-		return RotateAround_90(GetShapeCenter());
-	case ESpatialItemRotation::One_Eighty:
-		return RotateAround_180(GetShapeCenter());
-	case ESpatialItemRotation::Two_Seventy:
-		return RotateAround_270(GetShapeCenter());
-	case ESpatialItemRotation::None:
-	case ESpatialItemRotation::MAX:
-	default:
-		return *this;
-	}
+	if (!Reset && Rotation == ESpatialItemRotation::None) return *this;
+	FFaerieGridShape OutShape = *this;
+	Faerie::BitMatrix Matrix = ToMatrix();
+	Matrix = RotateMatrixClockwise(Matrix, Rotation);
+	auto ShapeCopy = *this;
+	ShapeCopy.Points = ShapeCopy.MatrixToPoints(Matrix, {0, 0});
+	ShapeCopy.NormalizeInline();
+	auto Size = ShapeCopy.GetSize();
+
+	const FIntPoint OriginalSize = {Size.X, Size.Y};
+	const FIntPoint NewSize = {Size.Y, Size.X};
+
+	const auto Multiplier = NewSize.X > OriginalSize.Y ? 1 : -1;
+
+	FIntPoint OriginOffset = {
+		((NewSize.Y - OriginalSize.Y) / 2) * Multiplier,
+		((NewSize.X - OriginalSize.X) / 2) * Multiplier
+	};
+	
+	UE_LOG(LogTemp, Warning, TEXT("Current Diff: X: %d Y: %d"), OriginOffset.X, OriginOffset.Y);
+	OutShape.Points = OutShape.MatrixToPoints(Matrix, OriginOffset);
+	return OutShape;
 }
 
 void FFaerieGridShape::RotateAroundInline_90(const FIntPoint& PivotPoint)
@@ -182,7 +288,6 @@ void FFaerieGridShape::RotateAroundInline_90(const FIntPoint& PivotPoint)
 
 		// Flip X - Clockwise
 		Point.X *= -1;
-
 		// Remove rebase
 		Point += PivotPoint;
 	}
@@ -204,7 +309,6 @@ void FFaerieGridShape::RotateAroundInline_180(const FIntPoint& PivotPoint)
 
 		// Flip
 		Point *= -1;
-
 		// Remove rebase
 		Point += PivotPoint;
 	}
