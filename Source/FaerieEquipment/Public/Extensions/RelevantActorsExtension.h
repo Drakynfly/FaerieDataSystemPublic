@@ -5,6 +5,7 @@
 #include "ItemContainerExtensionBase.h"
 #include "RelevantActorsExtension.generated.h"
 
+// @todo deprecate this and migrate to DependencyFetcher
 /**
  *
  */
