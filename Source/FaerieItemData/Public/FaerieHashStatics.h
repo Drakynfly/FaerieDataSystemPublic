@@ -6,10 +6,11 @@
 class UFaerieItem;
 class UFaerieItemContainerBase;
 
-using FFaerieItemHashFunction = TFunctionRef<uint32(const UFaerieItem*)>;
-
 namespace Faerie::Hash
 {
+	// A function that takes in a UFaerieItem and returns a hash for it.
+	using FItemHashFunction = TFunctionRef<uint32(const UFaerieItem*)>;
+
 	FAERIEITEMDATA_API [[nodiscard]] uint32 Combine(const uint32 A, const uint32 B);
 
 	FAERIEITEMDATA_API [[nodiscard]] FFaerieHash CombineHashes(TArray<uint32>& Hashes);
@@ -20,7 +21,9 @@ namespace Faerie::Hash
 	FAERIEITEMDATA_API [[nodiscard]] uint32 HashStructByProps(const void* Ptr, const UScriptStruct* Struct, bool IncludeSuper);
 	FAERIEITEMDATA_API [[nodiscard]] uint32 HashObjectByProps(const UObject* Obj, bool IncludeSuper);
 
-	FAERIEITEMDATA_API [[nodiscard]] FFaerieHash HashItemSet(const TSet<const UFaerieItem*>& Items, const FFaerieItemHashFunction& Function);
+	// Combine the hashes for a set of Items according to a HashFunction
+	FAERIEITEMDATA_API [[nodiscard]] FFaerieHash HashItemSet(const TSet<const UFaerieItem*>& Items, const FItemHashFunction& Function);
 
+	// A simple HashFunction that hashes the name of an item by its InfoToken
 	FAERIEITEMDATA_API [[nodiscard]] uint32 HashItemByName(const UFaerieItem* Item);
 }

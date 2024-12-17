@@ -8,7 +8,7 @@ class UFaerieItem;
 
 namespace Faerie::ItemData
 {
-	static int32 UnlimitedStack = -1;
+	inline constexpr int32 UnlimitedStack = -1;
 
 	static bool IsValidStack(const int32 Value)
 	{

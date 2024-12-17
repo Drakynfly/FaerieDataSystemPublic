@@ -7,6 +7,6 @@
 
 namespace Faerie::Hash
 {
-	FAERIEINVENTORY_API FFaerieHash HashContainer(const UFaerieItemContainerBase* Container, const FFaerieItemHashFunction& Function);
-	FAERIEINVENTORY_API FFaerieHash HashContainers(const TConstArrayView<const UFaerieItemContainerBase*> Containers, const FFaerieItemHashFunction& Function);
+	FAERIEINVENTORY_API FFaerieHash HashContainer(const UFaerieItemContainerBase* Container, const FItemHashFunction& Function);
+	FAERIEINVENTORY_API FFaerieHash HashContainers(const TConstArrayView<const UFaerieItemContainerBase*> Containers, const FItemHashFunction& Function);
 }

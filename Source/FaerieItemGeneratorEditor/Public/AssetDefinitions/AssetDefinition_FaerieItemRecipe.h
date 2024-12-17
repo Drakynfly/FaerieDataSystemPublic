@@ -29,8 +29,7 @@ public:
 	virtual TSoftClassPtr<UObject> GetAssetClass() const override { return UFaerieItemRecipe::StaticClass(); }
 	virtual TConstArrayView<FAssetCategoryPath> GetAssetCategories() const override
 	{
-		static const TArray<FAssetCategoryPath> Categories = { Faerie::Editor::DefaultAssetCategory };
-		return Categories;
+		return Faerie::Editor::DefaultCategories;
 	}
 	// UAssetDefinition End
 };

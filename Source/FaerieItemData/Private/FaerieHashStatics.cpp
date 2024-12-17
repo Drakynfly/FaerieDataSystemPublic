@@ -139,7 +139,7 @@ namespace Faerie::Hash
 	}
 
 	FFaerieHash HashItemSet(const TSet<const UFaerieItem*>& Items,
-							const FFaerieItemHashFunction& Function)
+							const FItemHashFunction& Function)
 	{
 		TArray<uint32> Hashes;
 

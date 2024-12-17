@@ -3,7 +3,7 @@
 
 namespace Faerie::Hash
 {
-	FFaerieHash HashContainer(const UFaerieItemContainerBase* Container, const FFaerieItemHashFunction& Function)
+	FFaerieHash HashContainer(const UFaerieItemContainerBase* Container, const FItemHashFunction& Function)
 	{
 		if (!IsValid(Container))
 		{
@@ -21,7 +21,7 @@ namespace Faerie::Hash
 		return CombineHashes(Hashes);
 	}
 
-	FFaerieHash HashContainers(const TConstArrayView<const UFaerieItemContainerBase*> Containers, const FFaerieItemHashFunction& Function)
+	FFaerieHash HashContainers(const TConstArrayView<const UFaerieItemContainerBase*> Containers, const FItemHashFunction& Function)
 	{
 		if (!Containers.IsEmpty())
 		{

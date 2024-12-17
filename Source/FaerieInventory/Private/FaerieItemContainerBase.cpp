@@ -142,7 +142,7 @@ void UFaerieItemContainerBase::ReleaseOwnership(UFaerieItem* Item)
 		// If we renamed the item to ourself when we took ownership of this item, then we need to release that now.
 		if (Item->GetOuter() == this)
 		{
-			Item->Rename(nullptr, GetTransientPackage(), REN_ForceNoResetLoaders | REN_DontCreateRedirectors);
+			Item->Rename(nullptr, GetTransientPackage(), REN_DontCreateRedirectors);
 		}
 
 		Item->GetNotifyOwnerOfSelfMutation().Unbind();
@@ -168,7 +168,7 @@ void UFaerieItemContainerBase::TakeOwnership(UFaerieItem* Item)
 
 		if (GetDefault<UFaerieInventorySettings>()->ContainerMutableBehavior == EFaerieContainerOwnershipBehavior::Rename)
 		{
-			Item->Rename(nullptr, this, REN_ForceNoResetLoaders | REN_DontCreateRedirectors);
+			Item->Rename(nullptr, this, REN_DontCreateRedirectors);
 		}
 
 		// Add our group of extensions to any sub-storages

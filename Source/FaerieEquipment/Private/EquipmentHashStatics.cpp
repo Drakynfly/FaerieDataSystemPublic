@@ -9,7 +9,7 @@
 namespace Faerie::Hash
 {
 	FFaerieHash HashEquipment(const UFaerieEquipmentManager* Manager,
-							  const TSet<FFaerieSlotTag>& Slots, const FFaerieItemHashFunction& Function)
+							  const TSet<FFaerieSlotTag>& Slots, const FItemHashFunction& Function)
 	{
 		if (!IsValid(Manager))
 		{
