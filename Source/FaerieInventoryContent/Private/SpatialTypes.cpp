@@ -120,17 +120,22 @@ FBitMatrix FFaerieGridShape::ToMatrix() const
 	int32 Width = Max.X - Min.X + 1;
 	int32 Height = Max.Y - Min.Y + 1;
 
-	// Create bit matrix
+	// Create square matrix
 	FBitMatrix BitMatrix;
-	BitMatrix.Init(Width, Height);
+	int32 Size = FMath::Max(Width, Height);
+	BitMatrix.Init(Size, Size);
 
-	// Set bits for points
+	// Calculate vertical offset to center the shape
+	int32 VerticalPadding = (Size - Height) / 2;
+
+	// Set bits for points, with vertical offset
 	for (const FIntPoint& Point : Points)
 	{
-		int32 Row = Point.Y - Min.Y;
 		int32 Col = Point.X - Min.X;
+		int32 Row = Point.Y - Min.Y + VerticalPadding; // Add padding to center vertically
 		BitMatrix.Set(Col, Row, true);
 	}
+
 	return BitMatrix;
 }
 
@@ -138,29 +143,39 @@ template <>
 TArray<FIntPoint> FFaerieGridShape::MatrixToPoints(const FBitMatrix& Matrix, FIntPoint Origin)
 {
 	TArray<FIntPoint> NewPoints;
-	for(auto& Point : Matrix.Data)
+
+	FIntPoint Min(Matrix.Width, Matrix.Height);
+	FIntPoint Max(-1, -1);
+
+	for (int32 Row = 0; Row < Matrix.Height; ++Row)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Matrix Point: %d"), Point);
-	}
-	for (int32 Col = 0; Col < Matrix.Width; ++Col)
-	{
-		for (int32 Row = 0; Row < Matrix.Height; ++Row)
+		for (int32 Col = 0; Col < Matrix.Width; ++Col)
 		{
 			if (Matrix.Get(Col, Row))
 			{
-				NewPoints.Add(FIntPoint(Origin.X + Col, Origin.Y + Row));
+				Min = Min.ComponentMin({Col, Row});
+				Max = Max.ComponentMax({Col, Row});
+				NewPoints.Add(FIntPoint(Col, Row));
 			}
 		}
 	}
+
+	for (FIntPoint& Point : NewPoints)
+	{
+		Point.X = Origin.X + (Point.X - Min.X);
+		Point.Y = Origin.Y + (Point.Y - Min.Y);
+	}
+
 	return NewPoints;
 }
+
 
 template <>
 FBitMatrix FFaerieGridShape::RotateMatrixClockwise(const FBitMatrix& Matrix, const ESpatialItemRotation Rotation) const
 {
 	if (Matrix.Width == 0 || Matrix.Height == 0 ||
-	   Rotation == ESpatialItemRotation::None ||
-	   Rotation == ESpatialItemRotation::MAX)
+		Rotation == ESpatialItemRotation::None ||
+		Rotation == ESpatialItemRotation::MAX)
 	{
 		return Matrix;
 	}
@@ -170,24 +185,9 @@ FBitMatrix FFaerieGridShape::RotateMatrixClockwise(const FBitMatrix& Matrix, con
 
 	for (int32 i = 0; i < NumRotations; ++i)
 	{
-		// Create new matrix with swapped dimensions
-		FBitMatrix RotatedMatrix;
-		RotatedMatrix.Init(Result.Height, Result.Width);
-        
-		// Copy data to new matrix to maintain original dimensions
-		for (int32 Row = 0; Row < Result.Height; Row++)
-		{
-			for (int32 Col = 0; Col < Result.Width; Col++)
-			{
-				RotatedMatrix.Set(Col, Row, Result.Get(Col, Row));
-			}
-		}
-        
 		// Transpose then reverse for 90-degree clockwise rotation
-		TransposeMatrix(RotatedMatrix);
-		ReverseMatrix(RotatedMatrix);
-        
-		Result = MoveTemp(RotatedMatrix);
+		TransposeMatrix(Result);
+		ReverseMatrix(Result);
 	}
 
 	return Result;
@@ -204,7 +204,7 @@ void FFaerieGridShape::TransposeMatrix(FBitMatrix& Matrix) const
 	{
 		for (int32 j = i + 1; j < Matrix.Width; j++)
 		{
-			bool Temp = Matrix.Get(i, j);
+			const bool Temp = Matrix.Get(i, j);
 			Matrix.Set(i, j, Matrix.Get(j, i));
 			Matrix.Set(j, i, Temp);
 		}
@@ -217,7 +217,7 @@ void FFaerieGridShape::ReverseMatrix(FBitMatrix& Matrix) const
 	{
 		for (int32 Col = 0; Col < Matrix.Width / 2; Col++)
 		{
-			bool Temp = Matrix.Get(Col, Row);
+			const bool Temp = Matrix.Get(Col, Row);
 			Matrix.Set(Col, Row, Matrix.Get(Matrix.Width - 1 - Col, Row));
 			Matrix.Set(Matrix.Width - 1 - Col, Row, Temp);
 		}
@@ -264,19 +264,22 @@ FFaerieGridShape FFaerieGridShape::Translate(const FIntPoint& Position) const
 
 void FFaerieGridShape::RotateInline(const ESpatialItemRotation Rotation)
 {
-	if(Rotation == ESpatialItemRotation::None) return;
+	if (Rotation == ESpatialItemRotation::None) return;
 	auto Matrix = ToMatrix<FBitMatrix>();
-	auto PrevMatrix = ToMatrix<FBitMatrix>();
 	Matrix = RotateMatrixClockwise(Matrix, Rotation);
-	PrevMatrix = RotateMatrixClockwise(PrevMatrix, GetPreviousRotation(Rotation));
+	auto ShapeCopy = *this;
+	// Get Size when rotated
+	ShapeCopy.Points = MatrixToPoints(Matrix, {0, 0});
+	ShapeCopy.NormalizeInline();
+	auto Size = ShapeCopy.GetSize();
 
-	const FIntPoint OriginalSize = {Matrix.Width, Matrix.Height};
-	const FIntPoint NewSize = {PrevMatrix.Width, PrevMatrix.Height};
-	
-	// Calculate the origin offset based on previous and new size difference
+	const FIntPoint OriginalSize = {Size.X, Size.Y};
+	const FIntPoint NewSize = {Size.Y, Size.X};
+	const auto Multiplier = NewSize.X > OriginalSize.Y ? 1 : -1;
+
 	const FIntPoint OriginOffset = {
-		((NewSize.X - OriginalSize.X) / 2),
-		((NewSize.Y - OriginalSize.Y) / 2)
+		((NewSize.Y - OriginalSize.Y) / 2) * Multiplier,
+		((NewSize.X - OriginalSize.X) / 2) * Multiplier
 	};
 	// Convert back to points
 	Points = MatrixToPoints(Matrix, OriginOffset);
@@ -284,21 +287,25 @@ void FFaerieGridShape::RotateInline(const ESpatialItemRotation Rotation)
 
 FFaerieGridShape FFaerieGridShape::Rotate(const ESpatialItemRotation Rotation) const
 {
-	if(Rotation == ESpatialItemRotation::None) return *this;
+	if (Rotation == ESpatialItemRotation::None) return *this;
 	FFaerieGridShape OutShape = *this;
 	FBitMatrix Matrix = ToMatrix<FBitMatrix>();
-	FBitMatrix PrevMatrix = ToMatrix<FBitMatrix>();
 	Matrix = RotateMatrixClockwise(Matrix, Rotation);
-	PrevMatrix = RotateMatrixClockwise(PrevMatrix, GetPreviousRotation(Rotation));
+	auto ShapeCopy = *this;
+	ShapeCopy.Points = ShapeCopy.MatrixToPoints(Matrix, {0, 0});
+	ShapeCopy.NormalizeInline();
+	auto Size = ShapeCopy.GetSize();
 
-	const FIntPoint OriginalSize = {Matrix.Width, Matrix.Height};
-	const FIntPoint NewSize = {PrevMatrix.Width, PrevMatrix.Height};
+	const FIntPoint OriginalSize = {Size.X, Size.Y};
+	const FIntPoint NewSize = {Size.Y, Size.X};
 
-	FIntPoint OriginOffset = {
-		((NewSize.X - OriginalSize.X) / 2),
-		((NewSize.Y - OriginalSize.Y) / 2)  // Opposite of X multiplier
+	const auto Multiplier = NewSize.X > OriginalSize.Y ? 1 : -1;
+
+	const FIntPoint OriginOffset = {
+		((NewSize.Y - OriginalSize.Y) / 2) * Multiplier,
+		((NewSize.X - OriginalSize.X) / 2) * Multiplier
 	};
-	
+
 	UE_LOG(LogTemp, Warning, TEXT("Current Diff: X: %d Y: %d"), OriginOffset.X, OriginOffset.Y);
 	OutShape.Points = OutShape.MatrixToPoints(Matrix, OriginOffset);
 	return OutShape;

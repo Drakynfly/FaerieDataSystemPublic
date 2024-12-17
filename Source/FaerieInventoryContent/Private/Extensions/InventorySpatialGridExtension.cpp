@@ -259,11 +259,6 @@ bool UInventorySpatialGridExtension::RotateItem(const FInventoryKey& Key)
 	FFaerieGridPlacement NewPlacement = GetStackPlacementData(Key);
 	auto PrevRot = NewPlacement.Rotation;
 	NewPlacement.Rotation = GetNextRotation(NewPlacement.Rotation);
-	if(NewPlacement.Rotation == ESpatialItemRotation::None && PrevRot == ESpatialItemRotation::Two_Seventy)
-	{
-		auto Size = ItemShape.GetSize();
-		NewPlacement.Origin = NewPlacement.Origin - Size/2;
-	}
 	FFaerieGridShape NewShape = ApplyPlacement(ItemShape, NewPlacement);
 	//Get New Origin Before Returning Normalized Shape
 	
@@ -278,7 +273,7 @@ bool UInventorySpatialGridExtension::RotateItem(const FInventoryKey& Key)
 	const FFaerieGridContent::FScopedStackHandle Handle = GridContent.GetHandle(Key);
 
 	// Store old points before transformations so we can clear them from the bit grid
-	ApplyPlacementInline(ItemShape, Handle.Get());
+	ApplyPlacementInline(ItemShape, Handle.Get(), true);
 	auto OldBounds = ItemShape.GetBounds();
 
 	// Clear old occupied cells
@@ -291,7 +286,7 @@ bool UInventorySpatialGridExtension::RotateItem(const FInventoryKey& Key)
 	}
 	// Set new occupied cells taking into account rotation
 	AddItemPosition(NewShape);
-
+	
 	return true;
 }
 
