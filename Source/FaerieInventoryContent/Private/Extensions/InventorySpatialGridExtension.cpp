@@ -257,9 +257,8 @@ bool UInventorySpatialGridExtension::RotateItem(const FInventoryKey& Key)
 	if (ItemShape.IsSymmetrical()) return false;
 
 	FFaerieGridPlacement NewPlacement = GetStackPlacementData(Key);
-	auto PrevRot = NewPlacement.Rotation;
 	NewPlacement.Rotation = GetNextRotation(NewPlacement.Rotation);
-	FFaerieGridShape NewShape = ApplyPlacement(ItemShape, NewPlacement);
+	FFaerieGridShape NewShape = ApplyPlacement(ItemShape, NewPlacement, false, NewPlacement.Rotation == ESpatialItemRotation::None);
 	//Get New Origin Before Returning Normalized Shape
 	
 	const FExclusionSet ExclusionSet = MakeExclusionSet(Key);
@@ -414,13 +413,13 @@ bool UInventorySpatialGridExtension::CanAddAtLocation(const FFaerieGridShape& Sh
 	return FitsInGridAnyRotation(Shape, Position, {});
 }
 
-FFaerieGridShape UInventorySpatialGridExtension::ApplyPlacement(const FFaerieGridShapeConstView& Shape, const FFaerieGridPlacement& Placement, bool bNormalize)
+FFaerieGridShape UInventorySpatialGridExtension::ApplyPlacement(const FFaerieGridShapeConstView& Shape, const FFaerieGridPlacement& Placement, bool bNormalize, bool Reset)
 {
 	if(bNormalize)
 	{
-		return Shape.Copy().Rotate(Placement.Rotation).Normalize().Translate(Placement.Origin);
+		return Shape.Copy().Rotate(Placement.Rotation, Reset).Normalize().Translate(Placement.Origin);
 	}
-	return Shape.Copy().Rotate(Placement.Rotation).Translate(Placement.Origin);
+	return Shape.Copy().Rotate(Placement.Rotation, Reset).Translate(Placement.Origin);
 }
 
 void UInventorySpatialGridExtension::ApplyPlacementInline(FFaerieGridShape& Shape, const FFaerieGridPlacement& Placement, bool bNormalize)

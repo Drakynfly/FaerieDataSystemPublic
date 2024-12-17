@@ -69,7 +69,7 @@ public:
 protected:
 	using FExclusionSet = TSet<FIntPoint>;
 
-	[[nodiscard]] static FFaerieGridShape ApplyPlacement(const FFaerieGridShapeConstView& Shape, const FFaerieGridPlacement& Placement, bool bNormalize = false);
+	[[nodiscard]] static FFaerieGridShape ApplyPlacement(const FFaerieGridShapeConstView& Shape, const FFaerieGridPlacement& Placement, bool bNormalize = false, bool Reset = false);
 	static void ApplyPlacementInline(FFaerieGridShape& Shape, const FFaerieGridPlacement& Placement, bool bNormalize = false);
 
 	FExclusionSet MakeExclusionSet(FInventoryKey ExcludedKey) const;

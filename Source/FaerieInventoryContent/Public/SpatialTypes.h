@@ -5,7 +5,11 @@
 #include "FaerieGridEnums.h"
 #include "SpatialTypes.generated.h"
 
-struct FBitMatrix;
+namespace Faerie
+{
+	class BitMatrix;
+}
+
 /*
  * A shape composed of 2D points.
  */
@@ -27,23 +31,21 @@ struct FAERIEINVENTORYCONTENT_API FFaerieGridShape
 	FIntPoint GetIndexedShapeCenter() const;
 	FIntPoint GetShapeAverageCenter() const;
 	bool IsSymmetrical() const;
-	template<typename T>
-	T ToMatrix() const;
-	template<typename T>
-	TArray<FIntPoint> MatrixToPoints(const T& Matrix, FIntPoint Origin);
-	void TransposeMatrix(FBitMatrix& Matrix) const;
-	void ReverseMatrix(FBitMatrix& Matrix) const;
-	template<typename T>
-	T RotateMatrixClockwise(const T& Matrix, ESpatialItemRotation Rotation = ESpatialItemRotation::None) const;
+	
+	//Matrix
+	Faerie::BitMatrix ToMatrix() const;
+	TArray<FIntPoint> MatrixToPoints(const Faerie::BitMatrix& Matrix, FIntPoint Origin);
+	Faerie::BitMatrix RotateMatrixClockwise(Faerie::BitMatrix& Matrix, ESpatialItemRotation Rotation = ESpatialItemRotation::None) const;
+
 	bool Contains(const FIntPoint& Position) const;
 	[[nodiscard]] bool Overlaps(const FFaerieGridShape& Other) const;
 
 	void TranslateInline(const FIntPoint& Position);
 	[[nodiscard]] FFaerieGridShape Translate(const FIntPoint& Position) const;
 
-	void RotateInline(ESpatialItemRotation Rotation);
-	[[nodiscard]] FFaerieGridShape Rotate(ESpatialItemRotation Rotation) const;
-
+	void RotateInline(ESpatialItemRotation Rotation, const bool Reset = false);
+	[[nodiscard]] FFaerieGridShape Rotate(ESpatialItemRotation Rotation, const bool Reset = false) const;
+	
 	void RotateAroundInline_90(const FIntPoint& PivotPoint);
 	[[nodiscard]] FFaerieGridShape RotateAround_90(const FIntPoint& PivotPoint) const;
 	void RotateAroundInline_180(const FIntPoint& PivotPoint);
@@ -130,45 +132,4 @@ struct FAERIEINVENTORYCONTENT_API FFaerieGridShapeConstView
 
 	friend bool operator==(const FFaerieGridShapeConstView& Lhs, const FFaerieGridShapeConstView& Rhs);
 	friend bool operator!=(const FFaerieGridShapeConstView& Lhs, const FFaerieGridShapeConstView& Rhs) { return !(Lhs == Rhs); }
-};
-
-// Add this to your class declaration
-struct FBitMatrix
-{
-	TArray<uint32> Data;
-	int32 Width;
-	int32 Height;
-
-	void Init(int32 InWidth, int32 InHeight)
-	{
-		Width = InWidth;
-		Height = InHeight;
-		// Calculate how many uint32s we need to store all bits
-		int32 NumInts = (Width * Height + 31) / 32;
-		Data.SetNum(NumInts, false);
-	}
-
-	void Set(int32 X, int32 Y, bool Value)
-	{
-		int32 Index = Y * Width + X;
-		int32 IntIndex = Index / 32;
-		int32 BitIndex = Index % 32;
-        
-		if (Value)
-		{
-			Data[IntIndex] |= (1u << BitIndex);
-		}
-		else
-		{
-			Data[IntIndex] &= ~(1u << BitIndex);
-		}
-	}
-
-	bool Get(int32 X, int32 Y) const
-	{
-		int32 Index = Y * Width + X;
-		int32 IntIndex = Index / 32;
-		int32 BitIndex = Index % 32;
-		return (Data[IntIndex] & (1u << BitIndex)) != 0;
-	}
 };
