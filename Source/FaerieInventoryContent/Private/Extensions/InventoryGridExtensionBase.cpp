@@ -67,7 +67,13 @@ FIntPoint UInventoryGridExtensionBase::Unravel(const int32 Index) const
 
 bool UInventoryGridExtensionBase::IsCellOccupied(const FIntPoint& Point) const
 {
-	return OccupiedCells[Ravel(Point)];
+	const int32 Index = Ravel(Point);
+	if (!OccupiedCells.IsValidIndex(Index))
+	{
+		// If cell doesn't exist, it cannot be occupied
+		return false;
+	}
+	return OccupiedCells[Index];
 }
 
 void UInventoryGridExtensionBase::MarkCell(const FIntPoint& Point)
