@@ -10,7 +10,7 @@ class AItemRepresentationActor;
 /**
  * #DEPRECATED USE UFaerieVisualActorClassToken instead
  */
-UCLASS(meta = (DisplayName = "Token - Visual Equipment (DEPRECATED)"))
+UCLASS(meta = (DisplayName = "Token - Visual: Equipment (DEPRECATED)"))
 class FAERIEEQUIPMENT_API UFaerieVisualEquipment : public UFaerieItemToken
 {
 	GENERATED_BODY()

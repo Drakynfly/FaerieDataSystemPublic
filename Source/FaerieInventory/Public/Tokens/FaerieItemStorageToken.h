@@ -47,7 +47,7 @@ class UItemContainerExtensionGroup;
 /**
  * This token adds an Item Storage object used to store items nested in another.
  */
-UCLASS(DisplayName = "Token - Item Storage")
+UCLASS(DisplayName = "Token - Add Item Storage")
 class FAERIEINVENTORY_API UFaerieItemStorageToken : public UFaerieItemContainerToken
 {
 	GENERATED_BODY()

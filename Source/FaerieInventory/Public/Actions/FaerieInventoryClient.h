@@ -82,7 +82,8 @@ enum class EFaerieClientRequestBatchType : uint8
 /**
  * A component to add to client owned actors, that grants access to inventory functionality.
  */
-UCLASS(ClassGroup = ("Faerie"), meta = (BlueprintSpawnableComponent))
+UCLASS(ClassGroup = ("Faerie"), meta = (BlueprintSpawnableComponent),
+	HideCategories = (Collision, ComponentTick, Replication, ComponentReplication, Activation, Sockets, Navigation))
 class FAERIEINVENTORY_API UFaerieInventoryClient : public UActorComponent
 {
 	GENERATED_BODY()

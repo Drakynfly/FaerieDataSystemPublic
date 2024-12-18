@@ -24,13 +24,13 @@ protected:
 };
 
 
-UCLASS(DisplayName = "Token - Info Card Class")
+UCLASS(DisplayName = "Token - Card Class: Info")
 class FAERIEITEMCARD_API UCustomInfoCard : public UCustomCardClass
 {
 	GENERATED_BODY()
 };
 
-UCLASS(DisplayName = "Token - Palette Card Class")
+UCLASS(DisplayName = "Token - Card Class: Palette")
 class FAERIEITEMCARD_API UCustomPaletteCard : public UCustomCardClass
 {
 	GENERATED_BODY()

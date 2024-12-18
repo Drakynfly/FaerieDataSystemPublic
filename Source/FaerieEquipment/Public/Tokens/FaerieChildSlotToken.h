@@ -9,7 +9,7 @@
 /**
  *
  */
-UCLASS(DisplayName = "Token - Child Slot")
+UCLASS(DisplayName = "Token - Add Child Slot")
 class FAERIEEQUIPMENT_API UFaerieChildSlotToken : public UFaerieItemContainerToken
 {
 	GENERATED_BODY()

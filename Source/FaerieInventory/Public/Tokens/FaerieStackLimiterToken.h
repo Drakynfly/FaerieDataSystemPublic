@@ -5,7 +5,7 @@
 #include "FaerieItemToken.h"
 #include "FaerieStackLimiterToken.generated.h"
 
-UCLASS()
+UCLASS(DisplayName = "Token - Stack Limit")
 class FAERIEINVENTORY_API UFaerieStackLimiterToken : public UFaerieItemToken
 {
 	GENERATED_BODY()

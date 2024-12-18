@@ -8,10 +8,12 @@
 
 class UDurabilityGradeAsset;
 
+// @todo remove or merge with DurabilityToken
+
 /**
  *
  */
-UCLASS()
+UCLASS(meta = (DisplayName = "Token - Resource"))
 class FAERIEEQUIPMENT_API UFaerieResourceToken : public UFaerieItemToken
 {
 	GENERATED_BODY()
