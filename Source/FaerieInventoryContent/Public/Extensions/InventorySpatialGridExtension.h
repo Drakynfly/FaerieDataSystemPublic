@@ -17,7 +17,6 @@ class FAERIEINVENTORYCONTENT_API UInventorySpatialGridExtension : public UInvent
 
 protected:
 	//~ UItemContainerExtensionBase
-	virtual void InitializeExtension(const UFaerieItemContainerBase* Container) override;
 	virtual EEventExtensionResponse AllowsAddition(const UFaerieItemContainerBase* Container, FFaerieItemStackView Stack, EFaerieStorageAddStackBehavior AddStackBehavior) const override;
 	virtual void PostAddition(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) override;
 	virtual void PostRemoval(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) override;
@@ -34,12 +33,12 @@ protected:
 
 	virtual FInventoryKey GetKeyAt(const FIntPoint& Position) const override;
 	virtual bool CanAddAtLocation(FFaerieItemStackView Stack, FIntPoint IntPoint) const override;
+	virtual bool AddItemToGrid(const FInventoryKey& Key, const UFaerieItem* Item) override;
 	virtual bool MoveItem(const FInventoryKey& Key, const FIntPoint& TargetPoint) override;
 	virtual bool RotateItem(const FInventoryKey& Key) override;
 	//~ UInventoryGridExtensionBase
 
 private:
-	bool AddItemToGrid(const FInventoryKey& Key, const UFaerieItem* Item);
 	void RemoveItem(const FInventoryKey& Key, const UFaerieItem* Item);
 	void RemoveItemBatch(const TConstArrayView<FInventoryKey>& Keys, const UFaerieItem* Item);
 

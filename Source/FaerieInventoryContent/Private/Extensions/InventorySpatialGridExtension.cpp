@@ -12,34 +12,6 @@
 DECLARE_STATS_GROUP(TEXT("InventorySpatialGridExtension"), STATGROUP_FaerieSpatialGrid, STATCAT_Advanced);
 DECLARE_CYCLE_STAT(TEXT("Client OccupiedCells rebuild"), STAT_Client_CellRebuild, STATGROUP_FaerieSpatialGrid);
 
-void UInventorySpatialGridExtension::InitializeExtension(const UFaerieItemContainerBase* Container)
-{
-	Super::InitializeExtension(Container);
-
-	if (const UFaerieItemStorage* ItemStorage = Cast<UFaerieItemStorage>(Container))
-	{
-		bool Failed = false;
-
-		ItemStorage->ForEachKey(
-			[this, ItemStorage, &Failed](const FEntryKey Key)
-			{
-				// @todo there is no break logic for ForEachKey! this is a temp hack
-				if (Failed) return;
-
-				for (const auto EntryView = ItemStorage->GetEntryView(Key);
-					auto&& Entry : EntryView.Get().Stacks)
-				{
-					if (const FInventoryKey InvKey(Key, Entry.Key);
-						!AddItemToGrid(InvKey, EntryView.Get().ItemObject))
-					{
-						Failed = true;
-						break;
-					}
-				}
-			});
-	}
-}
-
 EEventExtensionResponse UInventorySpatialGridExtension::AllowsAddition(const UFaerieItemContainerBase* Container,
 																	   const FFaerieItemStackView Stack,
 																	   EFaerieStorageAddStackBehavior) const
@@ -191,6 +163,35 @@ bool UInventorySpatialGridExtension::CanAddAtLocation(const FFaerieItemStackView
 	return CanAddAtLocation(Shape, IntPoint);
 }
 
+bool UInventorySpatialGridExtension::AddItemToGrid(const FInventoryKey& Key, const UFaerieItem* Item)
+{
+	if (!Key.IsValid())
+	{
+		return false;
+	}
+
+	if (GridContent.Find(Key) != nullptr)
+	{
+		return true;
+	}
+
+	FFaerieGridShape Shape = GetItemShape_Impl(Item);
+
+	const FFaerieGridPlacement DesiredItemPlacement = FindFirstEmptyLocation(Shape);
+
+	if (DesiredItemPlacement.Origin == FIntPoint::NoneValue)
+	{
+		return false;
+	}
+
+	GridContent.Insert(Key, DesiredItemPlacement);
+
+	ApplyPlacementInline(Shape, DesiredItemPlacement);
+	AddItemPosition(Shape);
+
+	return true;
+}
+
 bool UInventorySpatialGridExtension::MoveItem(const FInventoryKey& Key, const FIntPoint& TargetPoint)
 {
 	const FFaerieGridShape ItemShape = GetItemShape(Key.EntryKey);
@@ -284,35 +285,6 @@ bool UInventorySpatialGridExtension::RotateItem(const FInventoryKey& Key)
 	}
 	// Set new occupied cells taking into account rotation
 	AddItemPosition(NewShape);
-
-	return true;
-}
-
-bool UInventorySpatialGridExtension::AddItemToGrid(const FInventoryKey& Key, const UFaerieItem* Item)
-{
-	if (!Key.IsValid())
-	{
-		return false;
-	}
-
-	if (GridContent.Find(Key) != nullptr)
-	{
-		return true;
-	}
-
-	FFaerieGridShape Shape = GetItemShape_Impl(Item);
-
-	const FFaerieGridPlacement DesiredItemPlacement = FindFirstEmptyLocation(Shape);
-
-	if (DesiredItemPlacement.Origin == FIntPoint::NoneValue)
-	{
-		return false;
-	}
-
-	GridContent.Insert(Key, DesiredItemPlacement);
-
-	ApplyPlacementInline(Shape, DesiredItemPlacement);
-	AddItemPosition(Shape);
 
 	return true;
 }

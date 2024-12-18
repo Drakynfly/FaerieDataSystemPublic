@@ -39,6 +39,23 @@ void UInventoryGridExtensionBase::InitializeExtension(const UFaerieItemContainer
 	// @todo handle serialization loading
 	// @todo handle items that are too large to fit / too many items (log error?)
 	OccupiedCells.SetNum(GridSize.X * GridSize.Y, false);
+	if (const UFaerieItemStorage* ItemStorage = Cast<UFaerieItemStorage>(Container))
+	{
+		ItemStorage->ForEachKey(
+			[this, ItemStorage](const FEntryKey Key)
+			{
+				for (const auto EntryView = ItemStorage->GetEntryView(Key);
+					auto&& Entry : EntryView.Get().Stacks)
+				{
+					if (const FInventoryKey InvKey(Key, Entry.Key);
+						!AddItemToGrid(InvKey, EntryView.Get().ItemObject))
+					{
+						// Cannot add this item, skip the rest of stacks, and continue to next key
+						break;
+					}
+				}
+			});
+	}
 }
 
 void UInventoryGridExtensionBase::DeinitializeExtension(const UFaerieItemContainerBase* Container)

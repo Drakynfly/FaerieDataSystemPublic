@@ -46,6 +46,7 @@ public:
 	// Publicly accessible actions. Only call on server.
 	virtual FInventoryKey GetKeyAt(const FIntPoint& Position) const PURE_VIRTUAL(UInventoryGridExtensionBase::GetKeyAt, return FInventoryKey(); )
 	virtual bool CanAddAtLocation(FFaerieItemStackView Stack, FIntPoint IntPoint) const PURE_VIRTUAL(UInventoryGridExtensionBase::CanAddAtLocation, return false; )
+	virtual bool AddItemToGrid(const FInventoryKey& Key, const UFaerieItem* Item) PURE_VIRTUAL(UInventoryGridExtensionBase::AddItemToGrid, return false; )
 	virtual bool MoveItem(const FInventoryKey& Key, const FIntPoint& TargetPoint) PURE_VIRTUAL(UInventoryGridExtensionBase::MoveItem, return false; )
 	virtual bool RotateItem(const FInventoryKey& Key) PURE_VIRTUAL(UInventoryGridExtensionBase::RotateItem, return false; )
 

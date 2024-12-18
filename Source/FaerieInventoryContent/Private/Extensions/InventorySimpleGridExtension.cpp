@@ -8,34 +8,6 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(InventorySimpleGridExtension)
 
-void UInventorySimpleGridExtension::InitializeExtension(const UFaerieItemContainerBase* Container)
-{
-	Super::InitializeExtension(InitializedContainer);
-
-	if (const UFaerieItemStorage* ItemStorage = Cast<UFaerieItemStorage>(Container))
-	{
-		bool Failed = false;
-
-		ItemStorage->ForEachKey(
-			[this, ItemStorage, &Failed](const FEntryKey Key)
-			{
-				// @todo there is no break logic for ForEachKey! this is a temp hack
-				if (Failed) return;
-
-				for (const auto EntryView = ItemStorage->GetEntryView(Key);
-					auto&& Entry : EntryView.Get().Stacks)
-				{
-					if (const FInventoryKey InvKey(Key, Entry.Key);
-						!AddItemToGrid(InvKey, EntryView.Get().ItemObject))
-					{
-						Failed = true;
-						break;
-					}
-				}
-			});
-	}
-}
-
 EEventExtensionResponse UInventorySimpleGridExtension::AllowsAddition(const UFaerieItemContainerBase* Container,
 																	   const FFaerieItemStackView Stack,
 																	   EFaerieStorageAddStackBehavior) const
@@ -177,6 +149,30 @@ bool UInventorySimpleGridExtension::CanAddAtLocation(const FFaerieItemStackView 
 	return !IsCellOccupied(IntPoint);
 }
 
+bool UInventorySimpleGridExtension::AddItemToGrid(const FInventoryKey& Key, const UFaerieItem* Item)
+{
+	if (!Key.IsValid())
+	{
+		return false;
+	}
+
+	if (GridContent.Find(Key) != nullptr)
+	{
+		return true;
+	}
+
+	const FFaerieGridPlacement DesiredItemPlacement = FindFirstEmptyLocation();
+
+	if (DesiredItemPlacement.Origin == FIntPoint::NoneValue)
+	{
+		return false;
+	}
+
+	GridContent.Insert(Key, DesiredItemPlacement);
+	MarkCell(DesiredItemPlacement.Origin);
+	return true;
+}
+
 bool UInventorySimpleGridExtension::MoveItem(const FInventoryKey& Key, const FIntPoint& TargetPoint)
 {
 	if (const FInventoryKey OverlappingKey = FindOverlappingItem(Key);
@@ -214,30 +210,6 @@ bool UInventorySimpleGridExtension::RotateItem(const FInventoryKey& Key)
 {
 	const FFaerieGridContent::FScopedStackHandle Handle = GridContent.GetHandle(Key);
 	Handle->Rotation = GetNextRotation(Handle->Rotation);
-	return true;
-}
-
-bool UInventorySimpleGridExtension::AddItemToGrid(const FInventoryKey& Key, const UFaerieItem* Item)
-{
-	if (!Key.IsValid())
-	{
-		return false;
-	}
-
-	if (GridContent.Find(Key) != nullptr)
-	{
-		return true;
-	}
-
-	const FFaerieGridPlacement DesiredItemPlacement = FindFirstEmptyLocation();
-
-	if (DesiredItemPlacement.Origin == FIntPoint::NoneValue)
-	{
-		return false;
-	}
-
-	GridContent.Insert(Key, DesiredItemPlacement);
-	MarkCell(DesiredItemPlacement.Origin);
 	return true;
 }
 
