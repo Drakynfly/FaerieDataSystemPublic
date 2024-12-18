@@ -1,6 +1,6 @@
 ﻿// Copyright Guy (Drakynfly) Lundvall. All Rights Reserved.
 
-#include "FaerieMeshToken.h"
+#include "Tokens/FaerieMeshToken.h"
 
 #if WITH_EDITOR
 #include "Misc/DataValidation.h"

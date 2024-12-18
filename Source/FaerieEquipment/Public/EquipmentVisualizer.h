@@ -5,6 +5,7 @@
 #include "Components/ActorComponent.h"
 #include "UObject/WeakInterfacePtr.h"
 #include "FaerieItemDataProxy.h"
+#include "GameplayTagContainer.h"
 
 #include "EquipmentVisualizer.generated.h"
 
@@ -44,24 +45,26 @@ struct FEquipmentVisualAttachment
 };
 
 DECLARE_DYNAMIC_DELEGATE_TwoParams(FEquipmentVisualizerCallback, FFaerieVisualKey, Key, UObject*, Visual);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FEquipmentVisualizerEvent, FFaerieVisualKey, Key, UObject*, Visual);
 
 USTRUCT(Blueprintable)
 struct FEquipmentVisualMetadata
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EquipmentVisualMetadata")
+	UPROPERTY(EditAnywhere, Category = "EquipmentVisualMetadata")
 	FEquipmentVisualAttachment Attachment;
 
-	FEquipmentVisualizerCallback ChangeCallback;
+	UPROPERTY(EditAnywhere, Category = "EquipmentVisualMetadata")
+	FEquipmentVisualizerEvent ChangeCallback;
 };
 
 using FEquipmentVisualizerUpdateNative = TMulticastDelegate<void(FFaerieVisualKey, UObject*)>;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FEquipmentVisualizerUpdate, FFaerieVisualKey, Key, UObject*, Visual);
 
-
+// @todo move this to ItemMesh module, rename to UFaerieVisualizationComponent
 /**
- * An actor component that spawns visuals for equipment from a linked Equipment Manager
+ * An actor component that spawns visuals for items on the actor
  */
 UCLASS(ClassGroup = ("Faerie"), meta=(BlueprintSpawnableComponent))
 class FAERIEEQUIPMENT_API UEquipmentVisualizer : public UActorComponent
@@ -76,6 +79,7 @@ public:
 	//~ UActorComponent
 
 	FEquipmentVisualizerUpdateNative::RegistrationType& GetOnAnyVisualUpdate() { return OnAnyVisualUpdateNative; }
+	FGameplayTag GetPreferredTag() const { return PreferredTag; }
 
 	UFUNCTION(BlueprintCallable, Category = "Faerie|EquipmentVisualizer", meta = (DeterminesOutputType = "Class"))
 	UObject* GetSpawnedVisualByClass(TSubclassOf<UObject> Class, FFaerieVisualKey& Key) const;
@@ -99,16 +103,31 @@ public:
 		typename TActor
 		UE_REQUIRES(TIsDerivedFrom<TActor, AActor>::Value)
 	>
-	TActor* SpawnVisualActorNative(FFaerieVisualKey Key, TSubclassOf<TActor> Class, const FEquipmentVisualAttachment& Attachment)
+	TActor* SpawnVisualActorNative(FFaerieVisualKey Key, const TSubclassOf<TActor>& Class, const FEquipmentVisualAttachment& Attachment)
 	{
 		return Cast<TActor>(SpawnVisualActor(Key, Class, Attachment));
 	}
 
+	template <
+		typename TComponent
+		UE_REQUIRES(TIsDerivedFrom<TComponent, USceneComponent>::Value)
+	>
+	TComponent* SpawnVisualComponentNative(FFaerieVisualKey Key, const TSubclassOf<TComponent>& Class, const FEquipmentVisualAttachment& Attachment)
+	{
+		return Cast<TComponent>(SpawnVisualComponent(Key, Class, Attachment));
+	}
+
 	UFUNCTION(BlueprintCallable, Category = "Faerie|EquipmentVisualizer", meta = (AutoCreateRefTerm = "Attachment", DeterminesOutputType = "Class"))
-	AActor* SpawnVisualActor(FFaerieVisualKey Key, TSubclassOf<AActor> Class, const FEquipmentVisualAttachment& Attachment);
+	AActor* SpawnVisualActor(FFaerieVisualKey Key, const TSubclassOf<AActor>& Class, const FEquipmentVisualAttachment& Attachment);
+
+	UFUNCTION(BlueprintCallable, Category = "Faerie|EquipmentVisualizer", meta = (AutoCreateRefTerm = "Attachment", DeterminesOutputType = "Class"))
+	USceneComponent* SpawnVisualComponent(FFaerieVisualKey Key, const TSubclassOf<USceneComponent>& Class, const FEquipmentVisualAttachment& Attachment);
 
 	UFUNCTION(BlueprintCallable, Category = "Faerie|EquipmentVisualizer")
-	bool DestroyVisualActor(FFaerieVisualKey Key, bool ClearMetadata = false);
+	bool DestroyVisual(UObject* Visual, bool ClearMetadata = false);
+
+	UFUNCTION(BlueprintCallable, Category = "Faerie|EquipmentVisualizer")
+	bool DestroyVisualByKey(FFaerieVisualKey Key, bool ClearMetadata = false);
 
 	UFUNCTION(BlueprintCallable, Category = "Faerie|EquipmentVisualizer")
 	void ResetAttachment(FFaerieVisualKey Key);
@@ -123,18 +142,25 @@ protected:
 	UFUNCTION(/* Dynamic Callback */)
 	virtual void OnVisualActorDestroyed(AActor* DestroyedActor);
 
+	UFUNCTION(/* Dynamic Callback */)
+	virtual void OnVisualComponentDestroyed(USceneComponent* DestroyedComponent);
+
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FEquipmentVisualizerUpdate OnAnyVisualUpdate;
 
 protected:
+	// The MeshPurpose preferred by this Visualizer.
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Meta = (Categories = "MeshPurpose"))
+	FGameplayTag PreferredTag;
+
 	UPROPERTY()
 	TMap<FFaerieVisualKey, TObjectPtr<AActor>> SpawnedActors;
 
 	UPROPERTY()
-	TMap<TObjectPtr<AActor>, FFaerieVisualKey> ReverseMap;
+	TMap<FFaerieVisualKey, TObjectPtr<USceneComponent>> SpawnedComponents;
 
 	UPROPERTY()
-	TMap<FFaerieVisualKey, TObjectPtr<USceneComponent>> SpawnedComponents;
+	TMap<TObjectPtr<UObject>, FFaerieVisualKey> ReverseMap;
 
 	UPROPERTY()
 	TMap<FFaerieVisualKey, FEquipmentVisualMetadata> KeyedMetadata;

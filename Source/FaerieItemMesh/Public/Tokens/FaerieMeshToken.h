@@ -35,7 +35,7 @@ public:
 /**
  *
  */
-UCLASS(DisplayName = "Token - Mesh")
+UCLASS(DisplayName = "Token - Visual: Mesh")
 class FAERIEITEMMESH_API UFaerieMeshToken : public UFaerieMeshTokenBase
 {
 	GENERATED_BODY()

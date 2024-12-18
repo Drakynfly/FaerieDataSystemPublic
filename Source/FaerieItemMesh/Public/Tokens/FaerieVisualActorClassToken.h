@@ -10,8 +10,8 @@
 /**
  *
  */
-UCLASS(DisplayName = "Token - Visual Actor Class")
-class FAERIEINVENTORYCONTENT_API UFaerieVisualActorClassToken : public UFaerieItemToken
+UCLASS(DisplayName = "Token - Visual: Actor Class")
+class FAERIEITEMMESH_API UFaerieVisualActorClassToken : public UFaerieItemToken
 {
 	GENERATED_BODY()
 

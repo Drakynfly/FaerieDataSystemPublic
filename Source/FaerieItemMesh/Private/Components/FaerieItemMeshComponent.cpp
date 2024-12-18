@@ -13,6 +13,13 @@ UFaerieItemMeshComponent::UFaerieItemMeshComponent()
 	ActualType = EItemMeshType::None;
 }
 
+void UFaerieItemMeshComponent::DestroyComponent(const bool bPromoteChildren)
+{
+	MeshComponent->DestroyComponent();
+	MeshComponent = nullptr;
+	Super::DestroyComponent(bPromoteChildren);
+}
+
 void UFaerieItemMeshComponent::RebuildMesh()
 {
 	EItemMeshType NewMeshType = EItemMeshType::None;
@@ -171,7 +178,8 @@ void UFaerieItemMeshComponent::SetPreferredMeshType(const EItemMeshType MeshType
 
 FBoxSphereBounds UFaerieItemMeshComponent::GetBounds() const
 {
-	switch (ActualType) {
+	switch (ActualType)
+	{
 	case EItemMeshType::Static: return MeshData.GetStatic()->GetBounds();
 	case EItemMeshType::Dynamic: return UGeometryScriptLibrary_MeshQueryFunctions::GetMeshBoundingBox(MeshData.GetDynamic());
 	case EItemMeshType::Skeletal: return MeshData.GetSkeletal().Mesh->GetBounds();

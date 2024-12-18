@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "FaerieItemDataProxy.h"
+#include "FaerieItemProxy.h"
 #include "GameFramework/Actor.h"
 #include "ItemRepresentationActor.generated.h"
 
@@ -16,6 +16,8 @@ class FAERIEITEMMESH_API AItemRepresentationActor : public AActor
 
 public:
 	AItemRepresentationActor();
+
+	virtual void Destroyed() override;
 
 	UFUNCTION(BlueprintNativeEvent, Category = "Faerie|ItemRepresentationActor")
 	void ClearDataDisplay();

@@ -7,6 +7,7 @@
 
 class UEquipmentVisualizer;
 
+// @todo move this to ItemMesh module, rename to UFaerieVisualizationExtension
 /**
  *
  */
@@ -21,7 +22,7 @@ protected:
 
 	virtual void PostAddition(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) override;
 	virtual void PreRemoval(const UFaerieItemContainerBase* Container, FEntryKey Key, int32 Removal) override;
-	virtual void PostEntryChanged_DEPRECATED(const UFaerieItemContainerBase* Container, FEntryKey Key) override;
+	virtual void PostEntryChanged(const UFaerieItemContainerBase* Container, const Faerie::Inventory::FEventLog& Event) override;
 
 private:
 	static UEquipmentVisualizer* GetVisualizer(const UFaerieItemContainerBase* Container);

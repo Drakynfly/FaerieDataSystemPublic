@@ -1,15 +1,20 @@
 ﻿// Copyright Guy (Drakynfly) Lundvall. All Rights Reserved.
 
 #include "Extensions/EquipmentVisualizationUpdater.h"
-#include "EquipmentVisualizer.h"
-#include "FaerieEquipmentManager.h"
-#include "FaerieItemContainerBase.h"
-#include "ItemContainerEvent.h"
-#include "Actors/ItemRepresentationActor.h"
 #include "Extensions/RelevantActorsExtension.h"
 #include "Extensions/VisualSlotExtension.h"
-#include "GameFramework/Character.h"
+
+#include "EquipmentVisualizer.h"
+#include "FaerieItemContainerBase.h"
+#include "FaerieMeshSubsystem.h"
+#include "ItemContainerEvent.h"
+
+#include "Actors/ItemRepresentationActor.h"
+#include "Components/FaerieItemMeshComponent.h"
+#include "Tokens/FaerieMeshToken.h"
 #include "Tokens/FaerieVisualEquipment.h"
+
+#include "GameFramework/Character.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(EquipmentVisualizationUpdater)
 
@@ -67,17 +72,18 @@ void UEquipmentVisualizationUpdater::PreRemoval(const UFaerieItemContainerBase* 
 	}
 }
 
-void UEquipmentVisualizationUpdater::PostEntryChanged_DEPRECATED(const UFaerieItemContainerBase* Container, const FEntryKey Key)
+void UEquipmentVisualizationUpdater::PostEntryChanged(const UFaerieItemContainerBase* Container,
+	const Faerie::Inventory::FEventLog& Event)
 {
 	// The item in a slot has changed. Recreate the visual.
-	// @todo maybe don't always do this?!?! determine if we need to. but how?
+	// @todo maybe don't always do this?!?! determine if we need to. use the event tag type
 
 	auto&& Visualizer = GetVisualizer(Container);
 	if (!IsValid(Visualizer))
 	{
 		return;
 	}
-	const FFaerieItemProxy Proxy = Container->Proxy(Key);
+	const FFaerieItemProxy Proxy = Container->Proxy(Event.EntryTouched);
 	RemoveOldVisualImpl(Visualizer, Proxy);
 	CreateNewVisualImpl(Container, Visualizer, Proxy);
 }
@@ -132,28 +138,12 @@ void UEquipmentVisualizationUpdater::CreateNewVisualImpl(const UFaerieItemContai
 		return;
 	}
 
-	auto&& VisualToken = Proxy->GetItemObject()->GetToken<UFaerieVisualEquipment>();
-	if (!IsValid(VisualToken))
-	{
-		return;
-	}
-
-	if (VisualToken->GetActorClass().IsNull())
-	{
-		return;
-	}
-
-	const TSubclassOf<AItemRepresentationActor> VisualClass = VisualToken->GetActorClass().LoadSynchronous();
-	if (!IsValid(VisualClass))
-	{
-		UE_LOG(LogEquipmentManager, Warning, TEXT("VisualClass failed to load!"))
-		return;
-	}
+	// Step 1: Figure out what we are attaching to. For now, we rely on a VisualSlotExtension on the container to tell us!
 
 	auto&& SlotExtension = GetExtension<UVisualSlotExtension>(Container);
 	if (!IsValid(SlotExtension))
 	{
-		UE_LOG(LogEquipmentManager, Warning, TEXT("No slot extension for container!"))
+		UE_LOG(LogTemp, Warning, TEXT("No slot extension for container!"))
 		return;
 	}
 
@@ -166,24 +156,71 @@ void UEquipmentVisualizationUpdater::CreateNewVisualImpl(const UFaerieItemContai
 	}
 	Attachment.Socket = SlotExtension->GetSocket();
 
-	AItemRepresentationActor* NewVisual = Visualizer->SpawnVisualActorNative<AItemRepresentationActor>(
-		{ Proxy }, VisualClass, Attachment);
-	if (!IsValid(NewVisual))
+	// Step 2: What are we creating as a visual.
+
+	// Path 1: A Visual Actor
 	{
-		return;
+		auto&& VisualToken = Proxy->GetItemObject()->GetToken<UFaerieVisualEquipment>();
+		if (IsValid(VisualToken))
+		{
+			if (VisualToken->GetActorClass().IsNull())
+			{
+				return;
+			}
+
+			// @todo implement async path here
+			const TSubclassOf<AItemRepresentationActor> VisualClass = VisualToken->GetActorClass().LoadSynchronous();
+			if (!IsValid(VisualClass))
+			{
+				UE_LOG(LogTemp, Warning, TEXT("VisualClass failed to load!"))
+				return;
+			}
+
+			AItemRepresentationActor* NewVisual = Visualizer->SpawnVisualActorNative<AItemRepresentationActor>(
+				{ Proxy }, VisualClass, Attachment);
+			if (!IsValid(NewVisual))
+			{
+				return;
+			}
+
+			NewVisual->SetSourceProxy(Proxy);
+			return;
+		}
 	}
 
-	NewVisual->SetSourceProxy(Proxy);
+	// Path 2: A Visual Component
+	{
+		auto&& MeshToken = Proxy->GetItemObject()->GetToken<UFaerieMeshTokenBase>();
+		{
+			UFaerieMeshSubsystem* MeshSubsystem = Visualizer->GetWorld()->GetSubsystem<UFaerieMeshSubsystem>();
+			if (!MeshSubsystem)
+			{
+				return;
+			}
+
+			FFaerieItemMesh Mesh;
+			if (!MeshSubsystem->LoadMeshFromTokenSynchronous(MeshToken, Visualizer->GetPreferredTag(), Mesh))
+			{
+				UE_LOG(LogTemp, Warning, TEXT("LoadMeshFromTokenSynchronous failed!"))
+				return;
+			}
+
+			UFaerieItemMeshComponent* NewVisual = Visualizer->SpawnVisualComponentNative<UFaerieItemMeshComponent>(
+				{ Proxy }, UFaerieItemMeshComponent::StaticClass(), Attachment);
+			if (!IsValid(NewVisual))
+			{
+				return;
+			}
+
+			//NewVisual->SetPreferredMeshType()
+			NewVisual->SetItemMesh(Mesh);
+			return;
+		}
+	}
 }
 
 void UEquipmentVisualizationUpdater::RemoveOldVisualImpl(UEquipmentVisualizer* Visualizer, const FFaerieItemProxy Proxy)
 {
 	check(Visualizer);
-
-	if (AItemRepresentationActor* Visual = Cast<AItemRepresentationActor>(Visualizer->GetSpawnedActorByKey({ Proxy })))
-	{
-		Visual->ClearDataDisplay();
-	}
-
-	Visualizer->DestroyVisualActor({ Proxy });
+	Visualizer->DestroyVisualByKey({Proxy});
 }

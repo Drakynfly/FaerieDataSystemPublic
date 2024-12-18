@@ -5,8 +5,8 @@
 #include "FaerieItem.h"
 #include "FaerieItemDataProxy.h"
 #include "FaerieMeshStructs.h"
-#include "FaerieMeshToken.h"
 #include "SkeletalMergingLibrary.h"
+#include "Tokens/FaerieMeshToken.h"
 
 #include "Engine/StaticMeshSocket.h"
 #include "Engine/SkeletalMeshSocket.h"

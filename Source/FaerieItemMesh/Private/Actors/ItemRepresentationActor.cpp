@@ -9,6 +9,12 @@ AItemRepresentationActor::AItemRepresentationActor()
 	bReplicates = true;
 }
 
+void AItemRepresentationActor::Destroyed()
+{
+	ClearDataDisplay();
+	Super::Destroyed();
+}
+
 void AItemRepresentationActor::ClearDataDisplay_Implementation()
 {
 }
