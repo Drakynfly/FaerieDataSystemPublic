@@ -233,7 +233,11 @@ bool UFilterRule_HasTokens::ExecWithLog(const FFaerieItemStackView View, Faerie:
 	for (auto&& MissingClass : TokenClassesCopy)
 	{
 		FFormatOrderedArguments Args;
+#if WITH_EDITOR
 		Args.Add(MissingClass->GetDisplayNameText());
+#else
+		Args.Add(FText::FromString(MissingClass->GetName()));
+#endif
 		Logger.Errors.Add(FText::Format(ErrorFormat, Args));
 	}
 

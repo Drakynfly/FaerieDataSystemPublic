@@ -12,7 +12,11 @@ bool UFaerieItemDataFilter::ExecWithLog(const FFaerieItemStackView View,
 	{
 		static const FTextFormat ErrorFormat = NSLOCTEXT("FaerieItemDataFilter", "GenericFilterError", "Filter '{0}' failed. Implement ExecWithLog for more details.");
 		FFormatOrderedArguments Args;
+#if WITH_EDITOR
 		Args.Add(GetClass()->GetDisplayNameText());
+#else
+		Args.Add(FText::FromString(GetClass()->GetName()));
+#endif
 		Logger.Errors.Add(FText::Format(ErrorFormat, Args));
 	}
 
