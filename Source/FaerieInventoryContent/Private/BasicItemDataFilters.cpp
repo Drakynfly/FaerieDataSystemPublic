@@ -6,6 +6,8 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(BasicItemDataFilters)
 
+#define LOCTEXT_NAMESPACE "BasicItemDataFilters"
+
 #if WITH_EDITOR
 EItemDataMutabilityStatus UFilterRule_LogicalOr::GetMutabilityStatus() const
 {
@@ -25,6 +27,19 @@ EItemDataMutabilityStatus UFilterRule_LogicalOr::GetMutabilityStatus() const
 	return Super::GetMutabilityStatus();
 }
 #endif
+
+bool UFilterRule_LogicalOr::ExecWithLog(const FFaerieItemStackView View, Faerie::ItemData::FFilterLogger& Logger) const
+{
+	for (auto&& Rule : Rules)
+	{
+		if (!Rule->ExecWithLog(View, Logger))
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
 
 bool UFilterRule_LogicalOr::Exec(const FFaerieItemStackView View) const
 {
@@ -164,6 +179,16 @@ EItemDataMutabilityStatus UFilterRule_MatchTemplate::GetMutabilityStatus() const
 }
 #endif
 
+bool UFilterRule_MatchTemplate::ExecWithLog(const FFaerieItemStackView View,
+	Faerie::ItemData::FFilterLogger& Logger) const
+{
+	if (IsValid(Template))
+	{
+		return Template->TryMatchWithDescriptions(View, Logger.Errors);
+	}
+	return false;
+}
+
 bool UFilterRule_MatchTemplate::Exec(const FFaerieItemStackView View) const
 {
 	if (IsValid(Template))
@@ -188,6 +213,33 @@ EItemDataMutabilityStatus UFilterRule_HasTokens::GetMutabilityStatus() const
 }
 #endif
 
+bool UFilterRule_HasTokens::ExecWithLog(const FFaerieItemStackView View, Faerie::ItemData::FFilterLogger& Logger) const
+{
+	TArray<TSubclassOf<UFaerieItemToken>> TokenClassesCopy = TokenClasses;
+
+	for (auto&& Tokens = View.Item->GetTokens();
+		const TObjectPtr<UFaerieItemToken>& Token : Tokens)
+	{
+		if (!IsValid(Token)) continue;
+
+		TokenClassesCopy.RemoveAllSwap([Token](const TSubclassOf<UFaerieItemToken>& TokenClass)
+			{
+				return Token->IsA(TokenClass);
+			});
+	}
+
+	static const FTextFormat ErrorFormat = LOCTEXT("HasTokens_MissingClassError", "Missing required token of class: '{0}'");
+
+	for (auto&& MissingClass : TokenClassesCopy)
+	{
+		FFormatOrderedArguments Args;
+		Args.Add(MissingClass->GetDisplayNameText());
+		Logger.Errors.Add(FText::Format(ErrorFormat, Args));
+	}
+
+	return TokenClassesCopy.IsEmpty();
+}
+
 bool UFilterRule_HasTokens::Exec(const FFaerieItemStackView View) const
 {
 	TArray<TSubclassOf<UFaerieItemToken>> TokenClassesCopy = TokenClasses;
@@ -197,7 +249,7 @@ bool UFilterRule_HasTokens::Exec(const FFaerieItemStackView View) const
 	{
 		if (!IsValid(Token)) continue;
 
-		TokenClassesCopy.RemoveAllSwap([Token](const TSubclassOf<UFaerieItemToken> TokenClass)
+		TokenClassesCopy.RemoveAllSwap([Token](const TSubclassOf<UFaerieItemToken>& TokenClass)
 			{
 				return Token->IsA(TokenClass);
 			});
@@ -309,3 +361,5 @@ bool UFilterRule_GameplayTagAll::Exec(const FFaerieItemStackView View) const
 	}
 	return false;
 }
+
+#undef LOCTEXT_NAMESPACE

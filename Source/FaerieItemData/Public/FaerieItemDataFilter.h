@@ -33,10 +33,7 @@ public:
 	virtual EItemDataMutabilityStatus GetMutabilityStatus() const { return EItemDataMutabilityStatus::Unknown; }
 #endif
 
-	virtual bool ExecWithLog(const FFaerieItemStackView View, Faerie::ItemData::FFilterLogger& Logger) const
-	{
-		return Exec(View);
-	}
+	virtual bool ExecWithLog(const FFaerieItemStackView View, Faerie::ItemData::FFilterLogger& Logger) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Faerie|ItemDataFilter")
 	virtual bool Exec(FFaerieItemStackView View) const PURE_VIRTUAL(UFaerieItemDataFilter::Exec, return false; )
