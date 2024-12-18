@@ -72,12 +72,24 @@ bool UInventoryGridExtensionBase::IsCellOccupied(const FIntPoint& Point) const
 
 void UInventoryGridExtensionBase::MarkCell(const FIntPoint& Point)
 {
-	OccupiedCells[Ravel(Point)] = true;
+	const int32 Index = Ravel(Point);
+	if (!OccupiedCells.IsValidIndex(Index))
+	{
+		// If cell doesn't exist, expand to fit.
+		OccupiedCells.SetNum(Index, false);
+	}
+	OccupiedCells[Index] = true;
 }
 
 void UInventoryGridExtensionBase::UnmarkCell(const FIntPoint& Point)
 {
-	OccupiedCells[Ravel(Point)] = false;
+	const int32 Index = Ravel(Point);
+	if (!OccupiedCells.IsValidIndex(Index))
+	{
+		// If cell doesn't exist, no need to unmark it.
+		return;
+	}
+	OccupiedCells[Index] = false;
 }
 
 void UInventoryGridExtensionBase::UnmarkAllCells()
