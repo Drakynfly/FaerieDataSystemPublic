@@ -15,7 +15,10 @@ class FAERIEEQUIPMENT_API URelevantActorsExtension : public UItemContainerExtens
 	GENERATED_BODY()
 
 public:
-	template <typename TActor>
+	template <
+		typename TActor
+		UE_REQUIRES(TIsDerivedFrom<TActor, AActor>::Value)
+	>
 	TActor* FindActor() const
 	{
 		return Cast<TActor>(FindActor(TActor::StaticClass()));

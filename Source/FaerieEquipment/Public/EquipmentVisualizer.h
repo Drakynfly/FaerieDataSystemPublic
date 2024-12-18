@@ -95,7 +95,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Faerie|EquipmentVisualizer")
 	USceneComponent* GetSpawnedComponentByKey(FFaerieVisualKey Key) const;
 
-	template <typename TActor>
+	template <
+		typename TActor
+		UE_REQUIRES(TIsDerivedFrom<TActor, AActor>::Value)
+	>
 	TActor* SpawnVisualActorNative(FFaerieVisualKey Key, TSubclassOf<TActor> Class, const FEquipmentVisualAttachment& Attachment)
 	{
 		return Cast<TActor>(SpawnVisualActor(Key, Class, Attachment));

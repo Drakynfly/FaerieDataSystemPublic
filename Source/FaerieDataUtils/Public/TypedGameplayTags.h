@@ -5,7 +5,10 @@
 #include "NativeGameplayTags.h"
 
 // A wrapper around FNativeGameplayTag that enforces the use of a FGameplayTag child.
-template <typename TagT>
+template <
+	typename TagT
+	UE_REQUIRES(TIsDerivedFrom<TagT, FGameplayTag>::Value)
+>
 class TTypedNativeGameplayTag
 {
 public:

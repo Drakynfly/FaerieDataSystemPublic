@@ -28,7 +28,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Faerie|ItemContainerToken", meta = (DeterminesOutputType = Class))
 	static TSet<UFaerieItemContainerBase*> GetContainersInItemOfClass(const UFaerieItem* Item, TSubclassOf<UFaerieItemContainerBase> Class);
 
-	template <typename TContainerType>
+	template <
+		typename TContainerType
+		UE_REQUIRES(TIsDerivedFrom<TContainerType, UFaerieItemContainerBase>::Value)
+	>
 	static TSet<TContainerType*> GetContainersInItem(const UFaerieItem* Item)
 	{
 		return Type::Cast<TSet<TContainerType*>>(GetContainersInItemOfClass(Item, TContainerType::StaticClass()));
