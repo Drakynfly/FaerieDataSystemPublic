@@ -5,6 +5,11 @@
 #include "FaerieGridEnums.h"
 #include "SpatialTypes.generated.h"
 
+namespace Faerie
+{
+	class FBitMatrix;
+}
+
 /*
  * A shape composed of 2D points.
  */
@@ -23,16 +28,23 @@ struct FAERIEINVENTORYCONTENT_API FFaerieGridShape
 	FIntPoint GetSize() const;
 	FIntRect GetBounds() const;
 	FIntPoint GetShapeCenter() const;
+	FIntPoint GetIndexedShapeCenter() const;
 	FIntPoint GetShapeAverageCenter() const;
 	bool IsSymmetrical() const;
+
+	//Matrix
+	Faerie::FBitMatrix ToMatrix() const;
+	static TArray<FIntPoint> MatrixToPoints(const Faerie::FBitMatrix& Matrix, FIntPoint Origin);
+	static void RotateMatrixClockwise(Faerie::FBitMatrix& Matrix, ESpatialItemRotation Rotation = ESpatialItemRotation::None);
+
 	bool Contains(const FIntPoint& Position) const;
 	[[nodiscard]] bool Overlaps(const FFaerieGridShape& Other) const;
 
 	void TranslateInline(const FIntPoint& Position);
 	[[nodiscard]] FFaerieGridShape Translate(const FIntPoint& Position) const;
 
-	void RotateInline(ESpatialItemRotation Rotation);
-	[[nodiscard]] FFaerieGridShape Rotate(ESpatialItemRotation Rotation) const;
+	void RotateInline(ESpatialItemRotation Rotation, const bool Reset = false);
+	[[nodiscard]] FFaerieGridShape Rotate(ESpatialItemRotation Rotation, const bool Reset = false) const;
 
 	void RotateAroundInline_90(const FIntPoint& PivotPoint);
 	[[nodiscard]] FFaerieGridShape RotateAround_90(const FIntPoint& PivotPoint) const;
