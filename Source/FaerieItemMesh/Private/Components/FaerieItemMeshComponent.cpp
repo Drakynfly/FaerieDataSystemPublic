@@ -15,8 +15,12 @@ UFaerieItemMeshComponent::UFaerieItemMeshComponent()
 
 void UFaerieItemMeshComponent::DestroyComponent(const bool bPromoteChildren)
 {
-	MeshComponent->DestroyComponent();
-	MeshComponent = nullptr;
+	if (IsValid(MeshComponent))
+	{
+		MeshComponent->DestroyComponent();
+		MeshComponent = nullptr;
+	}
+
 	Super::DestroyComponent(bPromoteChildren);
 }
 
