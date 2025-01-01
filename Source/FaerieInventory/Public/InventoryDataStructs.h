@@ -376,7 +376,7 @@ public:
 
 	int32 Num() const { return Entries.Num(); }
 
-	struct FScopedItemHandle
+	struct FScopedItemHandle : FNoncopyable
 	{
 		FScopedItemHandle(const FEntryKey Key, FInventoryContent& Source)
 		  : Handle(Source.Entries[Source.IndexOf(Key)]),

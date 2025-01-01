@@ -85,9 +85,11 @@ public:
 	virtual void ForEachKey(const TFunctionRef<void(FEntryKey)>& Func) const override;
 	virtual int32 GetStack(FEntryKey Key) const override;
 
+protected:
 	virtual void OnItemMutated(const UFaerieItem* Item, const UFaerieItemToken* Token) override;
 	//~ UFaerieItemContainerBase
 
+public:
 	//~ IFaerieItemOwnerInterface
 	virtual FFaerieItemStack Release(FFaerieItemStackView Stack) override;
 	virtual bool Possess(FFaerieItemStack Stack) override;

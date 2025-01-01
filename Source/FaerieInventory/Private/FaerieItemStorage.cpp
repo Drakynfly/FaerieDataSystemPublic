@@ -297,6 +297,9 @@ FInventoryEntryView UFaerieItemStorage::GetEntryViewImpl(const FEntryKey Key) co
 
 UInventoryEntryProxy* UFaerieItemStorage::GetEntryProxyImpl(const FEntryKey Key) const
 {
+	// Don't create proxies for invalid keys.
+	if (!Key.IsValid()) return nullptr;
+
 	if (auto&& ExistingProxy = LocalEntryProxies.Find(Key))
 	{
 		if (ExistingProxy && ExistingProxy->IsValid())
@@ -328,6 +331,9 @@ UInventoryEntryProxy* UFaerieItemStorage::GetEntryProxyImpl(const FEntryKey Key)
 
 UInventoryStackProxy* UFaerieItemStorage::GetStackProxyImpl(const FInventoryKey Key) const
 {
+	// Don't create proxies for invalid keys.
+	if (!Key.IsValid()) return nullptr;
+
 	if (auto&& ExistingProxy = LocalStackProxies.Find(Key))
 	{
 		if (ExistingProxy && ExistingProxy->IsValid())

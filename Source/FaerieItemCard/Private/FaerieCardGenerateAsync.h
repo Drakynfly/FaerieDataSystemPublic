@@ -27,7 +27,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Faerie|ItemCards", meta = (ExpandBoolAsExecs = "ReturnValue"))
 	static bool GenerateItemCard(APlayerController* OwningPlayer, TScriptInterface<IFaerieCardGeneratorInterface> Generator, FFaerieItemProxy Proxy, TSubclassOf<UCustomCardClass> Type, UFaerieCardBase*& Widget);
 
-	UFUNCTION(BlueprintCallable, meta = (BlueprintInternalUseOnly = "true", WorldContext = "WorldContextObject"), Category = "Online")
+	UFUNCTION(BlueprintCallable, meta = (BlueprintInternalUseOnly = "true", WorldContext = "WorldContextObject"), Category = "Faerie|ItemCards", DisplayName = "Generate Item Card (async)")
 	static UFaerieCardGenerateAsync* GenerateItemCardAsync(APlayerController* OwningPlayer, TScriptInterface<IFaerieCardGeneratorInterface> Generator, FFaerieItemProxy Proxy, TSubclassOf<UCustomCardClass> Type);
 
 	// UBlueprintAsyncActionBase interface

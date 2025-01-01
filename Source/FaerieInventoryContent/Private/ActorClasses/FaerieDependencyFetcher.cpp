@@ -2,6 +2,8 @@
 
 #include "ActorClasses/FaerieDependencyFetcher.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(FaerieDependencyFetcher)
+
 UFaerieDependencyFetcher::UFaerieDependencyFetcher()
 {
 	PrimaryComponentTick.bCanEverTick = false;

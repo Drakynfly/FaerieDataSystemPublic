@@ -274,7 +274,7 @@ bool FInventoryEntry::IsEqualTo(const FInventoryEntry& A, const FInventoryEntry&
 
 	TEST_FLAG(Limit, A.Limit == B.Limit);
 	TEST_FLAG(StackSum, A.StackSum() == B.StackSum());
-	TEST_FLAG(ItemData, A.ItemObject->CompareWith(B.ItemObject));
+	TEST_FLAG(ItemData, UFaerieItem::Compare(A.ItemObject, B.ItemObject));
 
 #undef TEST_FLAG
 

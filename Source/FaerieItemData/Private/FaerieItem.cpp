@@ -178,6 +178,12 @@ TArray<UFaerieItemToken*> UFaerieItem::GetMutableTokens(const TSubclassOf<UFaeri
 	return OutTokens;
 }
 
+bool UFaerieItem::Compare(const UFaerieItem* A, const UFaerieItem* B)
+{
+	if (!A || !B) return A == B;
+	return A->CompareWith(B);
+}
+
 bool UFaerieItem::CompareWith(const UFaerieItem* Other) const
 {
 	// If we are the same object, then we already know we're identical

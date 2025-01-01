@@ -91,7 +91,7 @@ public:
 		return Items.FindByPredicate(Pred);
 	}
 
-	struct FScopedStackHandle
+	struct FScopedStackHandle : FNoncopyable
 	{
 		FScopedStackHandle(const FInventoryKey Key, FFaerieGridContent& Source)
 		  : Handle(Source.Items[Source.IndexOf(Key)]),

@@ -116,6 +116,7 @@ public:
 		return Type::Cast<TArray<TFaerieItemToken*>>(GetMutableTokens(TFaerieItemToken::StaticClass()));
 	}
 
+	static bool Compare(const UFaerieItem* A, const UFaerieItem* B);
 	bool CompareWith(const UFaerieItem* Other) const;
 
 protected:

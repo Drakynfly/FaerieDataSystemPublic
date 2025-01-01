@@ -6,6 +6,7 @@
 #include "FaerieItemDataLibrary.generated.h"
 
 class UFaerieItem;
+class UFaerieItemAsset;
 class UFaerieItemToken;
 
 /**
@@ -22,4 +23,9 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Faerie|ItemDataLibrary")
 	static bool Equal_ItemToken(const UFaerieItemToken* A, const UFaerieItemToken* B);
+
+	// Get the item instance this asset represents. By default, this will return the immutable asset if possible.
+	// If the item needs to allow changes, enable MutableInstance.
+	UFUNCTION(BlueprintPure, Category = "Faerie|ItemAsset")
+	static UFaerieItem* GetItemInstance(const UFaerieItemAsset* Asset, bool MutableInstance);
 };
