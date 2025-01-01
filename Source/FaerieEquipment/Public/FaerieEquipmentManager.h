@@ -40,8 +40,20 @@ struct FFaerieEquipmentSaveData
 	TArray<FFaerieContainerSaveData> PerSlotData;
 };
 
-using FEquipmentChangedEventNative = TMulticastDelegate<void(UFaerieEquipmentSlot*)>;
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FEquipmentChangedEvent, UFaerieEquipmentSlot*, Slot);
+UENUM(BlueprintType)
+enum class EFaerieEquipmentSlotChangeType : uint8
+{
+	// The item in a slot has changed
+	ItemChange,
+
+	// A token from an item in a slot was edited
+	TokenEdit
+};
+
+using FEquipmentChangedEventSimpleNative = TMulticastDelegate<void(UFaerieEquipmentSlot*)>;
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FEquipmentChangedEventSimple, UFaerieEquipmentSlot*, Slot);
+using FEquipmentChangedEventNative = TMulticastDelegate<void(UFaerieEquipmentSlot*, EFaerieEquipmentSlotChangeType)>;
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FEquipmentChangedEvent, UFaerieEquipmentSlot*, Slot, EFaerieEquipmentSlotChangeType, Type);
 
 /*
  * An actor component that manages an array of Equipment Slots, which can each store a single item entry.
@@ -84,7 +96,7 @@ private:
 	void AddSubobjectsForReplication();
 
 protected:
-	void OnSlotItemChanged(UFaerieEquipmentSlot* Slot);
+	void OnSlotItemChanged(UFaerieEquipmentSlot* Slot, bool TokenEdit);
 
 public:
 	/**------------------------------*/
@@ -99,8 +111,8 @@ public:
 	/*			SLOTS API			 */
 	/**------------------------------*/
 
-	FEquipmentChangedEventNative::RegistrationType& GetOnEquipmentSlotAdded() { return OnEquipmentSlotAddedNative; }
-	FEquipmentChangedEventNative::RegistrationType& GetOnPreEquipmentSlotRemoved() { return OnPreEquipmentSlotRemovedNative; }
+	FEquipmentChangedEventSimpleNative::RegistrationType& GetOnEquipmentSlotAdded() { return OnEquipmentSlotAddedNative; }
+	FEquipmentChangedEventSimpleNative::RegistrationType& GetOnPreEquipmentSlotRemoved() { return OnPreEquipmentSlotRemovedNative; }
 	FEquipmentChangedEventNative::RegistrationType& GetOnEquipmentChangedEvent() { return OnEquipmentChangedEventNative; }
 
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Faerie|EquipmentManager")
@@ -137,18 +149,18 @@ public:
 
 protected:
 	UPROPERTY(BlueprintAssignable, Transient, Category = "Events")
-	FEquipmentChangedEvent OnEquipmentSlotAdded;
+	FEquipmentChangedEventSimple OnEquipmentSlotAdded;
 
 	UPROPERTY(BlueprintAssignable, Transient, Category = "Events")
-	FEquipmentChangedEvent OnPreEquipmentSlotRemoved;
+	FEquipmentChangedEventSimple OnPreEquipmentSlotRemoved;
 
 	// A generic event when any slot is changed, either by adding or removing the item, or the item itself is changed.
 	UPROPERTY(BlueprintAssignable, Transient, Category = "Events")
 	FEquipmentChangedEvent OnEquipmentChangedEvent;
 
 private:
-	FEquipmentChangedEventNative OnEquipmentSlotAddedNative;
-	FEquipmentChangedEventNative OnPreEquipmentSlotRemovedNative;
+	FEquipmentChangedEventSimpleNative OnEquipmentSlotAddedNative;
+	FEquipmentChangedEventSimpleNative OnPreEquipmentSlotRemovedNative;
 	FEquipmentChangedEventNative OnEquipmentChangedEventNative;
 
 protected:

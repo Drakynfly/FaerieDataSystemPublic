@@ -122,10 +122,11 @@ void UFaerieEquipmentManager::AddSubobjectsForReplication()
 	}
 }
 
-void UFaerieEquipmentManager::OnSlotItemChanged(UFaerieEquipmentSlot* Slot)
+void UFaerieEquipmentManager::OnSlotItemChanged(UFaerieEquipmentSlot* Slot, const bool TokenEdit)
 {
-	OnEquipmentChangedEventNative.Broadcast(Slot);
-	OnEquipmentChangedEvent.Broadcast(Slot);
+	const EFaerieEquipmentSlotChangeType Type = TokenEdit ? EFaerieEquipmentSlotChangeType::TokenEdit : EFaerieEquipmentSlotChangeType::ItemChange;
+	OnEquipmentChangedEventNative.Broadcast(Slot, Type);
+	OnEquipmentChangedEvent.Broadcast(Slot, Type);
 }
 
 FFaerieContainerSaveData UFaerieEquipmentManager::MakeSaveData() const
@@ -153,8 +154,8 @@ void UFaerieEquipmentManager::LoadSaveData(const FFaerieContainerSaveData& SaveD
 		{
 			NewSlot->LoadSaveData(SlotSaveData);
 			Slots.Add(NewSlot);
-			NewSlot->OnItemChangedNative.AddUObject(this, &ThisClass::OnSlotItemChanged);
-			NewSlot->OnItemDataChangedNative.AddUObject(this, &ThisClass::OnSlotItemChanged);
+			NewSlot->OnItemChangedNative.AddUObject(this, &ThisClass::OnSlotItemChanged, false);
+			NewSlot->OnItemDataChangedNative.AddUObject(this, &ThisClass::OnSlotItemChanged, true);
 			NewSlot->AddExtension(ExtensionGroup);
 		}
 	}
@@ -181,8 +182,8 @@ UFaerieEquipmentSlot* UFaerieEquipmentManager::AddSlot(const FFaerieEquipmentSlo
 		AddReplicatedSubObject(NewSlot);
 		NewSlot->AddSubobjectsForReplication(GetOwner());
 
-		NewSlot->OnItemChangedNative.AddUObject(this, &ThisClass::OnSlotItemChanged);
-		NewSlot->OnItemDataChangedNative.AddUObject(this, &ThisClass::OnSlotItemChanged);
+		NewSlot->OnItemChangedNative.AddUObject(this, &ThisClass::OnSlotItemChanged, false);
+		NewSlot->OnItemDataChangedNative.AddUObject(this, &ThisClass::OnSlotItemChanged, true);
 
 		NewSlot->AddExtension(ExtensionGroup);
 

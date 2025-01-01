@@ -138,8 +138,20 @@ void UFaerieItemMeshComponent::RebuildMesh()
 	case EItemMeshType::Skeletal:
 		if (USkeletalMeshComponent* SkeletalMesh = Cast<USkeletalMeshComponent>(MeshComponent))
 		{
-			SkeletalMesh->SetSkeletalMesh(MeshData.GetSkeletal().Mesh);
-			SkeletalMesh->SetAnimInstanceClass(MeshData.GetSkeletal().AnimClass);
+			auto&& Skeletal = MeshData.GetSkeletal();
+			SkeletalMesh->SetSkeletalMesh(Skeletal.Mesh);
+			if (IsValid(Skeletal.AnimClass))
+			{
+				SkeletalMesh->SetAnimInstanceClass(Skeletal.AnimClass);
+			}
+			else
+			{
+				// If there is no AnimClass, maybe we were supposed to be a LeaderPose component. Check if our parent supports this
+				if (USkinnedMeshComponent* ParentMesh = Cast<USkinnedMeshComponent>(GetAttachParent()))
+				{
+					SkeletalMesh->SetLeaderPoseComponent(ParentMesh, true);
+				}
+			}
 			for (int32 i = 0; i < MeshData.Materials.Num(); ++i)
 			{
 				SkeletalMesh->SetMaterial(i, MeshData.Materials[i].Material.LoadSynchronous());

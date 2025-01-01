@@ -75,7 +75,7 @@ void UEquipmentVisualizationUpdater::PreRemoval(const UFaerieItemContainerBase* 
 void UEquipmentVisualizationUpdater::PostEntryChanged(const UFaerieItemContainerBase* Container,
 	const Faerie::Inventory::FEventLog& Event)
 {
-	// The item in a slot has changed. Recreate the visual.
+	// The item in a container has changed. Recreate the visual.
 	// @todo maybe don't always do this?!?! determine if we need to. use the event tag type
 
 	auto&& Visualizer = GetVisualizer(Container);
@@ -95,15 +95,28 @@ UEquipmentVisualizer* UEquipmentVisualizationUpdater::GetVisualizer(const UFaeri
 		return nullptr;
 	}
 
-	if (auto&& Relevants = GetExtension<URelevantActorsExtension>(Container))
+	auto&& Relevants = GetExtension<URelevantActorsExtension>(Container);
+	if (!IsValid(Relevants))
 	{
-		if (auto&& Pawn = Relevants->FindActor<APawn>())
-		{
-			return Pawn->GetComponentByClass<UEquipmentVisualizer>();
-		}
+		UE_LOG(LogTemp, Warning, TEXT("GetVisualizer failed: Requires a RelevantActorsExtension on the container to find the pawn!"))
+		return nullptr;
 	}
 
-	return nullptr;
+	auto&& Pawn = Relevants->FindActor<APawn>();
+	if (!IsValid(Pawn))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("GetVisualizer failed: Failed to find relevant Pawn!"))
+		return nullptr;
+	}
+
+	auto&& Visualizer = Pawn->GetComponentByClass<UEquipmentVisualizer>();
+	if (!IsValid(Visualizer))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("GetVisualizer failed: Pawn does not container a visualizer!"))
+		return nullptr;
+	}
+
+	return Visualizer;
 }
 
 void UEquipmentVisualizationUpdater::CreateNewVisual(const UFaerieItemContainerBase* Container, const FEntryKey Key)
@@ -138,23 +151,25 @@ void UEquipmentVisualizationUpdater::CreateNewVisualImpl(const UFaerieItemContai
 		return;
 	}
 
-	// Step 1: Figure out what we are attaching to. For now, we rely on a VisualSlotExtension on the container to tell us!
-
-	auto&& SlotExtension = GetExtension<UVisualSlotExtension>(Container);
-	if (!IsValid(SlotExtension))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("No slot extension for container!"))
-		return;
-	}
-
+	// Step 1: Figure out what we are attaching to.
 	FEquipmentVisualAttachment Attachment;
-	Attachment.Parent = Visualizer->GetOwner()->FindComponentByTag<USceneComponent>(SlotExtension->GetComponentTag());
-	if (!Attachment.Parent.IsValid() && Visualizer->GetOwner()->IsA<ACharacter>())
+
+	// If there is a VisualSlotExtension on the slot, then defer to it.
+	auto&& SlotExtension = GetExtension<UVisualSlotExtension>(Container);
+	if (IsValid(SlotExtension))
 	{
-		// Default to using the character mesh for attachment if no other is found.
-		Attachment.Parent = Cast<ACharacter>(Visualizer->GetOwner())->GetMesh();
+		Attachment.Parent = Visualizer->GetOwner()->FindComponentByTag<USceneComponent>(SlotExtension->GetComponentTag());
+		if (!Attachment.Parent.IsValid() && Visualizer->GetOwner()->IsA<ACharacter>())
+		{
+			// Default to using the character mesh for attachment if no other is found.
+			Attachment.Parent = Cast<ACharacter>(Visualizer->GetOwner())->GetMesh();
+		}
+		Attachment.Socket = SlotExtension->GetSocket();
 	}
-	Attachment.Socket = SlotExtension->GetSocket();
+	else
+	{
+		// @todo fallback attachment
+	}
 
 	// Step 2: What are we creating as a visual.
 
@@ -203,6 +218,27 @@ void UEquipmentVisualizationUpdater::CreateNewVisualImpl(const UFaerieItemContai
 			{
 				UE_LOG(LogTemp, Warning, TEXT("LoadMeshFromTokenSynchronous failed!"))
 				return;
+			}
+
+			if (Mesh.IsSkeletal())
+			{
+				// If there is no AnimClass on the mesh, it would prefer using LeaderPose as a fallback
+				bool LeaderPoseMesh = !IsValid(Mesh.GetSkeletal().AnimClass);
+
+				// But some extensions might ban that (like items held in hands)
+				if (IsValid(SlotExtension))
+				{
+					if (!SlotExtension->GetAllowLeaderPose())
+					{
+						LeaderPoseMesh = false;
+					}
+				}
+
+				if (LeaderPoseMesh)
+				{
+					Attachment.Parent = Visualizer->GetLeaderBone();
+					Attachment.Socket = NAME_None;
+				}
 			}
 
 			UFaerieItemMeshComponent* NewVisual = Visualizer->SpawnVisualComponentNative<UFaerieItemMeshComponent>(

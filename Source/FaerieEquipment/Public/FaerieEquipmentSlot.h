@@ -62,6 +62,8 @@ public:
 	virtual void LoadSaveData(const FFaerieContainerSaveData& SaveData) override;
 	virtual bool IsValidKey(FEntryKey Key) const override;
 	virtual void ForEachKey(const TFunctionRef<void(FEntryKey)>& Func) const override;
+
+protected:
 	virtual void OnItemMutated(const UFaerieItem* InItem, const UFaerieItemToken* Token) override;
 
 private:

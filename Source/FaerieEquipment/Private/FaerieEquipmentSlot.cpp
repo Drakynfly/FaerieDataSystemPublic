@@ -348,7 +348,6 @@ FFaerieItemStack UFaerieEquipmentSlot::TakeItemFromSlot(int32 Copies)
 		Extensions->PostEntryChanged(this, Event);
 	}
 
-
 	BroadcastChange();
 
 	return OutStack;

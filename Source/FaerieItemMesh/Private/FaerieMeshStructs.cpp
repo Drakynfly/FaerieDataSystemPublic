@@ -80,5 +80,6 @@ bool FFaerieItemMesh::IsDynamic() const
 
 bool FFaerieItemMesh::IsSkeletal() const
 {
-	return IsValid(SkeletonAndAnimClass.Mesh) && IsValid(SkeletonAndAnimClass.AnimClass);
+	return IsValid(SkeletonAndAnimClass.Mesh);
+		//&& IsValid(SkeletonAndAnimClass.AnimClass);
 }

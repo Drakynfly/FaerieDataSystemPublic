@@ -25,6 +25,11 @@ void UEquipmentVisualizer::OnComponentDestroyed(const bool bDestroyingHierarchy)
 	Super::OnComponentDestroyed(bDestroyingHierarchy);
 }
 
+USkinnedMeshComponent* UEquipmentVisualizer::GetLeaderBone() const
+{
+	return Cast<USkinnedMeshComponent>(LeaderPoseComponent.GetComponent(GetOwner()));
+}
+
 UObject* UEquipmentVisualizer::GetSpawnedVisualByClass(const TSubclassOf<UObject> Class, FFaerieVisualKey& Key) const
 {
 	if (!IsValid(Class)) return nullptr;

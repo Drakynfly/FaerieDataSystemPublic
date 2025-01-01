@@ -68,19 +68,19 @@ public:
 	// todo make async version of this function? In practice this function hasn't been "that" slow, but for more complex meshes it might be.
 	// Immediately retrieves the mesh for an item.
 	// WARNING: This can cause a hitch if the mesh is not cached and it requires a lengthy assembly.
-	UFUNCTION(BlueprintCallable, Category = "Faerie|MeshSubsystem", Meta = (GameplayTagFilter = "MeshPurpose", ExpandBoolAsExecs = "ReturnValue"))
+	UFUNCTION(BlueprintCallable, Category = "Faerie|MeshSubsystem", meta = (GameplayTagFilter = "MeshPurpose", ExpandBoolAsExecs = "ReturnValue"))
 	bool LoadMeshFromTokenSynchronous(const UFaerieMeshTokenBase* Token, const FGameplayTag Purpose, FFaerieItemMesh& Mesh);
 
 	// todo make async version of this function? In practice this function hasn't been "that" slow, but for more complex meshes it might be.
 	// Immediately retrieves the mesh for an item.
 	// WARNING: This can cause a hitch if the mesh is not cached and it requires a lengthy assembly.
-	UFUNCTION(BlueprintCallable, Category = "Faerie|MeshSubsystem", Meta = (GameplayTagFilter = "MeshPurpose", ExpandBoolAsExecs = "ReturnValue"))
+	UFUNCTION(BlueprintCallable, Category = "Faerie|MeshSubsystem", meta = (GameplayTagFilter = "MeshPurpose", ExpandBoolAsExecs = "ReturnValue"))
 	bool LoadMeshFromProxySynchronous(FFaerieItemProxy Proxy, const FGameplayTag Purpose, FFaerieItemMesh& Mesh);
 
 protected:
 	// If the purpose requested when loading a mesh is not available, the tag "MeshPurpose.Default" is normally used as
 	// a fallback. If this is set to a tag other than that, then this will be tried first, before the default.
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Meta = (Categories = "MeshPurpose"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (Categories = "MeshPurpose"))
 	FGameplayTag FallbackPurpose;
 
 private:

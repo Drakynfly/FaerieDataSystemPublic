@@ -31,8 +31,9 @@ EDataValidationResult UFaerieMeshToken::IsDataValid(FDataValidationContext& Cont
 
 	for (auto&& i : MeshContainer.SkeletalMeshes)
 	{
-		if (i.SkeletonAndAnimClass.Mesh.IsNull() ||
-			i.SkeletonAndAnimClass.AnimClass.IsNull())
+		if (i.SkeletonAndAnimClass.Mesh.IsNull()
+			//|| i.SkeletonAndAnimClass.AnimClass.IsNull()
+			)
 		{
 			Context.AddError(LOCTEXT("IsDataValid_Failed_InvalidSkeletalMesh", "Invalid skeletal mesh found"));
 		}
@@ -82,8 +83,9 @@ EDataValidationResult UFaerieMeshToken_Dynamic::IsDataValid(FDataValidationConte
 	{
 		for (auto&& Fragment : Element.Fragments)
 		{
-			if (Fragment.SkeletonAndAnimClass.Mesh.IsNull() ||
-				Fragment.SkeletonAndAnimClass.AnimClass.IsNull())
+			if (Fragment.SkeletonAndAnimClass.Mesh.IsNull()
+				//|| Fragment.SkeletonAndAnimClass.AnimClass.IsNull()
+				)
 			{
 				Context.AddError(LOCTEXT("IsDataValid_Failed_InvalidSkeletalMesh", "Invalid skeletal mesh found"));
 			}

@@ -12,7 +12,7 @@ class UDurabilityGradeAsset;
 /**
  *
  */
-UCLASS(DisplayName = "Token - Durability Grade")
+UCLASS(DisplayName = "Token - Durability Grade (DEPRECATED)")
 class FAERIEEQUIPMENT_API UFaerieDurabilityToken : public UFaerieItemToken
 {
 	GENERATED_BODY()

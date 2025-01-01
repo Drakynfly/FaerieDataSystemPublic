@@ -81,6 +81,9 @@ public:
 	FEquipmentVisualizerUpdateNative::RegistrationType& GetOnAnyVisualUpdate() { return OnAnyVisualUpdateNative; }
 	FGameplayTag GetPreferredTag() const { return PreferredTag; }
 
+	// For attachments that want to follow the leader pose, get their leader component.
+	USkinnedMeshComponent* GetLeaderBone() const;
+
 	UFUNCTION(BlueprintCallable, Category = "Faerie|EquipmentVisualizer", meta = (DeterminesOutputType = "Class"))
 	UObject* GetSpawnedVisualByClass(TSubclassOf<UObject> Class, FFaerieVisualKey& Key) const;
 
@@ -150,8 +153,11 @@ protected:
 
 protected:
 	// The MeshPurpose preferred by this Visualizer.
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Meta = (Categories = "MeshPurpose"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Config", meta = (Categories = "MeshPurpose"))
 	FGameplayTag PreferredTag;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Config")
+	FComponentReference LeaderPoseComponent;
 
 	UPROPERTY()
 	TMap<FFaerieVisualKey, TObjectPtr<AActor>> SpawnedActors;
