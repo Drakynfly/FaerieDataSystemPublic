@@ -220,7 +220,7 @@ struct FAERIEITEMMESH_API FFaerieItemMesh
 		return ItemMesh;
 	}
 
-	static FFaerieItemMesh MakeSkeletal(const FSkeletonAndAnimClass Mesh, const TArray<FFaerieItemMaterial>& Materials)
+	static FFaerieItemMesh MakeSkeletal(const FSkeletonAndAnimClass& Mesh, const TArray<FFaerieItemMaterial>& Materials)
 	{
 		FFaerieItemMesh ItemMesh;
 		ItemMesh.SkeletonAndAnimClass = Mesh;

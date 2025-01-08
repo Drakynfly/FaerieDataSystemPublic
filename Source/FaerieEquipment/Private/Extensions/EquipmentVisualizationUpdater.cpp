@@ -15,6 +15,7 @@
 #include "Tokens/FaerieVisualEquipment.h"
 
 #include "GameFramework/Character.h"
+#include "Tokens/FaerieVisualActorClassToken.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(EquipmentVisualizationUpdater)
 
@@ -175,16 +176,24 @@ void UEquipmentVisualizationUpdater::CreateNewVisualImpl(const UFaerieItemContai
 
 	// Path 1: A Visual Actor
 	{
-		auto&& VisualToken = Proxy->GetItemObject()->GetToken<UFaerieVisualEquipment>();
-		if (IsValid(VisualToken))
-		{
-			if (VisualToken->GetActorClass().IsNull())
-			{
-				return;
-			}
+		TSoftClassPtr<AItemRepresentationActor> ActorClass = nullptr;
 
+		if (auto&& VisualToken_Deprecated = Proxy->GetItemObject()->GetToken<UFaerieVisualEquipment>();
+			IsValid(VisualToken_Deprecated))
+		{
+			ActorClass = VisualToken_Deprecated->GetActorClass();
+		}
+
+		if (auto&& VisualToken = Proxy->GetItemObject()->GetToken<UFaerieVisualActorClassToken>();
+			IsValid(VisualToken))
+		{
+			ActorClass = VisualToken->GetActorClass();
+		}
+
+		if (!ActorClass.IsNull())
+		{
 			// @todo implement async path here
-			const TSubclassOf<AItemRepresentationActor> VisualClass = VisualToken->GetActorClass().LoadSynchronous();
+			const TSubclassOf<AItemRepresentationActor> VisualClass = ActorClass.LoadSynchronous();
 			if (!IsValid(VisualClass))
 			{
 				UE_LOG(LogTemp, Warning, TEXT("VisualClass failed to load!"))
@@ -193,13 +202,11 @@ void UEquipmentVisualizationUpdater::CreateNewVisualImpl(const UFaerieItemContai
 
 			AItemRepresentationActor* NewVisual = Visualizer->SpawnVisualActorNative<AItemRepresentationActor>(
 				{ Proxy }, VisualClass, Attachment);
-			if (!IsValid(NewVisual))
+			if (IsValid(NewVisual))
 			{
+				NewVisual->SetSourceProxy(Proxy);
 				return;
 			}
-
-			NewVisual->SetSourceProxy(Proxy);
-			return;
 		}
 	}
 
