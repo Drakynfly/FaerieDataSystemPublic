@@ -13,13 +13,19 @@ void UEquipmentVisualizer::OnComponentDestroyed(const bool bDestroyingHierarchy)
 {
 	for (auto&& Element : SpawnedActors)
 	{
-		Element.Value->OnDestroyed.RemoveAll(this);
-		Element.Value->Destroy();
+		if (IsValid(Element.Value))
+		{
+			Element.Value->OnDestroyed.RemoveAll(this);
+			Element.Value->Destroy();
+		}
 	}
 
 	for (auto&& Element : SpawnedComponents)
 	{
-		Element.Value->DestroyComponent();
+		if (IsValid(Element.Value))
+		{
+			Element.Value->DestroyComponent();
+		}
 	}
 
 	Super::OnComponentDestroyed(bDestroyingHierarchy);
