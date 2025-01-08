@@ -5,6 +5,7 @@
 #include "Blueprint/UserWidget.h"
 #include "FaerieCardTokenBase.generated.h"
 
+class UFaerieItem;
 class UFaerieCardBase;
 class UFaerieItemToken;
 
@@ -32,6 +33,15 @@ public:
 protected:
 	void OnCardRefreshed();
 
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Faerie|ItemCardToken")
+	const UFaerieItem* GetItem() const;
+
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Faerie|ItemCardToken")
+	const UFaerieItemToken* GetItemToken() const;
+
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Faerie|ItemCardToken", meta = (ExpandBoolAsExecs = "ReturnValue"))
+	bool GetItemTokenChecked(UFaerieItemToken*& Token) const;
+
 	UFUNCTION(BlueprintImplementableEvent, Category = "Faerie|ItemCardToken", meta = (DisplayName = "Refresh"))
 	void BP_Refresh();
 
@@ -39,7 +49,7 @@ protected:
 	UFaerieCardBase* GetOwningCard() const;
 
 protected:
-	UE_DEPRECATED(5.4, "Use GetOwningCard->ItemProxy instead.")
+	UE_DEPRECATED(5.4, "Use GetItemToken/GetItemTokenChecked instead.")
 	UPROPERTY(BlueprintReadOnly, Category = "ItemCardToken")
 	TObjectPtr<const UFaerieItemToken> ItemToken;
 };

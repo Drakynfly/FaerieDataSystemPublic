@@ -55,6 +55,34 @@ void UFaerieCardTokenBase::OnCardRefreshed()
 	BP_Refresh();
 }
 
+const UFaerieItem* UFaerieCardTokenBase::GetItem() const
+{
+	if (auto&& Card = GetOwningCard())
+	{
+		if (auto&& ItemObj = Card->GetItemData().GetItemObject())
+		{
+			return ItemObj;
+		}
+	}
+	return nullptr;
+}
+
+const UFaerieItemToken* UFaerieCardTokenBase::GetItemToken() const
+{
+	if (auto&& ItemObj = GetItem())
+	{
+		return ItemObj->GetToken(GetTokenClass());
+	}
+	return nullptr;
+}
+
+bool UFaerieCardTokenBase::GetItemTokenChecked(UFaerieItemToken*& Token) const
+{
+	// @todo again, BP doesn't understand const-ness :(
+	Token = const_cast<UFaerieItemToken*>(GetItemToken());
+	return IsValid(Token);
+}
+
 UFaerieCardBase* UFaerieCardTokenBase::GetOwningCard() const
 {
 	return GetTypedOuter<UFaerieCardBase>();
