@@ -9,8 +9,14 @@ UFaerieDependencyFetcher::UFaerieDependencyFetcher()
 	PrimaryComponentTick.bCanEverTick = false;
 }
 
+bool UFaerieDependencyFetcher::FetchDependency_Implementation(const TSubclassOf<UActorComponent> Class,
+															  UActorComponent*& Component) const
+{
+	return GetDependency(Class, Component);
+}
+
 bool UFaerieDependencyFetcher::GetDependency_Implementation(const TSubclassOf<UActorComponent> Class,
-	UActorComponent*& Component) const
+															UActorComponent*& Component) const
 {
 	AActor* Owner = GetOwner();
 	if (IsValid(Owner))
