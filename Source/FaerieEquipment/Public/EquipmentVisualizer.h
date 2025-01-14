@@ -59,8 +59,14 @@ struct FEquipmentVisualMetadata
 	FEquipmentVisualizerEvent ChangeCallback;
 };
 
-using FEquipmentVisualizerUpdateNative = TMulticastDelegate<void(FFaerieVisualKey, UObject*)>;
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FEquipmentVisualizerUpdate, FFaerieVisualKey, Key, UObject*, Visual);
+namespace Faerie::Equipment
+{
+	using FVisualSpawned = TMulticastDelegate<void(FFaerieVisualKey, UObject*)>;
+	using FVisualDestroyed = TMulticastDelegate<void(FFaerieVisualKey)>;
+}
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FFaerieEquipmentVisualSpawned, FFaerieVisualKey, Key, UObject*, Visual);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FFaerieEquipmentVisualDestroyed, FFaerieVisualKey, Key);
 
 // @todo move this to ItemMesh module, rename to UFaerieVisualizationComponent
 /**
@@ -78,7 +84,8 @@ public:
 	virtual void OnComponentDestroyed(bool bDestroyingHierarchy) override;
 	//~ UActorComponent
 
-	FEquipmentVisualizerUpdateNative::RegistrationType& GetOnAnyVisualUpdate() { return OnAnyVisualUpdateNative; }
+	Faerie::Equipment::FVisualSpawned::RegistrationType& GetOnAnyVisualSpawned() { return OnAnyVisualSpawnedNative; }
+	Faerie::Equipment::FVisualDestroyed::RegistrationType& GetOnAnyVisualDestroyed() { return OnAnyVisualDestroyedNative; }
 	FGameplayTag GetPreferredTag() const { return PreferredTag; }
 
 	// For attachments that want to follow the leader pose, get their leader component.
@@ -145,11 +152,15 @@ protected:
 	UFUNCTION(/* Dynamic Callback */)
 	virtual void OnVisualActorDestroyed(AActor* DestroyedActor);
 
-	UFUNCTION(/* Dynamic Callback */)
-	virtual void OnVisualComponentDestroyed(USceneComponent* DestroyedComponent);
+	// @todo not used
+	//UFUNCTION(/* Dynamic Callback */)
+	//virtual void OnVisualComponentDestroyed(USceneComponent* DestroyedComponent);
 
 	UPROPERTY(BlueprintAssignable, Category = "Events")
-	FEquipmentVisualizerUpdate OnAnyVisualUpdate;
+	FFaerieEquipmentVisualSpawned OnAnyVisualSpawned;
+
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FFaerieEquipmentVisualDestroyed OnAnyVisualDestroyed;
 
 protected:
 	// The MeshPurpose preferred by this Visualizer.
@@ -172,5 +183,6 @@ protected:
 	TMap<FFaerieVisualKey, FEquipmentVisualMetadata> KeyedMetadata;
 
 private:
-	FEquipmentVisualizerUpdateNative OnAnyVisualUpdateNative;
+	Faerie::Equipment::FVisualSpawned OnAnyVisualSpawnedNative;
+	Faerie::Equipment::FVisualDestroyed OnAnyVisualDestroyedNative;
 };

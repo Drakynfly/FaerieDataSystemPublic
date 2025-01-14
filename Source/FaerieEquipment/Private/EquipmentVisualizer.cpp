@@ -157,8 +157,8 @@ AActor* UEquipmentVisualizer::SpawnVisualActor(const FFaerieVisualKey Key, const
 		}
 
 		KeyedMetadata.FindOrAdd(Key).ChangeCallback.Broadcast(Key, NewActor);
-		OnAnyVisualUpdateNative.Broadcast(Key, NewActor);
-		OnAnyVisualUpdate.Broadcast(Key, NewActor);
+		OnAnyVisualSpawnedNative.Broadcast(Key, NewActor);
+		OnAnyVisualSpawned.Broadcast(Key, NewActor);
 
 		return NewActor;
 	}
@@ -174,7 +174,7 @@ USceneComponent* UEquipmentVisualizer::SpawnVisualComponent(const FFaerieVisualK
 
 	if (SpawnedComponents.Contains(Key))
 	{
-		UE_LOG(LogTemp, Error, TEXT("Attempted to spawn a VisualActor using a key already in use!"))
+		UE_LOG(LogTemp, Error, TEXT("Attempted to spawn a VisualComponent using a key already in use!"))
 		return nullptr;
 	}
 
@@ -184,8 +184,6 @@ USceneComponent* UEquipmentVisualizer::SpawnVisualComponent(const FFaerieVisualK
 		GetOwner()->AddInstanceComponent(NewComponent);
 		NewComponent->RegisterComponent();
 
-		//NewComponent->OnComponentDestroyed().AddDynamic(this, &ThisClass::OnVisualComponentDestroyed);
-
 		SpawnedComponents.Add(Key, NewComponent);
 		ReverseMap.Add(NewComponent, Key);
 
@@ -193,8 +191,8 @@ USceneComponent* UEquipmentVisualizer::SpawnVisualComponent(const FFaerieVisualK
 		NewComponent->AttachToComponent(Attachment.Parent.Get(), Attachment.TransformRules, Attachment.Socket);
 
 		KeyedMetadata.FindOrAdd(Key).ChangeCallback.Broadcast(Key, NewComponent);
-		OnAnyVisualUpdateNative.Broadcast(Key, NewComponent);
-		OnAnyVisualUpdate.Broadcast(Key, NewComponent);
+		OnAnyVisualSpawnedNative.Broadcast(Key, NewComponent);
+		OnAnyVisualSpawned.Broadcast(Key, NewComponent);
 
 		return NewComponent;
 	}
@@ -215,6 +213,10 @@ bool UEquipmentVisualizer::DestroyVisual(UObject* Visual, const bool ClearMetada
 	{
 		VisualActor->Destroy();
 		SpawnedActors.Remove(Key);
+
+		OnAnyVisualDestroyedNative.Broadcast(Key);
+		OnAnyVisualDestroyed.Broadcast(Key);
+
 		return true;
 	}
 
@@ -222,6 +224,10 @@ bool UEquipmentVisualizer::DestroyVisual(UObject* Visual, const bool ClearMetada
 	{
 		VisualComponent->DestroyComponent();
 		SpawnedComponents.Remove(Key);
+
+		OnAnyVisualDestroyedNative.Broadcast(Key);
+		OnAnyVisualDestroyed.Broadcast(Key);
+
 		return true;
 	}
 
@@ -230,6 +236,8 @@ bool UEquipmentVisualizer::DestroyVisual(UObject* Visual, const bool ClearMetada
 
 bool UEquipmentVisualizer::DestroyVisualByKey(const FFaerieVisualKey Key, const bool ClearMetadata)
 {
+	if (!Key.IsValid()) return false;
+
 	if (ClearMetadata)
 	{
 		KeyedMetadata.Remove(Key);
@@ -237,19 +245,28 @@ bool UEquipmentVisualizer::DestroyVisualByKey(const FFaerieVisualKey Key, const 
 
 	if (AActor* Visual = GetSpawnedActorByKey(Key))
 	{
-		ReverseMap.Remove(Visual);
-
 		// This will clear from SpawnedActors and ReverseMap via OnDestroyed
 		Visual->Destroy();
+		SpawnedActors.Remove(Key);
+
+		OnAnyVisualDestroyedNative.Broadcast(Key);
+		OnAnyVisualDestroyed.Broadcast(Key);
+
+		ReverseMap.Remove(Visual);
+
 		return true;
 	}
 
 	if (USceneComponent* VisualComponent = GetSpawnedComponentByKey(Key))
 	{
-		ReverseMap.Remove(VisualComponent);
-
 		VisualComponent->DestroyComponent();
 		SpawnedComponents.Remove(Key);
+
+		OnAnyVisualDestroyedNative.Broadcast(Key);
+		OnAnyVisualDestroyed.Broadcast(Key);
+
+		ReverseMap.Remove(VisualComponent);
+
 		return true;
 	}
 
@@ -291,18 +308,26 @@ FFaerieVisualKey UEquipmentVisualizer::MakeVisualKeyFromProxy(const TScriptInter
 
 void UEquipmentVisualizer::OnVisualActorDestroyed(AActor* DestroyedActor)
 {
-	if (const auto Key = ReverseMap.Find(DestroyedActor))
+	if (const FFaerieVisualKey* Key = ReverseMap.Find(DestroyedActor))
 	{
-		ReverseMap.Remove(DestroyedActor);
 		SpawnedActors.Remove(*Key);
+		OnAnyVisualDestroyedNative.Broadcast(*Key);
+		OnAnyVisualDestroyed.Broadcast(*Key);
 	}
+
+	ReverseMap.Remove(DestroyedActor);
 }
 
+/*
 void UEquipmentVisualizer::OnVisualComponentDestroyed(USceneComponent* DestroyedComponent)
 {
 	if (const auto Key = ReverseMap.Find(DestroyedComponent))
 	{
-		ReverseMap.Remove(DestroyedComponent);
 		SpawnedComponents.Remove(*Key);
+		OnAnyVisualDestroyedNative.Broadcast(*Key);
+		OnAnyVisualDestroyed.Broadcast(*Key);
 	}
+
+	ReverseMap.Remove(DestroyedComponent);
 }
+*/
