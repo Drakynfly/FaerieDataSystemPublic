@@ -235,17 +235,36 @@ void UFaerieItemStorage::PostContentChanged(const FKeyedInventoryEntry& Entry)
 			}
 		}
 
-		// Call updates on any stack proxies
-		for (auto&& Keys = GetInvKeysForEntry(Entry.Key);
-			auto&& Key : Keys)
+		// Call updates on any stack proxies.
+		// PostContentChanged is called when stacks are removed as well, so let's do some cleanup here.
+		// Start by getting all the Keys that we could have proxies for.
+		const TSet<FInventoryKey> Keys(GetInvKeysForEntry(Entry.Key));
+		TArray<FInventoryKey> Cleanup;
+		for (auto&& LocalStackProxy : LocalStackProxies)
 		{
-			if (auto&& StackProxy = LocalStackProxies.Find(Key))
+			// Check for local proxies that match this entry
+			if (!LocalStackProxy.Value.IsValid() ||
+				LocalStackProxy.Key.EntryKey != Entry.Key)
 			{
-				if (StackProxy->IsValid())
-				{
-					StackProxy->Get()->NotifyUpdate();
-				}
+				continue;
 			}
+
+			// If this is a key we are supposed to have update it.
+			if (Keys.Contains(LocalStackProxy.Key))
+			{
+				LocalStackProxy.Value->NotifyUpdate();
+			}
+			// Otherwise, discard it.
+			else
+			{
+				Cleanup.Add(LocalStackProxy.Key);
+				LocalStackProxy.Value->NotifyRemoval();
+			}
+		}
+
+		for (const FInventoryKey Key : Cleanup)
+		{
+			LocalStackProxies.Remove(Key);
 		}
 	}
 	else
