@@ -116,6 +116,20 @@ USceneComponent* UEquipmentVisualizer::GetSpawnedComponentByKey(const FFaerieVis
 	return nullptr;
 }
 
+TArray<AActor*> UEquipmentVisualizer::GetSpawnedActors() const
+{
+	TArray<AActor*> Array;
+	SpawnedActors.GenerateValueArray(ObjectPtrWrap(Array));
+	return Array;
+}
+
+TArray<USceneComponent*> UEquipmentVisualizer::GetSpawnedComponents() const
+{
+	TArray<USceneComponent*> Array;
+	SpawnedComponents.GenerateValueArray(ObjectPtrWrap(Array));
+	return Array;
+}
+
 AActor* UEquipmentVisualizer::SpawnVisualActor(const FFaerieVisualKey Key, const TSubclassOf<AActor>& Class, const FEquipmentVisualAttachment& Attachment)
 {
 	if (!Key.IsValid()) return nullptr;

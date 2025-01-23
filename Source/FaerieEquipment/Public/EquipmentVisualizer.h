@@ -109,6 +109,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Faerie|EquipmentVisualizer")
 	USceneComponent* GetSpawnedComponentByKey(FFaerieVisualKey Key) const;
 
+	UFUNCTION(BlueprintCallable, Category = "Faerie|EquipmentVisualizer")
+	TArray<AActor*> GetSpawnedActors() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Faerie|EquipmentVisualizer")
+	TArray<USceneComponent*> GetSpawnedComponents() const;
+
 	template <
 		typename TActor
 		UE_REQUIRES(TIsDerivedFrom<TActor, AActor>::Value)
