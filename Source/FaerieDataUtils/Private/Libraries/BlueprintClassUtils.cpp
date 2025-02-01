@@ -9,3 +9,18 @@ UObject* UBlueprintClassUtils::GetTypedOuter(UObject* Object, const TSubclassOf<
 	if (!IsValid(Object)) return nullptr;
 	return Object->GetTypedOuter(Class);
 }
+
+USceneComponent* UBlueprintClassUtils::GetTypedParent(USceneComponent* Component, const TSubclassOf<USceneComponent> Class)
+{
+	if (!IsValid(Component)) return nullptr;
+
+	USceneComponent* Result = nullptr;
+	for (USceneComponent* NextOuter = Component->GetAttachParent(); Result == nullptr && NextOuter != nullptr; NextOuter = NextOuter->GetAttachParent() )
+	{
+		if (NextOuter->IsA(Class))
+		{
+			Result = NextOuter;
+		}
+	}
+	return Result;
+}
