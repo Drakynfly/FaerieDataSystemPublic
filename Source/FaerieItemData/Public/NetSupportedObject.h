@@ -3,6 +3,7 @@
 #pragma once
 
 #include "UObject/Object.h"
+#include "Net/Core/PushModel/PushModelMacros.h"
 #include "NetSupportedObject.generated.h"
 
 
@@ -13,6 +14,9 @@ UCLASS(Abstract)
 class FAERIEITEMDATA_API UNetSupportedObject : public UObject
 {
 	GENERATED_BODY()
+
+	// We have to add this ourself, because Unreal cannot detect that a class is supposed to be replicated when it has no replicated properties.
+	REPLICATED_BASE_CLASS(UNetSupportedObject)
 
 public:
 	// Enable full networking
