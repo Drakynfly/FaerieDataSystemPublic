@@ -14,12 +14,18 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FaerieItemPool)
 
-FTableDrop FFaerieWeightedDropPool::GenerateDrop(const double RanWeight) const
+const FTableDrop* FFaerieWeightedDropPool::GetDrop(const double RanWeight) const
 {
 	if (DropList.IsEmpty())
 	{
 		UE_LOG(LogTemp, Error, TEXT("Exiting generation: Empty Table"));
-		return FTableDrop();
+		return nullptr;
+	}
+
+	// Skip performing binary search if there is only one possible result.
+	if (DropList.Num() == 1)
+	{
+		return &DropList[0].Drop;
 	}
 
 	const int32 BinarySearchResult = Algo::LowerBoundBy(DropList, RanWeight, &FWeightedDrop::AdjustedWeight);
@@ -27,10 +33,10 @@ FTableDrop FFaerieWeightedDropPool::GenerateDrop(const double RanWeight) const
 	if (!DropList.IsValidIndex(BinarySearchResult))
 	{
 		UE_LOG(LogTemp, Error, TEXT("Binary search returned out-of-bounds index!"));
-		return FTableDrop();
+		return nullptr;
 	}
 
-	return DropList[BinarySearchResult].Drop;
+	return &DropList[BinarySearchResult].Drop;
 }
 
 #if WITH_EDITOR
@@ -177,13 +183,30 @@ UFaerieItem* UFaerieItemPool::CreateItemInstance(const UItemInstancingContext* C
 	return nullptr;
 }
 
+const FTableDrop* UFaerieItemPool::GetDrop(const double RanWeight) const
+{
+	return DropPool.GetDrop(RanWeight);
+}
+
+const FTableDrop* UFaerieItemPool::GetDrop_Seeded(USquirrel* Squirrel) const
+{
+	return DropPool.GetDrop(Squirrel->NextReal());
+}
+
 FTableDrop UFaerieItemPool::GenerateDrop(const double RanWeight) const
 {
-	return DropPool.GenerateDrop(RanWeight);
+	if (auto&& DropPtr = GetDrop(RanWeight))
+	{
+		return *DropPtr;
+	}
+	return FTableDrop();
 }
 
 FTableDrop UFaerieItemPool::GenerateDrop_Seeded(USquirrel* Squirrel) const
 {
-	if (!ensure(IsValid(Squirrel))) return FTableDrop();
-	return DropPool.GenerateDrop(Squirrel->NextReal());
+	if (auto&& DropPtr = GetDrop_Seeded(Squirrel))
+	{
+		return *DropPtr;
+	}
+	return FTableDrop();
 }

@@ -55,7 +55,11 @@ FPendingItemGeneration UItemGenerationConfig::Resolve() const
 {
 	FPendingItemGeneration Result;
 
-    Result.Drop = DropPool.GenerateDrop(Squirrel->NextReal());
+	if (auto&& Drop = DropPool.GetDrop(Squirrel->NextReal()))
+	{
+		Result.Drop = *Drop;
+	}
+
 	Result.Count = AmountResolver.Get<FGeneratorAmountBase>().Resolve(Squirrel);
 	Result.Squirrel = Squirrel;
 

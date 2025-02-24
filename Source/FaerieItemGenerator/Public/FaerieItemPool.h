@@ -18,7 +18,7 @@ struct FFaerieWeightedDropPool
 	TArray<FWeightedDrop> DropList;
 
 	// Generates a drop from this pool, using the provided random weight, which must be a value between 0 and 1.
-	FTableDrop GenerateDrop(double RanWeight) const;
+	const FTableDrop* GetDrop(double RanWeight) const;
 
 #if WITH_EDITOR
 	// Calculate the percentage each drop has to be chosen.
@@ -59,11 +59,15 @@ public:
 	virtual UFaerieItem* CreateItemInstance(const UItemInstancingContext* Context) const override;
 	//~ IFaerieItemSource
 
+	const FTableDrop* GetDrop(double RanWeight) const;
+	const FTableDrop* GetDrop_Seeded(USquirrel* Squirrel) const;
+
+protected:
 	// Generates a drop from this table, using the provided random weight, which must be a value between 0 and 1.
-	UFUNCTION(Blueprintable, BlueprintPure = false, Category = "Faerie|ItemPool")
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Faerie|ItemPool")
 	FTableDrop GenerateDrop(double RanWeight) const;
 
-	UFUNCTION(Blueprintable, BlueprintPure = false, Category = "Faerie|ItemPool", DisplayName = "Generate Drop (Seeded)")
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Faerie|ItemPool", DisplayName = "Generate Drop (Seeded)")
 	FTableDrop GenerateDrop_Seeded(USquirrel* Squirrel) const;
 
 protected:
